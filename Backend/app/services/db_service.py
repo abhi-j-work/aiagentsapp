@@ -3,6 +3,10 @@ import logging
 from sqlalchemy import create_engine, inspect
 from typing import Dict, Any
 import asyncio
+from typing import List 
+from sqlalchemy import create_engine, text
+
+from .errors import DatabaseServiceError
 from app.services.errors import DatabaseServiceError
 
 logger = logging.getLogger(__name__)
@@ -50,19 +54,43 @@ async def extract_db_schema(conn_str: str) -> Dict[str, Any]:
     return await loop.run_in_executor(None, _extract_schema_sync, conn_str)
 
 # ### BEST PRACTICE: Included your apply_sql_statements function for completeness.
-def _apply_sql_sync(conn_str: str, statements: list[str]):
+def _execute_statements_sync(conn_str: str, statements: list[str]):
+    """
+    Synchronously executes statements using SQLAlchemy.
+    This function is designed to be run in a separate thread.
+    """
+    # create_engine is a factory for connections and manages a connection pool.
     engine = create_engine(conn_str)
+    
+    # engine.connect() checks out a connection from the pool.
     with engine.connect() as connection:
+        # connection.begin() starts a transaction block.
         with connection.begin() as transaction:
             try:
                 for stmt in statements:
-                    if stmt.strip():
+                    # Ensure we don't execute empty strings
+                    if stmt and stmt.strip():
                         connection.execute(text(stmt))
-                transaction.commit()
+                
+                # The transaction is automatically committed here if no exception was raised.
+                # The explicit `transaction.commit()` is not needed with `with connection.begin()`.
             except Exception as e:
-                transaction.rollback()
-                raise DatabaseServiceError(f"Failed to apply SQL: {e}", 400)
+                # The transaction is automatically rolled back here upon exiting the `with`
+                # block due to an exception.
+                raise DatabaseServiceError(message=f"Failed to apply SQL: {e}", status_code=400)
 
-async def apply_sql_statements(conn_str: str, statements: list[str]):
+# This is your async wrapper function. We'll call this from the API endpoint.
+async def execute_statements(conn_str: str, statements: list[str]):
+    """
+    Asynchronously executes a list of SQL statements by running the
+    synchronous SQLAlchemy logic in a thread pool executor.
+    """
     loop = asyncio.get_running_loop()
-    await loop.run_in_executor(None, _apply_sql_sync, conn_str, statements)
+    # `run_in_executor` pushes the blocking function to a thread,
+    # freeing the event loop to handle other requests.
+    await loop.run_in_executor(
+        None,  # Use the default thread pool executor
+        _execute_statements_sync,
+        conn_str,
+        statements
+    )

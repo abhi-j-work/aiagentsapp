@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 from enum import Enum
-
+from pydantic import BaseModel, Field
+from typing import List
 # =============================================================================
 # Enums and Core Data Structures
 # =============================================================================
@@ -151,3 +152,35 @@ class TablePlan(BaseModel):
 
 class LLMResponseModel(BaseModel):
     tables: List[TablePlan]
+
+
+class ApplyMaskingRequest(BaseModel):
+    connection_string: Optional[str] = Field(
+        None,
+        description="Database connection string. If not provided, the server's configured URL will be used."
+    )
+    sql_statements: List[str] = Field(
+        ...,
+        description="The list of SQL statements (e.g., CREATE VIEW...) to be executed."
+    )
+
+# This is the OUTPUT of our new endpoint.
+class ApplyPlanResponse(BaseModel):
+    status: str = "success"
+    message: str
+
+
+class RelationshipExplanation(BaseModel):
+    from_table: str
+    to_table: str
+    business_rule: str
+    impact_of_change: str
+
+class FoundationalTable(BaseModel):
+    table_name: str
+    business_role: str
+    impact_of_change: str
+
+class ReferentialIntegrityResponse(BaseModel):
+    relationship_explanations: List[RelationshipExplanation]
+    foundational_tables: List[FoundationalTable]
