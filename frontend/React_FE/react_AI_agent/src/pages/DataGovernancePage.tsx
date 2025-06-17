@@ -23,10 +23,13 @@ const DataGovernancePage = () => {
   return (
     <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
       <div className="w-full relative max-w-xs">
-        <div className="relative card-border overflow-hidden rounded-2xl flex flex-col animate-float">
-          
+        {/* OUTER CARD: Uses the custom CSS class */}
+        <div className="relative card-border overflow-hidden rounded-2xl flex flex-col animate-vertical-float">
           <div className="p-4 flex justify-center relative">
-            <div className="w-full h-48 rounded-xl gradient-border inner-glow overflow-hidden relative">
+
+            {/* INNER SCHEMA BOX: Uses the other custom CSS class */}
+            <div className="w-full h-48 rounded-xl gradient-border inner-glow overflow-hidden relative animate-vertical-float-subtle">
+              
               <div className="absolute inset-0 opacity-10">
                 <div className="w-full h-full animate-pulse" style={{backgroundImage: 'linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px)', backgroundSize: '15px 15px'}}></div>
               </div>

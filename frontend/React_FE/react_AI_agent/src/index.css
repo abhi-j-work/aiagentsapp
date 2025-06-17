@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&family=Manrope:wght@200..800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -11,163 +11,49 @@
 }
 
 @layer components {
-  /* Glassmorphism effect for cards and inputs */
-  .glass {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
+  /* General Styles */
+  .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+  .gradient-border { position: relative; background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)); }
+  .gradient-border::before { content: ''; position: absolute; inset: 0; padding: 1px; background: linear-gradient(135deg, #4f46e5, #3b82f6, #8b5cf6); border-radius: inherit; mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: xor; }
+  .inner-glow { box-shadow: inset 0 0 20px rgba(79, 70, 229, 0.3), inset 0 0 40px rgba(59, 130, 246, 0.2), 0 0 30px rgba(139, 92, 246, 0.4); }
+  .card-border { background: rgba(79, 70, 229, 0.08); border: 1px solid rgba(79, 70, 229, 0.3); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.3), inset 0 0 30px rgba(79, 70, 229, 0.1), inset 0 0 60px rgba(59, 130, 246, 0.05), 0 0 50px rgba(139, 92, 246, 0.2); }
+  .gradient-text { background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 25%, #6366f1 75%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .divider { height: 1px; background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent); }
+  .vertical-divider { width: 1px; background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.2), transparent); }
 
-  /* Animated SVG connector lines */
-  .connector {
-    stroke-dasharray: 8;
-    animation: connector-draw 2s linear infinite;
-  }
-  
-  /* Floating animation for smaller table cards in DataGovernancePage */
-  .table-float {
-    animation: float 6s ease-in-out infinite;
-  }
-  /* Animation delays for table cards */
-  .delay-1 { animation-delay: -1.5s; }
-  .delay-2 { animation-delay: -3.0s; }
-  .delay-3 { animation-delay: -4.5s; }
+  /* Connector Animation */
+  .connector { stroke-dasharray: 8; animation: dataStream 2s linear infinite; }
 
-  /* Complex border with a gradient */
-  .gradient-border {
-    position: relative;
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
-  }
+  /* Pricing Page Styles */
+  .font-manrope { font-family: 'Manrope', sans-serif; }
+  .glass-effect { backdrop-filter: blur(14px) brightness(0.91); -webkit-backdrop-filter: blur(14px) brightness(0.91); }
+  .card-divider { height: 1px; background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.09) 20%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0.09) 80%, transparent ); }
+  .icon-circle { @apply h-8 w-8 rounded-full flex items-center justify-center bg-white/5 border border-white/10; }
   
-  .gradient-border::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    padding: 1px; /* Border width */
-    background: linear-gradient(135deg, #4f46e5, #3b82f6, #8b5cf6);
-    border-radius: inherit;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: xor;
-  }
-  
-  /* Inner glow effect for visual elements */
-  .inner-glow {
-    box-shadow: 
-      inset 0 0 20px rgba(79, 70, 229, 0.3),
-      inset 0 0 40px rgba(59, 130, 246, 0.2),
-      0 0 30px rgba(139, 92, 246, 0.4);
-  }
-  
-  /* Main card styling with border, background, and shadow */
-  .card-border {
-    background: rgba(79, 70, 229, 0.08);
-    border: 1px solid rgba(79, 70, 229, 0.3);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 
-      0 0 0 1px rgba(79, 70, 229, 0.3),
-      inset 0 0 30px rgba(79, 70, 229, 0.1),
-      inset 0 0 60px rgba(59, 130, 246, 0.05),
-      0 0 50px rgba(139, 92, 246, 0.2);
-  }
-
-  /* Text with gradient */
-  .gradient-text {
-      background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 25%, #6366f1 75%, #ec4899 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-  }
-
-  /* Dividers used on LandingPage */
-  .divider {
-      height: 1px;
-      background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
-  }
-  .vertical-divider {
-      width: 1px;
-      background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.2), transparent);
-  }
-   .font-manrope {
-    font-family: 'Manrope', sans-serif;
-  }
-  .glass-effect {
-    backdrop-filter: blur(14px) brightness(0.91);
-    -webkit-backdrop-filter: blur(14px) brightness(0.91);
-  }
-  .card-divider {
-    height: 1px;
-    background-image: linear-gradient(90deg,
-      transparent,
-      rgba(255,255,255,0.09) 20%,
-      rgba(255,255,255,0.22) 50%,
-      rgba(255,255,255,0.09) 80%,
-      transparent
-    );
-    }
-  .icon-circle {
-    @apply h-8 w-8 rounded-full flex items-center justify-center bg-white/5 border border-white/10;
-  }
-
-   .card-stack {
-    --_offset-steps: 4rem;
-    --_scale-steps: 15;
-    --_opacity-steps: 20;
-    
-    --_offset-steps-two: calc(var(--_offset-steps) * -1);
-    --_offset-steps-three: calc(var(--_offset-steps) * -2);
-    --scale-steps-two: calc(1 - var(--_scale-steps) * 0.01);
-    --scale-steps-three: calc(1 - var(--_scale-steps) * 0.02);
-    --opacity-steps-two: calc(1 - var(--_opacity-steps) * 0.02);
-    --opacity-steps-three: calc(1 - var(--_opacity-steps) * 0.04);
-    
-    display: grid;
-    grid-template-areas: "stack";
-    width: min(calc(100% - 2rem), 26rem);
-  }
-  
-  .card-stack > article {
-    grid-area: stack;
-    transition: 500ms ease-in-out;
-    translate: 0 var(--_offset);
-    order: var(--_order);
-    z-index: var(--_order);
-    scale: var(--_scale);
-    opacity: var(--_opacity);
-    cursor: grab;
-    user-select: none;
-  }
-  
+  /* Tech Stack Page Styles */
+  .card-stack { --_offset-steps: 4rem; --_scale-steps: 15; --_opacity-steps: 20; --_offset-steps-two: calc(var(--_offset-steps) * -1); --_offset-steps-three: calc(var(--_offset-steps) * -2); --scale-steps-two: calc(1 - var(--_scale-steps) * 0.01); --scale-steps-three: calc(1 - var(--_scale-steps) * 0.02); --opacity-steps-two: calc(1 - var(--_opacity-steps) * 0.02); --opacity-steps-three: calc(1 - var(--_opacity-steps) * 0.04); display: grid; grid-template-areas: "stack"; width: min(calc(100% - 2rem), 26rem); }
+  .card-stack > article { grid-area: stack; transition: 500ms ease-in-out; translate: 0 var(--_offset); order: var(--_order); z-index: var(--_order); scale: var(--_scale); opacity: var(--_opacity); cursor: grab; user-select: none; }
   .card-stack > article:active { cursor: grabbing; }
-
   .card-stack > article:nth-of-type(1) { --_order: var(--_1-order); --_scale: var(--_1-scale); --_opacity: var(--_1-opacity); --_offset: var(--_1-offset); }
   .card-stack > article:nth-of-type(2) { --_order: var(--_2-order); --_scale: var(--_2-scale); --_opacity: var(--_2-opacity); --_offset: var(--_2-offset); }
   .card-stack > article:nth-of-type(3) { --_order: var(--_3-order); --_scale: var(--_3-scale); --_opacity: var(--_3-opacity); --_offset: var(--_3-offset); }
   .card-stack > article:nth-of-type(4) { --_order: var(--_4-order); --_scale: var(--_4-scale); --_opacity: var(--_4-opacity); --_offset: var(--_4-offset); }
-
-  .card-1-active {
-    --_1-order: 4; --_1-scale: 1; --_1-opacity: 1; --_1-offset: 0;
-    --_2-order: 3; --_2-scale: var(--scale-steps-two); --_2-opacity: var(--opacity-steps-two); --_2-offset: var(--_offset-steps-two);
-    --_3-order: 2; --_3-scale: var(--scale-steps-three); --_3-opacity: var(--opacity-steps-three); --_3-offset: var(--_offset-steps-three);
-    --_4-order: 1; --_4-scale: calc(1 - var(--_scale-steps) * 0.03); --_4-opacity: calc(1 - var(--_opacity-steps) * 0.06); --_4-offset: calc(var(--_offset-steps) * -3);
-  }
-  .card-2-active {
-    --_2-order: 4; --_2-scale: 1; --_2-opacity: 1; --_2-offset: 0;
-    --_3-order: 3; --_3-scale: var(--scale-steps-two); --_3-opacity: var(--opacity-steps-two); --_3-offset: var(--_offset-steps-two);
-    --_4-order: 2; --_4-scale: var(--scale-steps-three); --_4-opacity: var(--opacity-steps-three); --_4-offset: var(--_offset-steps-three);
-    --_1-order: 1; --_1-scale: calc(1 - var(--_scale-steps) * 0.03); --_1-opacity: calc(1 - var(--_opacity-steps) * 0.06); --_1-offset: calc(var(--_offset-steps) * -3);
-  }
-  .card-3-active {
-    --_3-order: 4; --_3-scale: 1; --_3-opacity: 1; --_3-offset: 0;
-    --_4-order: 3; --_4-scale: var(--scale-steps-two); --_4-opacity: var(--opacity-steps-two); --_4-offset: var(--_offset-steps-two);
-    --_1-order: 2; --_1-scale: var(--scale-steps-three); --_1-opacity: var(--opacity-steps-three); --_1-offset: var(--_offset-steps-three);
-    --_2-order: 1; --_2-scale: calc(1 - var(--_scale-steps) * 0.03); --_2-opacity: calc(1 - var(--_opacity-steps) * 0.06); --_2-offset: calc(var(--_offset-steps) * -3);
-  }
-  .card-4-active {
-    --_4-order: 4; --_4-scale: 1; --_4-opacity: 1; --_4-offset: 0;
-    --_1-order: 3; --_1-scale: var(--scale-steps-two); --_1-opacity: var(--opacity-steps-two); --_1-offset: var(--_offset-steps-two);
-    --_2-order: 2; --_2-scale: var(--scale-steps-three); --_2-opacity: var(--opacity-steps-three); --_2-offset: var(--_offset-steps-three);
-    --_3-order: 1; --_3-scale: calc(1 - var(--_scale-steps) * 0.03); --_3-opacity: calc(1 - var(--_opacity-steps) * 0.06); --_3-offset: calc(var(--_offset-steps) * -3);
-  }
+  .card-1-active { --_1-order: 4; --_1-scale: 1; --_1-opacity: 1; --_1-offset: 0; --_2-order: 3; --_2-scale: var(--scale-steps-two); --_2-opacity: var(--opacity-steps-two); --_2-offset: var(--_offset-steps-two); --_3-order: 2; --_3-scale: var(--scale-steps-three); --_3-opacity: var(--opacity-steps-three); --_3-offset: var(--_offset-steps-three); --_4-order: 1; --_4-scale: calc(1 - var(--_scale-steps) * 0.03); --_4-opacity: calc(1 - var(--_opacity-steps) * 0.06); --_4-offset: calc(var(--_offset-steps) * -3); }
+  .card-2-active { --_2-order: 4; --_2-scale: 1; --_2-opacity: 1; --_2-offset: 0; --_3-order: 3; --_3-scale: var(--scale-steps-two); --_3-opacity: var(--opacity-steps-two); --_3-offset: var(--_offset-steps-two); --_4-order: 2; --_4-scale: var(--scale-steps-three); --_4-opacity: var(--opacity-steps-three); --_4-offset: var(--_offset-steps-three); --_1-order: 1; --_1-scale: calc(1 - var(--_scale-steps) * 0.03); --_1-opacity: calc(1 - var(--_opacity-steps) * 0.06); --_1-offset: calc(var(--_offset-steps) * -3); }
+  .card-3-active { --_3-order: 4; --_3-scale: 1; --_3-opacity: 1; --_3-offset: 0; --_4-order: 3; --_4-scale: var(--scale-steps-two); --_4-opacity: var(--opacity-steps-two); --_4-offset: var(--_offset-steps-two); --_1-order: 2; --_1-scale: var(--scale-steps-three); --_1-opacity: var(--opacity-steps-three); --_1-offset: var(--_offset-steps-three); --_2-order: 1; --_2-scale: calc(1 - var(--_scale-steps) * 0.03); --_2-opacity: calc(1 - var(--_opacity-steps) * 0.06); --_2-offset: calc(var(--_offset-steps) * -3); }
+  .card-4-active { --_4-order: 4; --_4-scale: 1; --_4-opacity: 1; --_4-offset: 0; --_1-order: 3; --_1-scale: var(--scale-steps-two); --_1-opacity: var(--opacity-steps-two); --_1-offset: var(--_offset-steps-two); --_2-order: 2; --_2-scale: var(--scale-steps-three); --_2-opacity: var(--opacity-steps-three); --_2-offset: var(--_offset-steps-three); --_3-order: 1; --_3-scale: calc(1 - var(--_scale-steps) * 0.03); --_3-opacity: calc(1 - var(--_opacity-steps) * 0.06); --_3-offset: calc(var(--_offset-steps) * -3); }
+  .dragging-left { transform: translateX(-50px) !important; }
+  .dragging-right { transform: translateX(50px) !important; }
 }
+
+/* CUSTOM ANIMATION CLASSES (NON-TAILWIND) */
+@keyframes float-animation { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+@keyframes float-subtle-animation { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
+
+.animate-vertical-float { animation: float-animation 6s ease-in-out infinite; }
+.animate-vertical-float-subtle { animation: float-subtle-animation 8s ease-in-out infinite; }
+
+.table-float { animation: float-animation 6s ease-in-out infinite; }
+.delay-1 { animation-delay: -1.5s; }
+.delay-2 { animation-delay: -3.0s; }
+.delay-3 { animation-delay: -4.5s; }
