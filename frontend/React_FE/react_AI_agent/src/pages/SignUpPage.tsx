@@ -1,22 +1,19 @@
 import { Link } from 'react-router-dom';
+import { Code, Database, Shield, Workflow } from 'lucide-react';
 
 const SignUpPage = () => {
   return (
-    <div className="fixed inset-0 flex items-center justify-center p-4">
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
       <div className="w-full relative max-w-4xl">
         <div className="relative card-border overflow-hidden rounded-2xl flex animate-float">
           
-          {/* Left Side - Visual/Branding */}
           <div className="w-1/2 hidden md:flex flex-col justify-center items-center relative p-8">
-            {/* Animated Visual Box */}
             <div className="w-full h-64 rounded-xl gradient-border inner-glow overflow-hidden relative mb-6">
               
-              {/* Animated grid background */}
               <div className="absolute inset-0 opacity-10">
                 <div className="w-full h-full animate-pulse" style={{backgroundImage: 'linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
               </div>
               
-              {/* Connection lines SVG */}
               <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 250">
                 <defs>
                   <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -35,25 +32,13 @@ const SignUpPage = () => {
                 </g>
               </svg>
               
-              {/* Floating feature icons */}
-              <div className="absolute top-8 left-8 animate-icon-float-1">
-                <div className="w-12 h-12 glass rounded-xl flex items-center justify-center border border-indigo-400/30 inner-glow"><svg className="w-6 h-6 text-indigo-400" fill="currentColor" viewBox="0 0 20 20" /></div>
-              </div>
-              <div className="absolute top-8 right-8 animate-icon-float-2">
-                <div className="w-12 h-12 glass rounded-xl flex items-center justify-center border border-purple-400/30 inner-glow"><svg className="w-6 h-6 text-purple-400" fill="currentColor" viewBox="0 0 20 20" /></div>
-              </div>
-              <div className="absolute bottom-8 left-8 animate-icon-float-3">
-                <div className="w-12 h-12 glass rounded-xl flex items-center justify-center border border-orange-400/30 inner-glow"><svg className="w-6 h-6 text-orange-400" fill="currentColor" viewBox="0 0 20 20" /></div>
-              </div>
-              <div className="absolute bottom-8 right-8 animate-icon-float-4">
-                <div className="w-12 h-12 glass rounded-xl flex items-center justify-center border border-blue-400/30 inner-glow"><svg className="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 20 20" /></div>
-              </div>
+              <div className="absolute top-8 left-8 animate-icon-float-1"><div className="w-12 h-12 glass rounded-xl flex items-center justify-center border border-indigo-400/30 inner-glow"><Code className="w-6 h-6 text-indigo-400" /></div></div>
+              <div className="absolute top-8 right-8 animate-icon-float-2"><div className="w-12 h-12 glass rounded-xl flex items-center justify-center border border-purple-400/30 inner-glow"><Shield className="w-6 h-6 text-purple-400" /></div></div>
+              <div className="absolute bottom-8 left-8 animate-icon-float-3"><div className="w-12 h-12 glass rounded-xl flex items-center justify-center border border-orange-400/30 inner-glow"><Database className="w-6 h-6 text-orange-400" /></div></div>
+              <div className="absolute bottom-8 right-8 animate-icon-float-4"><div className="w-12 h-12 glass rounded-xl flex items-center justify-center border border-blue-400/30 inner-glow"><Workflow className="w-6 h-6 text-blue-400" /></div></div>
               
-              {/* Central logo/brand */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-schema-pulse">
-                <div className="w-16 h-16 glass flex items-center justify-center inner-glow border-blue-400/50 border rounded-2xl">
-                  <div className="text-2xl font-bold text-white">S</div>
-                </div>
+                <div className="w-16 h-16 glass flex items-center justify-center inner-glow border-blue-400/50 border rounded-2xl"><div className="text-2xl font-bold text-white">S</div></div>
               </div>
             </div>
             
@@ -63,10 +48,8 @@ const SignUpPage = () => {
             </div>
           </div>
           
-          {/* Vertical divider */}
           <div className="w-px bg-gradient-to-b from-transparent via-white/30 to-transparent"></div>
           
-          {/* Right Side - Form */}
           <div className="w-full md:w-1/2 p-8 flex flex-col justify-center">
             <div className="max-w-sm mx-auto w-full">
               <span className="inline-block px-3 py-1 glass text-indigo-300 rounded-full text-xs font-medium mb-6 border border-indigo-400/30">Get Started</span>
