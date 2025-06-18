@@ -19,27 +19,32 @@ def initialize_groq_client(settings: Settings):
         model_name = settings.MODEL
         logger.info(f"Groq client initialized successfully for model: {model_name}")
 
-async def call_llm(system_prompt: str, user_prompt: str, response_format: Optional[Dict[str, Any]] = None) -> str:
-    """Calls the Groq API with the provided prompts."""
-    if groq_client is None:
-        raise LLMServiceError("Groq client not initialized.", 503)
+
+class LLMService:
+    async def call_llm(self, system_prompt: str, user_prompt: str, response_format: Optional[Dict[str, Any]] = None) -> str:
+        """Calls the Groq API with the provided prompts."""
+        if groq_client is None:
+            raise LLMServiceError("Groq client not initialized.", 503)
+        
+        try:
+            # ### FIX: Correctly uses the response_format dict passed from the router.
+            response = groq_client.chat.completions.create(
+                model=model_name,
+                messages=[
+                   {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                response_format=response_format,
+                temperature=0.0,
+            )
+            content = response.choices[0].message.content
+            return content.strip() if content else ""
+        except APIConnectionError as e:
+            raise LLMServiceError(f"Groq API connection failed: {str(e)}", 503)
+        except RateLimitError as e:
+            raise LLMServiceError("Groq API rate limit exceeded", 429)
+        except APIStatusError as e:
+            raise LLMServiceError(f"Groq API error: {e.status_code} - {e.response.text}", e.status_code)
     
-    try:
-        # ### FIX: Correctly uses the response_format dict passed from the router.
-        response = groq_client.chat.completions.create(
-            model=model_name,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            response_format=response_format,
-            temperature=0.0,
-        )
-        content = response.choices[0].message.content
-        return content.strip() if content else ""
-    except APIConnectionError as e:
-        raise LLMServiceError(f"Groq API connection failed: {str(e)}", 503)
-    except RateLimitError as e:
-        raise LLMServiceError("Groq API rate limit exceeded", 429)
-    except APIStatusError as e:
-        raise LLMServiceError(f"Groq API error: {e.status_code} - {e.response.text}", e.status_code)
+def get_llm_service():
+    return LLMService()

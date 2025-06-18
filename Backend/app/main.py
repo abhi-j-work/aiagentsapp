@@ -4,8 +4,8 @@ from contextlib import asynccontextmanager
 from app.core.config import get_settings
 from app.core.logging_config import setup_logging
 from app.services import llm_service
-from app.api.routers import data_governance, user_management
-
+from app.api.routers import data_governance, user_management,talktoDb
+from fastapi.middleware.cors import CORSMiddleware
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Code to run on startup
@@ -21,9 +21,21 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+origins = [
+    "http://localhost:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 app.include_router(data_governance.router)
-# app.include_router(user_management.router)
+app.include_router(talktoDb.router) 
 
 @app.get("/")
 def read_root():

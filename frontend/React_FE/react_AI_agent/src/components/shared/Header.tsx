@@ -10,7 +10,7 @@ const Header = () => {
           <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
             <InfinityIcon className="text-white h-4 w-4" />
           </div>
-          <span className="text-white font-medium text-lg font-geist">Aurora</span>
+          <span className="text-white font-medium text-lg font-geist">Data AI Agent Marketplace</span>
         </Link>
         
         <div className="hidden md:flex items-center space-x-8">

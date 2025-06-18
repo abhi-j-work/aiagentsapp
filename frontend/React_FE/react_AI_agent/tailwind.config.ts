@@ -1,14 +1,14 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
-  safelist: [
-    {
-      pattern: /(bg|to|border|text)-(green|blue|purple|amber)-(400|500)/,
-    },
-    {
-      pattern: /(bg|to|border|text)-(green|blue|purple|amber)-(500)\/(10|20|30)/,
-    }
-  ],
+  // safelist: [
+  //   {
+  //     pattern: /(bg|to|border|text)-(green|blue|purple|amber)-(400|500)/,
+  //   },
+  //   {
+  //     pattern: /(bg|to|border|text)-(green|blue|purple|amber)-(500)\/(10|20|30)/,
+  //   }
+  // ],
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",

@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field,PostgresDsn
 from typing import List
 # =============================================================================
 # Enums and Core Data Structures
@@ -184,3 +184,43 @@ class FoundationalTable(BaseModel):
 class ReferentialIntegrityResponse(BaseModel):
     relationship_explanations: List[RelationshipExplanation]
     foundational_tables: List[FoundationalTable]
+
+class NaturalLanguageQueryRequest(BaseModel):
+    """
+    Defines the request payload for the NLQ endpoint, using a connection string.
+    """
+    connection_string: PostgresDsn = Field(
+        ...,
+        example="postgresql://postgres:your_password@localhost:5432/mydatabase"
+    )
+    prompt: str = Field(
+        ...,
+        min_length=5,
+        description="The natural language question to be converted to SQL."
+    )
+
+class NaturalLanguageQueryResponse(BaseModel):
+    """Defines the successful response structure from the NLQ endpoint."""
+    generated_sql: str
+    data: List[Dict[str, Any]] | None = None
+    message: str | None = None
+
+
+
+
+class ListViewsResponse(BaseModel):
+    """Response model for listing the governed views."""
+    governed_views: List[str] = Field(..., description="A list of view names that match the governed view pattern.")
+
+class FetchViewDataRequest(DBParams):
+    """Request model for fetching data from a specific view."""
+    view_name: str = Field(..., description="The name of the governed view to query.")
+    limit: int = Field(default=100, gt=0, le=1000, description="Number of rows to return.")
+    offset: int = Field(default=0, ge=0, description="Number of rows to skip for pagination.")
+    role: str = Field(..., description="The database role to assume for this query (e.g., 'admin', 'analyst').") 
+
+class FetchViewDataResponse(BaseModel):
+    """Response model for returning data from a view."""
+    view_name: str
+    row_count: int = Field(..., description="The number of rows returned in this response.")
+    data: List[Dict[str, Any]]

@@ -57,3 +57,14 @@
 .delay-1 { animation-delay: -1.5s; }
 .delay-2 { animation-delay: -3.0s; }
 .delay-3 { animation-delay: -4.5s; }
+
+.nlp-connector-1, .nlp-connector-2 {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+}
+.nlp-connector-1 {
+  animation: draw 2s ease-out 0.5s forwards;
+}
+.nlp-connector-2 {
+  animation: draw 2s ease-out 1.5s forwards;
+}
