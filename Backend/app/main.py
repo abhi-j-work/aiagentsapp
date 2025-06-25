@@ -1,10 +1,10 @@
 # In file: app/main.py
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from app.core.config import get_settings
-from app.core.logging_config import setup_logging
-from app.services import llm_service
-from app.api.routers import data_governance, user_management,talktoDb
+from app.core.config import get_settings # type: ignore
+from app.core.logging_config import setup_logging # type: ignore
+from app.services import llm_service # type: ignore
+from app.api.routers import data_governance, data_quality,talktoDb # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -36,6 +36,7 @@ app.add_middleware(
 
 app.include_router(data_governance.router)
 app.include_router(talktoDb.router) 
+app.include_router(data_quality.router) 
 
 @app.get("/")
 def read_root():

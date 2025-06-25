@@ -4,10 +4,10 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import ValidationError
 
-from app.core.config import Settings, get_settings
-from app.api import models
-from app.services import db_service, llm_service
-from app.services.errors import DatabaseServiceError, LLMServiceError
+from app.core.config import Settings, get_settings # type: ignore
+from app.api import models # type: ignore
+from app.services import db_service, llm_service # type: ignore
+from app.services.errors import DatabaseServiceError, LLMServiceError # type: ignore
 
 logger = logging.getLogger(__name__)    
 

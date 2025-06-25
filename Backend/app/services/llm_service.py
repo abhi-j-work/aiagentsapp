@@ -1,9 +1,9 @@
 # In file: app/services/llm_service.py
 import logging
 from typing import Dict, Any, Optional
-from groq import Groq, APIConnectionError, RateLimitError, APIStatusError
-from app.core.config import Settings
-from app.services.errors import LLMServiceError
+from groq import Groq, APIConnectionError, RateLimitError, APIStatusError # type: ignore
+from app.core.config import Settings # type: ignore
+from app.services.errors import LLMServiceError # type: ignore
 
 logger = logging.getLogger(__name__)
 groq_client: Optional[Groq] = None

@@ -5,9 +5,9 @@ from typing import Dict, Any
 import asyncio
 from typing import List 
 from sqlalchemy import create_engine, text
-
+import asyncpg
 from .errors import DatabaseServiceError
-from app.services.errors import DatabaseServiceError
+from app.services.errors import DatabaseServiceError # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -158,3 +158,36 @@ async def fetch_view_data(conn_str: str, view_name: str, limit: int, offset: int
     return await loop.run_in_executor(
         None, _fetch_view_data_sync, conn_str, view_name, limit, offset, role
     )
+
+async def execute_scalar_query(conn_str: str, query: str) -> int:
+    """
+    Executes a SQL query that is expected to return a single value (a scalar), like a count.
+
+    Args:
+        conn_str: The database connection string.
+        query: The SQL query to execute (e.g., "SELECT COUNT(*) FROM my_table").
+
+    Returns:
+        The integer result of the query.
+
+    Raises:
+        DatabaseServiceError: If any database-related error occurs.
+    """
+    conn = None
+    try:
+        # Establish connection to the database
+        conn = await asyncpg.connect(dsn=conn_str)
+        
+        # fetchval() is the perfect method to get a single value from a query
+        result = await conn.fetchval(query)
+        
+        # Ensure we return an integer. If the query returns None, default to 0.
+        return int(result) if result is not None else 0
+
+    except (asyncpg.PostgresError, OSError) as e:
+        # Catch specific database or connection errors
+        raise DatabaseServiceError(message=f"Database query failed: {e}", status_code=500)
+    finally:
+        # CRITICAL: Always ensure the connection is closed to prevent leaks
+        if conn:
+            await conn.close()

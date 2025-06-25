@@ -224,3 +224,48 @@ class FetchViewDataResponse(BaseModel):
     view_name: str
     row_count: int = Field(..., description="The number of rows returned in this response.")
     data: List[Dict[str, Any]]
+
+
+class GenerateQualityPlanRequest(DBParams):
+    """Request to have the AI generate a plan of data quality checks."""
+    table_name: str
+
+class ProposedQualityCheck(BaseModel):
+    """A single data quality check proposed by the AI."""
+    check_id: str = Field(..., description="A unique, machine-friendly ID for the check (e.g., 'email_format_check').")
+    rule_name: str = Field(..., description="A human-readable name for the rule.")
+    rule_description: str = Field(..., description="A clear explanation of what the rule validates.")
+    check_sql: str = Field(..., description="The executable SQL query to count records that VIOLATE this rule.")
+
+class GenerateQualityPlanResponse(BaseModel):
+    """The response from the plan generation endpoint, containing a list of proposed checks."""
+    table_name: str
+    proposed_checks: List[ProposedQualityCheck]
+
+
+# --- Endpoint 2: Execute Checks ---
+
+class CheckToExecute(BaseModel):
+    """A single check selected by the user to be executed."""
+    check_id: str
+    rule_name: str
+    check_sql: str
+
+class ExecuteQualityChecksRequest(DBParams):
+    """Request to execute a list of selected data quality checks."""
+    table_name: str
+    checks_to_run: List[CheckToExecute]
+
+class ValidationResult(BaseModel):
+    """The final validation result for a single, executed rule."""
+    check_id: str
+    rule_name: str
+    is_valid: bool = Field(..., description="True if invalid_count is 0, otherwise False.")
+    invalid_count: int = Field(..., description="The number of rows that failed this rule's validation.")
+    total_rows: int = Field(..., description="The total number of rows in the table for context.")
+    check_query: str = Field(..., description="The exact SQL query that was executed.")
+
+class ExecuteQualityChecksResponse(BaseModel):
+    """The final response from the check execution endpoint."""
+    table_name: str
+    validation_results: List[ValidationResult]

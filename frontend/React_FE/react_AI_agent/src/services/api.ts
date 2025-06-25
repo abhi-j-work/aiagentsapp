@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:10086';
+const API_BASE_URL = 'http://localhost:10089';
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
@@ -191,6 +191,82 @@ export const postTalkToDbQuery = async (params: TalkToDbRequest): Promise<TalkTo
     if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || 'Failed to query the database.');
+    }
+    return response.json();
+};
+
+
+// In file: src/services/api.ts
+
+// ... (keep all existing imports and types) ...
+
+// ===================================================
+// NEW: Types for the Data Quality Agent
+// ===================================================
+
+export type ProposedQualityCheck = {
+  check_id: string;
+  rule_name: string;
+  rule_description: string;
+  check_sql: string;
+};
+
+export type GenerateQualityPlanResponse = {
+  table_name: string;
+  proposed_checks: ProposedQualityCheck[];
+};
+
+export type CheckToExecute = {
+  check_id: string;
+  rule_name: string;
+  check_sql: string;
+};
+
+export type ValidationResult = {
+  check_id: string;
+  rule_name: string;
+  is_valid: boolean;
+  invalid_count: number;
+  total_rows: number;
+  check_query: string;
+};
+
+export type ExecuteQualityChecksResponse = {
+  table_name: string;
+  validation_results: ValidationResult[];
+};
+
+
+// ===================================================
+// NEW: API functions for the Data Quality Agent
+// ===================================================
+
+export const postGenerateQualityPlan = async (connectionString: string, tableName: string): Promise<GenerateQualityPlanResponse> => {
+    const response = await fetch(`${API_BASE_URL}/data-quality/generate-quality-plan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ connection_string: connectionString, table_name: tableName }),
+    });
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to generate quality plan.');
+    }
+    return response.json();
+};
+
+export const postExecuteQualityChecks = async (connectionString: string, tableName: string, checksToRun: CheckToExecute[]): Promise<ExecuteQualityChecksResponse> => {
+    const response = await fetch(`${API_BASE_URL}/data-quality/execute-quality-checks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            connection_string: connectionString,
+            table_name: tableName,
+            checks_to_run: checksToRun
+        }),
+    });
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to execute quality checks.');
     }
     return response.json();
 };

@@ -1,9 +1,19 @@
 import React, { useState } from 'react';
-import { LoaderCircle, AlertTriangle, Send, FileCode, Table, Database, MessageSquareQuote } from 'lucide-react';
+import { 
+    LoaderCircle, 
+    AlertTriangle, 
+    Send, 
+    FileCode, 
+    Table, 
+    Database, 
+    MessageSquareQuote, 
+    Edit3,
+    CheckCircle // Added for the "Set Connection" button
+} from 'lucide-react';
 import { postTalkToDbQuery, type TalkToDbResponse } from '../services/api';
 
 // ===================================================
-// SUB-COMPONENTS for displaying results
+// SUB-COMPONENTS for displaying results (No Changes)
 // ===================================================
 
 const SqlDisplay = ({ sql }: { sql: string }) => (
@@ -54,6 +64,7 @@ const TalkToDbPage = () => {
     // UI State
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isConnectionSet, setIsConnectionSet] = useState(false);
     
     // Form Input State
     const [connectionString, setConnectionString] = useState('');
@@ -62,10 +73,22 @@ const TalkToDbPage = () => {
     // Result State
     const [result, setResult] = useState<TalkToDbResponse | null>(null);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    // Handler for the "Set Connection" button
+    const handleSetConnection = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!connectionString || !prompt) {
-            setError("Both connection string and a prompt are required.");
+        if (!connectionString.trim()) {
+            setError("Connection string cannot be empty.");
+            return;
+        }
+        setIsConnectionSet(true);
+        setError(null); // Clear previous errors
+    };
+
+    // Handler for submitting the prompt to the AI
+    const handleSubmitPrompt = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!prompt.trim()) {
+            setError("Please enter a question.");
             return;
         }
         
@@ -82,60 +105,96 @@ const TalkToDbPage = () => {
             setIsLoading(false);
         }
     };
+    
+    // Handler to show the connection string input again
+    const handleEditConnection = () => {
+        setIsConnectionSet(false);
+        setResult(null); // Clear old results when changing connection
+    };
 
     return (
         <div className="min-h-[calc(100vh-80px)] w-full flex items-center justify-center p-4">
             <div className="w-full max-w-2xl">
                 <div className="relative card-border overflow-hidden rounded-2xl flex flex-col animate-vertical-float">
                     
-                    <div className="p-6 border-b border-indigo-500/20">
-                        <h2 className="text-xl font-semibold text-white flex items-center gap-3">
-                            <MessageSquareQuote className="w-6 h-6 text-indigo-400" />
-                            Talk to Your Database
-                        </h2>
-                        <p className="text-sm text-slate-400 mt-1">Ask a question in plain English to query your database.</p>
+                    <div className="p-6 border-b border-indigo-500/20 flex justify-between items-center">
+                        <div>
+                            <h2 className="text-xl font-semibold text-white flex items-center gap-3">
+                                <MessageSquareQuote className="w-6 h-6 text-indigo-400" />
+                                Talk to Your Database
+                            </h2>
+                            <p className="text-sm text-slate-400 mt-1">
+                                {isConnectionSet ? "Step 2: Ask a question." : "Step 1: Connect to your database."}
+                            </p>
+                        </div>
+                        {isConnectionSet && (
+                            <button 
+                                onClick={handleEditConnection}
+                                disabled={isLoading}
+                                className="flex items-center gap-2 text-xs px-3 py-1.5 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition disabled:opacity-50"
+                            >
+                                <Edit3 className="w-3 h-3" />
+                                Change Connection
+                            </button>
+                        )}
                     </div>
 
-                    <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                        <div>
-                            <label htmlFor="connStr" className="text-sm font-medium text-slate-300 block mb-2 flex items-center gap-2">
-                                <Database className="w-4 h-4"/> Database Connection String
-                            </label>
-                            <input 
-                                id="connStr" 
-                                type="password" 
-                                value={connectionString} 
-                                onChange={(e) => setConnectionString(e.target.value)} 
-                                placeholder="postgresql://user:password@host/database"
-                                className="w-full px-4 py-2 glass rounded-lg border border-white/20 text-white focus:border-indigo-400 focus:outline-none transition" 
-                                disabled={isLoading}
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="prompt" className="text-sm font-medium text-slate-300 block mb-2">
-                                Your Question
-                            </label>
-                            <textarea 
-                                id="prompt" 
-                                value={prompt} 
-                                onChange={(e) => setPrompt(e.target.value)} 
-                                placeholder="e.g., Show me the total sales for each product category"
-                                rows={3}
-                                className="w-full px-4 py-2 glass rounded-lg border border-white/20 text-white focus:border-indigo-400 focus:outline-none transition" 
-                                disabled={isLoading}
-                            />
-                        </div>
-                        
-                        <button 
-                            type="submit"
-                            disabled={isLoading || !prompt || !connectionString}
-                            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-500 transition disabled:bg-slate-700 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                            {isLoading ? <LoaderCircle className="w-5 h-5 animate-spin"/> : <Send className="w-5 h-5"/>}
-                            {isLoading ? 'Querying...' : 'Ask AI'}
-                        </button>
-                    </form>
+                    <div className="p-6">
+                        {/* --- VIEW 1: Set Connection --- */}
+                        {!isConnectionSet && (
+                            <form onSubmit={handleSetConnection} className="space-y-4 animate-fade-in">
+                                <div>
+                                    <label htmlFor="connStr" className="text-sm font-medium text-slate-300 block mb-2 flex items-center gap-2">
+                                        <Database className="w-4 h-4"/> Database Connection String
+                                    </label>
+                                    <input 
+                                        id="connStr" 
+                                        type="password" 
+                                        value={connectionString} 
+                                        onChange={(e) => setConnectionString(e.target.value)} 
+                                        placeholder="postgresql://user:password@host/database"
+                                        className="w-full px-4 py-2 glass rounded-lg border border-white/20 text-white focus:border-indigo-400 focus:outline-none transition" 
+                                    />
+                                </div>
+                                <button 
+                                    type="submit"
+                                    disabled={!connectionString}
+                                    className="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-500 transition disabled:bg-slate-700 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                    <CheckCircle className="w-5 h-5"/>
+                                    Set Connection
+                                </button>
+                            </form>
+                        )}
 
-                    {/* Results Area */}
+                        {/* --- VIEW 2: Ask Question --- */}
+                        {isConnectionSet && (
+                             <form onSubmit={handleSubmitPrompt} className="space-y-4 animate-fade-in">
+                                <div>
+                                    <label htmlFor="prompt" className="text-sm font-medium text-slate-300 block mb-2">
+                                        Your Question
+                                    </label>
+                                    <textarea 
+                                        id="prompt" 
+                                        value={prompt} 
+                                        onChange={(e) => setPrompt(e.target.value)} 
+                                        placeholder="e.g., Show me the total sales for each product category"
+                                        rows={3}
+                                        className="w-full px-4 py-2 glass rounded-lg border border-white/20 text-white focus:border-indigo-400 focus:outline-none transition" 
+                                        disabled={isLoading}
+                                    />
+                                </div>
+                                <button 
+                                    type="submit"
+                                    disabled={isLoading || !prompt}
+                                    className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-500 transition disabled:bg-slate-700 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                    {isLoading ? <LoaderCircle className="w-5 h-5 animate-spin"/> : <Send className="w-5 h-5"/>}
+                                    {isLoading ? 'Querying...' : 'Ask AI'}
+                                </button>
+                            </form>
+                        )}
+                    </div>
+
+                    {/* --- Results Area --- */}
                     <div className="p-6 pt-0">
                         {isLoading && (
                             <div className="text-center p-4 text-slate-400 animate-pulse">
@@ -156,7 +215,6 @@ const TalkToDbPage = () => {
                             </div>
                         )}
                     </div>
-
                 </div>
             </div>
         </div>

@@ -4,9 +4,9 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 
 # Import the schemas (models) and services needed
-from app.api import models as schemas
-from app.services import db_service, llm_service,talktoDbservice
-from app.services.errors import DatabaseServiceError, LLMServiceError
+from app.api import models as schemas # type: ignore
+from app.services import db_service, llm_service,talktoDbservice # type: ignore
+from app.services.errors import DatabaseServiceError, LLMServiceError # type: ignore
 
 # Get the same logger instance for consistent logging
 logger = logging.getLogger(__name__)
@@ -48,24 +48,36 @@ async def generate_and_run_sql(
         )
 
         # Step 2: Define the System and User Prompts, keeping the logic in the endpoint.
+        # In file: app/api/routers/talktoDb.py
+
+# ... inside the generate_and_run_sql function ...
+
         system_prompt = f"""
-        You are a meticulous, senior PostgreSQL database engineer. Your only task is to convert a user's question into a 100% syntactically correct and executable PostgreSQL SQL query.
-
-        **Golden Rules - You MUST follow these without exception:**
-
-        1.  **Absolute Identifier Quoting:** Every single identifier (table names, column names, schemas like "public", and aliases) MUST be enclosed in double quotes ("").
-            - Correct: `SELECT "u"."email" FROM "public"."users" AS "u"`
-            - Incorrect: `SELECT u.email FROM public.users AS u`
-
-        2.  **Output Format:** Your entire output must be ONLY the raw SQL query. Do NOT include any explanations, comments, or markdown formatting like ```sql.
-
-        3.  **Schema Adherence:** You MUST use the provided database schema as your only source of truth for table and column names. Do not invent columns or tables.
-
-        **Input Context:**
-        You will receive a database schema and a user question. Use this information to apply the Golden Rules correctly.
+        You are a senior PostgreSQL database engineer and a world-class SQL writer. Your primary objective is to convert a user's natural language question into a single, syntactically perfect, and executable PostgreSQL query.
 
         ---
-        **DATABASE SCHEMA:**
+        ### CRITICAL RULES
+        You MUST follow these rules without exception.
+
+        1.  **OUTPUT FORMAT:** Your ONLY output must be the raw SQL query. Do NOT include any explanations, comments, or markdown formatting.
+        2.  **IDENTIFIER QUOTING:** Every identifier (tables, columns, schemas, aliases) MUST be enclosed in double quotes (""). **If an identifier in the provided schema is already quoted, use it as-is. DO NOT add extra quotes.**
+            - Correct: `SELECT "u"."email" FROM "public"."users" AS "u"`
+            - Incorrect: `SELECT u.email FROM public.users AS u`
+            - Incorrect: `SELECT ""u"".""email"" FROM ""public"".""users""`
+        3.  **SCHEMA ADHERENCE:** You MUST use the provided database schema as your only source of truth. Do not invent columns or tables.
+
+        ---
+        ### QUERY WRITING GUIDELINES
+        (Your other guidelines about LIMIT, etc., are excellent and should remain here)
+        ...
+
+        ---
+        ### FAILURE CONDITION
+        (Your UNANSWERABLE rule is also excellent and should remain)
+        ...
+
+        ---
+        ### DATABASE SCHEMA
         {schema_representation}
         ---
         """
