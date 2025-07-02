@@ -1,0 +1,16 @@
+crewai
+sqlalchemy
+presidio-analyzer
+spacy
+fastapi
+uvicorn
+sqlalchemy
+transformers
+torch 
+requests
+psycopg2-binary
+groq
+sqlparse
+pydantic-settings
+sqlglot
+#Faker # For the sql query 

@@ -1,0 +1,354 @@
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoFlow - Green Tech Solutions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "ui-sans-serif", "system-ui"],
+            },
+            colors: {
+              surface: {
+                DEFAULT: "#0f1419",
+                foreground: "#1a2332",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+        section {
+            --_offset-steps: 4rem;
+            --_scale-steps: 15;
+            --_opacity-steps: 20;
+            
+            --_offset-steps-two: calc(var(--_offset-steps) * -1);
+            --_offset-steps-three: calc(var(--_offset-steps) * -2);
+            --scale-steps-two: calc(1 - var(--_scale-steps) * 0.01);
+            --scale-steps-three: calc(1 - var(--_scale-steps) * 0.02);
+            --opacity-steps-two: calc(1 - var(--_opacity-steps) * 0.02);
+            --opacity-steps-three: calc(1 - var(--_opacity-steps) * 0.04);
+            
+            display: grid;
+            grid-template-areas: "stack";
+            width: min(calc(100% - 2rem), 26rem);
+        }
+        
+        article {
+            grid-area: stack;
+            transition: 500ms ease-in-out;
+            translate: 0 var(--_offset);
+            order: var(--_order);
+            z-index: var(--_order);
+            scale: var(--_scale);
+            opacity: var(--_opacity);
+            cursor: grab;
+            user-select: none;
+        }
+        
+        article:active { cursor: grabbing; }
+        
+        article:nth-of-type(1) {
+            --_order: var(--_1-order);
+            --_scale: var(--_1-scale);
+            --_opacity: var(--_1-opacity);
+            --_offset: var(--_1-offset);
+        }
+        
+        article:nth-of-type(2) {
+            --_order: var(--_2-order);
+            --_scale: var(--_2-scale);
+            --_opacity: var(--_2-opacity);
+            --_offset: var(--_2-offset);
+        }
+        
+        article:nth-of-type(3) {
+            --_order: var(--_3-order);
+            --_scale: var(--_3-scale);
+            --_opacity: var(--_3-opacity);
+            --_offset: var(--_3-offset);
+        }
+        
+        article:nth-of-type(4) {
+            --_order: var(--_4-order);
+            --_scale: var(--_4-scale);
+            --_opacity: var(--_4-opacity);
+            --_offset: var(--_4-offset);
+        }
+        
+        section.card-1-active {
+            --_1-order: 4; --_1-scale: 1; --_1-opacity: 1; --_1-offset: 0;
+            --_2-order: 3; --_2-scale: var(--scale-steps-two); --_2-opacity: var(--opacity-steps-two); --_2-offset: var(--_offset-steps-two);
+            --_3-order: 2; --_3-scale: var(--scale-steps-three); --_3-opacity: var(--opacity-steps-three); --_3-offset: var(--_offset-steps-three);
+            --_4-order: 1; --_4-scale: calc(1 - var(--_scale-steps) * 0.03); --_4-opacity: calc(1 - var(--_opacity-steps) * 0.06); --_4-offset: calc(var(--_offset-steps) * -3);
+        }
+        
+        section.card-2-active {
+            --_2-order: 4; --_2-scale: 1; --_2-opacity: 1; --_2-offset: 0;
+            --_3-order: 3; --_3-scale: var(--scale-steps-two); --_3-opacity: var(--opacity-steps-two); --_3-offset: var(--_offset-steps-two);
+            --_4-order: 2; --_4-scale: var(--scale-steps-three); --_4-opacity: var(--opacity-steps-three); --_4-offset: var(--_offset-steps-three);
+            --_1-order: 1; --_1-scale: calc(1 - var(--_scale-steps) * 0.03); --_1-opacity: calc(1 - var(--_opacity-steps) * 0.06); --_1-offset: calc(var(--_offset-steps) * -3);
+        }
+        
+        section.card-3-active {
+            --_3-order: 4; --_3-scale: 1; --_3-opacity: 1; --_3-offset: 0;
+            --_4-order: 3; --_4-scale: var(--scale-steps-two); --_4-opacity: var(--opacity-steps-two); --_4-offset: var(--_offset-steps-two);
+            --_1-order: 2; --_1-scale: var(--scale-steps-three); --_1-opacity: var(--opacity-steps-three); --_1-offset: var(--_offset-steps-three);
+            --_2-order: 1; --_2-scale: calc(1 - var(--_scale-steps) * 0.03); --_2-opacity: calc(1 - var(--_opacity-steps) * 0.06); --_2-offset: calc(var(--_offset-steps) * -3);
+        }
+        
+        section.card-4-active {
+            --_4-order: 4; --_4-scale: 1; --_4-opacity: 1; --_4-offset: 0;
+            --_1-order: 3; --_1-scale: var(--scale-steps-two); --_1-opacity: var(--opacity-steps-two); --_1-offset: var(--_offset-steps-two);
+            --_2-order: 2; --_2-scale: var(--scale-steps-three); --_2-opacity: var(--opacity-steps-three); --_2-offset: var(--_offset-steps-three);
+            --_3-order: 1; --_3-scale: calc(1 - var(--_scale-steps) * 0.03); --_3-opacity: calc(1 - var(--_opacity-steps) * 0.06); --_3-offset: calc(var(--_offset-steps) * -3);
+        }
+        
+        .dragging-left { transform: translateX(-50px); }
+        .dragging-right { transform: translateX(50px); }
+    </style>
+<link id="dynamic-font-link-font-nunito" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&display=swap">
+<style id="dynamic-font-style-font-nunito">
+.font-nunito { font-family: 'Nunito', sans-serif !important; }
+</style>
+  <style>
+      /* Custom font utilities */
+      .font-nunito { font-family: 'Nunito', sans-serif !important; }
+    </style>
+</head>
+<body class="min-h-screen antialiased flex flex-col items-center justify-center text-white font-nunito bg-gradient-to-br from-slate-900 via-green-900/20 to-slate-800 pt-8 pr-8 pb-8 pl-8">
+    <div class="text-center mb-24">
+        <div class="flex items-center justify-center gap-2 text-green-400 mb-4">
+            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span class="text-sm font-medium uppercase tracking-wide">EcoFlow Solutions</span>
+        </div>
+        <h1 class="text-4xl font-semibold mb-3">Green Technology Stack</h1>
+        <p class="text-slate-400 max-w-md">Drag cards to explore our sustainable technology solutions</p>
+    </div>
+
+    <section id="cards-container" class="card-4-active">
+        <article class="relative h-96 rounded-2xl bg-gradient-to-br from-slate-800/90 to-green-900/30 backdrop-blur-md border border-green-500/20 shadow-2xl">
+            <div class="h-full flex flex-col pt-6 pr-6 pb-6 pl-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 rounded-full bg-green-500/20 border border-green-500/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="leaf" class="lucide lucide-leaf w-5 h-5 text-green-400"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path></svg>
+                    </div>
+                    <span class="text-xs uppercase tracking-wide text-green-400 font-medium">Carbon Analytics</span>
+                </div>
+                
+                <h3 class="text-2xl font-semibold mb-4">Smart Carbon Tracking</h3>
+                
+                <p class="text-slate-300 mb-6 flex-1">
+                    Real-time monitoring of your organization's carbon footprint with AI-powered insights. Track emissions across all operations and achieve net-zero goals.
+                </p>
+                
+                <div class="flex items-center gap-4 text-sm mb-6">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span class="text-slate-400">98% accuracy</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span class="text-slate-400">Real-time data</span>
+                    </div>
+                </div>
+                
+                <button class="w-full py-3 px-4 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 hover:bg-green-500/20 transition-colors">
+                    Reduce emissions by 40%
+                </button>
+            </div>
+        </article>
+        
+        <article class="relative h-96 rounded-2xl bg-gradient-to-br from-slate-800/90 to-blue-900/30 backdrop-blur-md border border-blue-500/20 shadow-2xl">
+            <div class="p-6 h-full flex flex-col">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 rounded-full bg-blue-500/20 border border-blue-500/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="zap" class="lucide lucide-zap w-5 h-5 text-blue-400"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg>
+                    </div>
+                    <span class="text-xs uppercase tracking-wide text-blue-400 font-medium">Energy Management</span>
+                </div>
+                
+                <h3 class="text-2xl font-semibold mb-4">Intelligent Power Control</h3>
+                
+                <p class="text-slate-300 mb-6 flex-1">
+                    AI-driven energy optimization that automatically adjusts power consumption based on usage patterns, weather, and grid demand.
+                </p>
+                
+                <div class="flex items-center gap-4 text-sm mb-6">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                        <span class="text-slate-400">24/7 monitoring</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                        <span class="text-slate-400">Auto-optimization</span>
+                    </div>
+                </div>
+                
+                <button class="w-full py-3 px-4 bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-400 hover:bg-blue-500/20 transition-colors">
+                    Save up to 35% on energy
+                </button>
+            </div>
+        </article>
+        
+        <article class="relative h-96 rounded-2xl bg-gradient-to-br from-slate-800/90 to-purple-900/30 backdrop-blur-md border border-purple-500/20 shadow-2xl">
+            <div class="p-6 h-full flex flex-col">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 rounded-full bg-purple-500/20 border border-purple-500/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="recycle" class="lucide lucide-recycle w-5 h-5 text-purple-400"><path d="M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5"></path><path d="M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12"></path><path d="m14 16-3 3 3 3"></path><path d="M8.293 13.596 7.196 9.5 3.1 10.598"></path><path d="m9.344 5.811 1.093-1.892A1.83 1.83 0 0 1 11.985 3a1.784 1.784 0 0 1 1.546.888l3.943 6.843"></path><path d="m13.378 9.633 4.096 1.098 1.097-4.096"></path></svg>
+                    </div>
+                    <span class="text-xs uppercase tracking-wide text-purple-400 font-medium">Waste Reduction</span>
+                </div>
+                
+                <h3 class="text-2xl font-semibold mb-4">Circular Economy Hub</h3>
+                
+                <p class="text-slate-300 mb-6 flex-1">
+                    Transform waste streams into valuable resources. Connect with suppliers, track materials, and create sustainable supply chains.
+                </p>
+                
+                <div class="flex items-center gap-4 text-sm mb-6">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-purple-400 rounded-full"></div>
+                        <span class="text-slate-400">Zero waste goal</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-purple-400 rounded-full"></div>
+                        <span class="text-slate-400">Material tracking</span>
+                    </div>
+                </div>
+                
+                <a href="dga1.html" class="w-full block text-center py-3 px-4 bg-purple-500/10 border border-purple-500/30 rounded-lg text-purple-400 hover:bg-purple-500/20 transition-colors">
+                    Achieve 90% waste diversion
+                </a>
+            </div>
+        </article>
+        
+        <article class="relative h-96 rounded-2xl bg-gradient-to-br from-slate-800/90 to-amber-900/30 backdrop-blur-md border border-amber-500/20 shadow-2xl">
+            <div class="h-full flex flex-col pt-6 pr-6 pb-6 pl-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 rounded-full bg-amber-500/20 border border-amber-500/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trending-up" class="lucide lucide-trending-up w-5 h-5 text-amber-400"><path d="M16 7h6v6"></path><path d="m22 7-8.5 8.5-5-5L2 17"></path></svg>
+                    </div>
+                    <span class="text-xs uppercase tracking-wide text-amber-400 font-medium">ESG Reporting</span>
+                </div>
+                
+                <h3 class="text-2xl font-semibold mb-4">Sustainability Dashboard</h3>
+                
+                <p class="flex-1 text-slate-300 mb-6">
+                    Comprehensive ESG reporting tools that automatically generate sustainability reports and ensure regulatory compliance.
+                </p>
+                
+                <div class="flex items-center gap-4 text-sm mb-6">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-amber-400 rounded-full"></div>
+                        <span class="text-slate-400">Automated reports</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-amber-400 rounded-full"></div>
+                        <span class="text-slate-400">Compliance ready</span>
+                    </div>
+                </div>
+                
+                <button class="w-full py-3 px-4 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400 hover:bg-amber-500/20 transition-colors">
+                    Streamline ESG compliance
+                </button>
+            </div>
+        </article>
+    </section>
+    
+    <div class="flex gap-2 mt-8">
+        <button id="dot-1" class="w-3 h-3 rounded-full bg-slate-600 hover:bg-green-400 transition-all"></button>
+        <button id="dot-2" class="w-3 h-3 rounded-full bg-slate-600 hover:bg-green-400 transition-all"></button>
+        <button id="dot-3" class="w-3 h-3 rounded-full bg-slate-600 hover:bg-green-400 transition-all"></button>
+        <button id="dot-4" class="w-3 h-3 rounded-full bg-green-500 transition-all scale-125"></button>
+    </div>
+    
+    <script>
+        lucide.createIcons();
+        
+        const container = document.getElementById('cards-container');
+        const cards = document.querySelectorAll('article');
+        const dots = document.querySelectorAll('[id^="dot-"]');
+        let activeCardId = 1;
+        
+        cards.forEach((card, index) => {
+            let startX, isDragging = false;
+            
+            card.addEventListener('mousedown', e => startDrag(e, index + 1));
+            card.addEventListener('touchstart', e => {
+                e.preventDefault();
+                startDrag(e.touches[0], index + 1);
+            });
+            
+            function startDrag(e, cardId) {
+                if (cardId !== activeCardId) return;
+                isDragging = true;
+                startX = e.clientX;
+                
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('touchmove', e => drag(e.touches[0]));
+                document.addEventListener('mouseup', endDrag);
+                document.addEventListener('touchend', endDrag);
+            }
+            
+            function drag(e) {
+                if (!isDragging) return;
+                const diff = e.clientX - startX;
+                
+                if (diff > 10) {
+                    card.classList.add('dragging-right');
+                    card.classList.remove('dragging-left');
+                } else if (diff < -10) {
+                    card.classList.add('dragging-left');
+                    card.classList.remove('dragging-right');
+                } else {
+                    card.classList.remove('dragging-left', 'dragging-right');
+                }
+            }
+            
+            function endDrag() {
+                if (!isDragging) return;
+                isDragging = false;
+                
+                if (card.classList.contains('dragging-right')) {
+                    navigateToCard(activeCardId === 1 ? 4 : activeCardId - 1);
+                } else if (card.classList.contains('dragging-left')) {
+                    navigateToCard(activeCardId === 4 ? 1 : activeCardId + 1);
+                }
+                
+                card.classList.remove('dragging-left', 'dragging-right');
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('touchmove', drag);
+                document.removeEventListener('mouseup', endDrag);
+                document.removeEventListener('touchend', endDrag);
+            }
+        });
+        
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                const cardId = parseInt(dot.id.split('-')[1]);
+                navigateToCard(cardId);
+            });
+        });
+        
+        function navigateToCard(cardId) {
+            activeCardId = cardId;
+            container.className = `card-${cardId}-active`;
+            
+            dots.forEach((dot, index) => {
+                if (index + 1 === cardId) {
+                    dot.className = 'w-3 h-3 rounded-full bg-green-500 transition-all scale-125';
+                } else {
+                    dot.className = 'w-3 h-3 rounded-full bg-slate-600 hover:bg-green-400 transition-all';
+                }
+            });
+        }
+    </script>
+
+</body></html>
