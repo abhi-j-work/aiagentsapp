@@ -11,6 +11,7 @@ import AgentHubPage from './pages/AgentHubPage';
 import DataQualityAgentPage from './pages/DataQualityAgentPage';
 import DataQualityIntroPage from './pages/DataQualityIntroPage';
 import TalkToDbIntroPage from './pages/TalkToDbIntroPage';
+import CollaborativeAgentsPage from './pages/CollaborativeAgentsPage';
 function App() {
   return (
     <Routes>
@@ -26,7 +27,7 @@ function App() {
         <Route path="/data-quality" element={<DataQualityAgentPage />} />
         <Route path="/data-quality-intro" element ={ <DataQualityIntroPage/>} />
         <Route path="/talk-to-db-intro" element ={ <TalkToDbIntroPage/>} />
-
+        <Route path="/collaborative-agents" element={<CollaborativeAgentsPage />} />
       </Route>
     </Routes>
   );

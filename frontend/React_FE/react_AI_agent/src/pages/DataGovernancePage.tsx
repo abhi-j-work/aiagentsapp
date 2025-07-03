@@ -49,7 +49,7 @@ type FeatureCardProps = {
   status: string;
 };
 
-const FeatureCard = ({ visual, title, description, linkTo, status }: FeatureCardProps) => (
+const FeatureCard = ({ visual, title, description, linkTo }: FeatureCardProps) => (
     <div className="relative card-border overflow-hidden rounded-2xl flex flex-col animate-vertical-float w-full max-w-xs mx-auto">
       <div className="p-4 flex justify-center relative">{visual}</div>
       <div className="w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
@@ -61,11 +61,15 @@ const FeatureCard = ({ visual, title, description, linkTo, status }: FeatureCard
         <p className="text-slate-300 mb-4 leading-relaxed text-sm flex-grow">{description}</p>
         <div className="flex justify-between items-center mt-auto">
             {/* CHANGED: Button text increased from text-xs to text-sm */}
-            <Link to={linkTo} className="text-indigo-400 hover:text-indigo-300 transition flex items-center text-sm font-medium glass px-3 py-1.5 rounded-lg border border-indigo-400/30">
-                Start<ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+           <Link 
+              to={linkTo} 
+              className="group bg-green-600 text-white hover:bg-green-500 transition-all flex items-center text-sm font-semibold px-3 py-1.5 rounded-lg shadow-lg hover:shadow-green-500/30 transform hover:-translate-y-0.5"
+            >
+                Start
+                <ArrowRight className="w-3.5 h-3.5 ml-1.5 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
             {/* CHANGED: Status badge text increased from text-xs to text-sm */}
-            <span className="text-white/60 text-sm glass px-3 py-1 rounded-full border border-white/10">{status}</span>
+            {/* <span className="text-white/60 text-sm glass px-3 py-1 rounded-full border border-white/10">{status}</span> */}
         </div>
       </div>
     </div>
@@ -89,13 +93,12 @@ const DataGovernancePage = () => {
           visual={<SchemaAnimation />}
           title="Data Governance Agent"
           description="Analyze, classify, and apply masking policies to protect sensitive data with a guided, multi-step workflow."
-          linkTo="/ai-agent"
-          status="Live"
-        />
+          linkTo="/ai-agent" 
+          status={''}        />
 
       </div>
     </div>
-  );
+  );  
 };
 
 export default DataGovernancePage;

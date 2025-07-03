@@ -149,3 +149,98 @@ html {
   /*         (thumb color) (track color) */
   scrollbar-color: #475569 #0f172a;
 } 
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 font-semibold text-white transition-all rounded-lg disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900;
+    }
+    .btn-secondary {
+        @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700/80 transition-colors border border-slate-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-slate-600;
+    }
+    .input-glass {
+        @apply block w-full px-4 py-2 text-slate-200 bg-slate-800/60 border border-slate-700 rounded-lg placeholder-slate-500 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:outline-none transition-colors;
+    }
+    .card-border {
+        @apply border border-slate-700/50;
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+}
+
+/* Add this to your main CSS file or <style> tag */
+
+/* This parent class is for positioning the glowing border */
+.glass-card-wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+/* The pseudo-element for the glowing, frosted border */
+.glass-card-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0; /* A modern shorthand for top/left/right/bottom: 0 */
+  border-radius: 0.75rem; /* Matches the card's rounded-xl */
+  padding: 1px; /* The thickness of the border */
+  
+  /* The gradient for the glow. Starts transparent. */
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    rgba(255, 255, 255, 0) 0deg,
+    var(--glow-color) 60deg,
+    var(--glow-color) 120deg,
+    rgba(255, 255, 255, 0) 180deg
+  );
+  
+  /* A more subtle animation */
+  animation: pulseGlow 5s ease-in-out infinite;
+
+  /* State management */
+  opacity: 0;
+  transition: opacity 0.4s ease-in-out;
+  
+  z-index: -1; /* Place it behind the actual card content */
+  
+  /* This is crucial for the "inner border" effect */
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* On hover, make the glowing border visible */
+.glass-card-wrapper:hover::before {
+  opacity: 1;
+}
+
+/* A subtle pulse and rotation animation */
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.05);
+    filter: brightness(1.5);
+  }
+}
+
+/* Fallback for browsers that don't support backdrop-filter */
+@supports not (backdrop-filter: blur(12px)) {
+  .glass-card {
+    background-color: rgba(30, 41, 59, 0.9) !important; /* A more opaque fallback */
+  }
+}

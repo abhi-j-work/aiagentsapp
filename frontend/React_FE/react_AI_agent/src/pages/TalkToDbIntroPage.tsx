@@ -6,12 +6,13 @@ import {
     MessageSquareQuote,
     User, 
     BrainCircuit, 
-    FileCode 
+    FileCode,
+    Share2 // A great icon for agent-to-agent communication
 } from 'lucide-react';
 
 // ===================================================
 // Component 1: The NEW Animation for "Talk to DB"
-// This component visually represents the NLP -> SQL flow.
+// (No changes needed here)
 // ===================================================
 const TalkToDbAnimation = () => (
     <div className="w-full h-48 rounded-xl gradient-border inner-glow overflow-hidden relative animate-vertical-float-subtle">
@@ -23,40 +24,22 @@ const TalkToDbAnimation = () => (
         {/* SVG for the connecting lines */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 320 180">
              <defs>
-                {/* A new gradient color for the lines to match the new theme */}
                 <linearGradient id="nlpGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" style={{stopColor:'#10b981', stopOpacity:0.8}} />
                     <stop offset="100%" style={{stopColor:'#22d3ee', stopOpacity:0.8}} />
                 </linearGradient>
             </defs>
             <g stroke="url(#nlpGradient)" strokeWidth="1.5" fill="none">
-                {/* Path from User icon to Brain icon */}
                 <path className="nlp-connector-1" d="M60,90 Q 110,50 160,90" />
-                {/* Path from Brain icon to SQL Code icon */}
                 <path className="nlp-connector-2" d="M160,90 Q 210,130 260,90" />
             </g>
         </svg>
 
         {/* Icons representing the workflow */}
         <div className="absolute inset-0 w-full h-full">
-            {/* User Icon (The user's question) */}
-            <div className="absolute left-8 top-1/2 -translate-y-1/2 animate-pulse">
-                <div className="w-12 h-12 glass rounded-full flex items-center justify-center border border-teal-400/30 inner-glow">
-                    <User className="w-6 h-6 text-teal-300" />
-                </div>
-            </div>
-            {/* AI Brain Icon (The AI processing) */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-schema-pulse">
-                 <div className="w-14 h-14 glass rounded-full flex items-center justify-center border-2 border-cyan-400/40 inner-glow">
-                    <BrainCircuit className="w-7 h-7 text-cyan-300" />
-                </div>
-            </div>
-            {/* SQL Code Icon (The final output) */}
-            <div className="absolute right-8 top-1/2 -translate-y-1/2 animate-pulse">
-                <div className="w-12 h-12 glass rounded-full flex items-center justify-center border border-sky-400/30 inner-glow">
-                    <FileCode className="w-6 h-6 text-sky-300" />
-                </div>
-            </div>
+            <div className="absolute left-8 top-1/2 -translate-y-1/2 animate-pulse"><div className="w-12 h-12 glass rounded-full flex items-center justify-center border border-teal-400/30 inner-glow"><User className="w-6 h-6 text-teal-300" /></div></div>
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-schema-pulse"><div className="w-14 h-14 glass rounded-full flex items-center justify-center border-2 border-cyan-400/40 inner-glow"><BrainCircuit className="w-7 h-7 text-cyan-300" /></div></div>
+            <div className="absolute right-8 top-1/2 -translate-y-1/2 animate-pulse"><div className="w-12 h-12 glass rounded-full flex items-center justify-center border border-sky-400/30 inner-glow"><FileCode className="w-6 h-6 text-sky-300" /></div></div>
         </div>
     </div>
 );
@@ -64,28 +47,46 @@ const TalkToDbAnimation = () => (
 
 // ===================================================
 // Component 2: The Reusable Feature Card Shell
-// This can be the same one used on your other pages for consistency.
 // ===================================================
+// CHANGED: The 'status' prop is now removed.
 type FeatureCardProps = {
   visual: React.ReactNode;
   title: string;
   description: string;
   linkTo: string;
-  status: string;
 };
 
-const FeatureCard = ({ visual, title, description, linkTo, status }: FeatureCardProps) => (
+const FeatureCard = ({ visual, title, description, linkTo }: FeatureCardProps) => (
     <div className="relative card-border overflow-hidden rounded-2xl flex flex-col animate-vertical-float w-full max-w-xs mx-auto">
       <div className="p-4 flex justify-center relative">{visual}</div>
       <div className="w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
-      <div className="p-4 flex-grow flex flex-col">
-          <h3 className="text-lg font-medium text-white mb-2">{title}</h3>
-          <p className="text-white/70 mb-4 leading-relaxed text-xs flex-grow">{description}</p>
+      <div className="p-6 flex-grow flex flex-col">
+          <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
+          <p className="text-base text-slate-300 mb-4 leading-relaxed flex-grow">{description}</p>
           <div className="flex justify-between items-center mt-auto">
-              <Link to={linkTo} className="text-indigo-400 hover:text-indigo-300 transition flex items-center text-xs font-medium glass px-3 py-1.5 rounded-lg border border-indigo-400/30">
-                  Start<ArrowRight className="w-3 h-3 ml-1" />
+              
+              {/* This "Start" button remains, pointing to the individual agent */}
+              <Link 
+                to={linkTo}
+                className="group bg-green-600 text-white hover:bg-green-500 transition-all flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-lg shadow-lg hover:shadow-green-500/30"
+              >
+                  Start Agent
+                  <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
-              <span className="text-white/50 text-xs glass px-2 py-1 rounded-full border border-white/10">{status}</span>
+              
+              {/* 
+                CHANGED: 
+                - The status badge is now a Link.
+                - It points to the new collaborative page.
+                - It has a distinct "secondary button" style.
+              */}
+              <Link 
+                to="/collaborative-agents" 
+                className="flex items-center gap-2 text-purple-300 hover:text-white hover:bg-purple-500/20 text-xs font-semibold px-3 py-1.5 rounded-full border border-purple-400/30 transition-all"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                Agent-to-Agent
+              </Link>
           </div>
       </div>
     </div>
@@ -112,8 +113,7 @@ const TalkToDbIntroPage = () => {
           visual={<TalkToDbAnimation />}
           title="Natural Language Querying"
           description="Connect to your database, ask a question in plain English, and receive the generated SQL and data results in real-time."
-          linkTo="/talk-to-db" // This should link to the actual agent page
-          status="Live"
+          linkTo="/talk-to-db" 
         />
       </div>
     </div>

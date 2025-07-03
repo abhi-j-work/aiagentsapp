@@ -1,0 +1,21 @@
+.log-dashboard-page .dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #3a3a3c;
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+.view-switcher button { /* Basic button styles */ }
+.view-switcher button.active { /* Active button styles */ }
+.view-switcher .badge {
+  background-color: #e74c3c;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.status-message { text-align: center; margin-top: 4rem; color: #8e8e93; }
+.status-message.error { color: #e74c3c; }
