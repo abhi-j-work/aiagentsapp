@@ -269,3 +269,122 @@ class ExecuteQualityChecksResponse(BaseModel):
     """The final response from the check execution endpoint."""
     table_name: str
     validation_results: List[ValidationResult]
+
+
+
+
+# ===================================================================
+# Models for Data Profiling
+# ===================================================================
+
+class GenerateDataProfileRequest(BaseModel):
+    """Request model for generating a data profile for a table."""
+    table_name: str = Field(..., description="The name of the table to profile.", example="users")
+    connection_string: Optional[str] = Field(
+        None, 
+        description="Optional database connection string. If not provided, the server's configured default will be used.",
+        example="postgresql://user:password@host:port/database"
+    )
+
+class ColumnProfile(BaseModel):
+    """Detailed statistical profile for a single column."""
+    column_name: str = Field(..., description="Name of the database column.")
+    data_type: str = Field(..., description="Data type of the column.")
+    
+    # General stats
+    total_values: int = Field(..., description="Total number of rows in the table.")
+    null_count: int = Field(..., description="Number of NULL values in this column.")
+    null_percentage: float = Field(..., description="Percentage of NULL values (0.0 to 1.0).")
+    distinct_count: int = Field(..., description="Number of distinct values in this column.")
+    distinct_percentage: float = Field(..., description="Percentage of distinct values (0.0 to 1.0).")
+
+    # Numeric stats (optional)
+    min_value: Optional[float] = Field(None, description="Minimum value for numeric columns.")
+    max_value: Optional[float] = Field(None, description="Maximum value for numeric columns.")
+    avg_value: Optional[float] = Field(None, description="Average value for numeric columns.")
+    std_dev: Optional[float] = Field(None, description="Standard deviation for numeric columns.")
+    
+    # Text stats (optional)
+    min_length: Optional[int] = Field(None, description="Minimum length for text columns.")
+    max_length: Optional[int] = Field(None, description="Maximum length for text columns.")
+    avg_length: Optional[float] = Field(None, description="Average length for text columns.")
+
+    # Datetime stats (optional)
+    earliest_date: Optional[str] = Field(None, description="Earliest date/timestamp for date columns.")
+    latest_date: Optional[str] = Field(None, description="Latest date/timestamp for date columns.")
+
+class GenerateDataProfileResponse(BaseModel):
+    """Response model containing the data profile for a table."""
+    table_name: str = Field(..., description="The name of the profiled table.")
+    column_profiles: List[ColumnProfile] = Field(..., description="A list of profiles for each column in the table.")
+
+
+# ===================================================================
+# Models for Quality Plan Generation
+# ===================================================================
+
+class GenerateQualityPlanRequest(BaseModel):
+    """Request model for generating a data quality plan."""
+    table_name: str = Field(..., description="The name of the table to analyze.", example="users")
+    connection_string: Optional[str] = Field(
+        None, 
+        description="Optional database connection string. If not provided, the server's configured default will be used.",
+        example="postgresql://user:password@host:port/database"
+    )
+
+class ProposedQualityCheck(BaseModel):
+    """A single data quality check proposed by the AI agent."""
+    check_id: str = Field(..., description="A unique, machine-friendly identifier for the check.", example="check_null_emails")
+    rule_name: str = Field(..., description="A human-readable name for the quality rule.", example="Check for Null Emails")
+    rule_description: str = Field(..., description="A clear explanation of what the rule checks for.", example="Ensures that the email column does not contain any NULL values.")
+    check_sql: str = Field(..., description="The PostgreSQL query to execute the check, which counts violating rows.", example='SELECT COUNT(*) FROM "users" WHERE "email" IS NULL;')
+
+class GenerateQualityPlanResponse(BaseModel):
+    """Response model containing the proposed data quality plan."""
+    table_name: str = Field(..., description="The name of the table for which the plan was generated.")
+    proposed_checks: List[ProposedQualityCheck] = Field(..., description="A list of recommended data quality checks.")
+
+
+# ===================================================================
+# Models for Quality Check Execution
+# ===================================================================
+
+class ExecuteQualityChecksRequest(BaseModel):
+    """Request model for executing a set of data quality checks."""
+    table_name: str = Field(..., description="The name of the table to run checks against.", example="users")
+    connection_string: Optional[str] = Field(
+        None, 
+        description="Optional database connection string. If not provided, the server's configured default will be used.",
+        example="postgresql://user:password@host:port/database"
+    )
+    checks_to_run: List[ProposedQualityCheck] = Field(..., description="The list of quality checks to be executed.")
+
+class ValidationResult(BaseModel):
+    """The result of executing a single data quality check."""
+    check_id: str = Field(..., description="The unique identifier of the check that was run.")
+    rule_name: str = Field(..., description="The human-readable name of the rule.")
+    is_valid: bool = Field(..., description="True if the check passed (0 violating rows), False otherwise.")
+    invalid_count: int = Field(..., description="The number of rows that violated the data quality rule.")
+    total_rows: int = Field(..., description="The total number of rows in the table when the check was run.")
+    check_query: str = Field(..., description="The SQL query that was executed for this check.")
+
+class ExecuteQualityChecksResponse(BaseModel):
+    """The final report after executing all requested data quality checks."""
+    table_name: str = Field(..., description="The name of the table that was validated.")
+    validation_results: List[ValidationResult] = Field(..., description="A list of results for each executed check.")
+
+
+class AIColumnProfile(BaseModel):
+    column_name: str
+    inferred_type: str
+    assumptions_about_data: str
+    potential_quality_risks: str
+    common_patterns_or_values: str
+
+class GenerateDataProfileRequest(BaseModel):
+    connection_string: Optional[str]
+    table_name: str
+
+class GenerateDataProfileResponse(BaseModel):
+    table_name: str
+    columns: List[AIColumnProfile]

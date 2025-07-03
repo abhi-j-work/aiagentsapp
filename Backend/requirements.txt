@@ -13,4 +13,4 @@ groq
 sqlparse
 pydantic-settings
 sqlglot
-#Faker # For the sql query 
+asyncpg

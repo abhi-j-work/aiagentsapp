@@ -1,17 +1,28 @@
 # In file: app/services/db_service.py
 import logging
-from sqlalchemy import create_engine, inspect
-from typing import Dict, Any
 import asyncio
-from typing import List 
-from sqlalchemy import create_engine, text
+from typing import Dict, Any, List
+
+from sqlalchemy import create_engine, inspect, text
 import asyncpg
+
 from .errors import DatabaseServiceError
-from app.services.errors import DatabaseServiceError # type: ignore
 
 logger = logging.getLogger(__name__)
 
+
+# =============================================================================
+# 1. SCHEMA EXTRACTION
+# =============================================================================
+
 def _extract_schema_sync(conn_str: str) -> Dict[str, Any]:
+    """
+    Synchronously inspects the database to extract a detailed schema.
+    This function is robust, using fully qualified names for tables (e.g., 'public.users')
+    and safely handling optional metadata like foreign key names.
+    
+    Uses SQLAlchemy's inspector, designed to be run in a thread.
+    """
     try:
         engine = create_engine(conn_str)
         inspector = inspect(engine)
@@ -19,81 +30,106 @@ def _extract_schema_sync(conn_str: str) -> Dict[str, Any]:
         all_tables_info = {}
         all_fks = []
         
+        # Get all non-system schema names
         schemas = [s for s in inspector.get_schema_names() if not s.startswith('pg_') and s != 'information_schema']
         
+        # If no specific schemas found, inspect the default schema
         if not schemas:
             schemas = [None] 
 
         for schema in schemas:
-            for table_name in inspector.get_table_names(schema=schema):
-                # ### FIX: Changed keys 'name'->'column_name' and 'type'->'data_type' to match models.py
+            table_names = inspector.get_table_names(schema=schema)
+            for table_name in table_names:
+                # CRITICAL: Create a qualified name to use as a unique key
+                qualified_name = f"{schema}.{table_name}" if schema else table_name
+                
+                # Safely extract column info using .get() to prevent KeyErrors
                 columns = [
-                    {'column_name': col['name'], 'data_type': str(col['type'])} 
+                    {'column_name': col.get('name'), 'data_type': str(col.get('type'))} 
                     for col in inspector.get_columns(table_name, schema=schema)
                 ]
-                all_tables_info[table_name] = {"columns": columns}
+                all_tables_info[qualified_name] = {"columns": columns}
                 
                 foreign_keys = inspector.get_foreign_keys(table_name, schema=schema)
                 for fk in foreign_keys:
+                    # THE DEFINITIVE FIX: Use .get() for all optional keys to prevent crashes.
                     all_fks.append({
-                        "name": fk['name'],
-                        "referencing_table": table_name,
-                        "referencing_columns": fk['constrained_columns'],
-                        "referenced_table": fk['referred_table'],
-                        "referenced_columns": fk['referred_columns'],
+                        "name": fk.get('name'), # This key is not always present
+                        "referencing_table": qualified_name,
+                        "referencing_columns": fk.get('constrained_columns'),
+                        "referenced_table": fk.get('referred_table'),
+                        "referenced_columns": fk.get('referred_columns'),
                     })
                     
         return {"tables": all_tables_info, "foreign_keys": all_fks}
         
     except Exception as e:
-        logger.error(f"Failed to extract schema: {e}")
-        raise DatabaseServiceError(f"Failed to extract schema: {e}", 500)
+        logger.error(f"Failed to extract database schema: {e}", exc_info=True)
+        raise DatabaseServiceError(f"Failed to extract database schema: {e}", 500)
 
 async def extract_db_schema(conn_str: str) -> Dict[str, Any]:
+    """Asynchronously extracts the DB schema by running the sync inspector in a thread."""
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, _extract_schema_sync, conn_str)
 
-# ### BEST PRACTICE: Included your apply_sql_statements function for completeness.
+
+# =============================================================================
+# 2. DATA QUALITY QUERY EXECUTION
+#    (Uses high-performance asyncpg)
+# =============================================================================
+
+async def execute_scalar_query(conn_str: str, query: str) -> int:
+    """Executes a SQL query expected to return a single value (a scalar), like a count."""
+    conn = None
+    try:
+        conn = await asyncpg.connect(dsn=conn_str)
+        result = await conn.fetchval(query)
+        return int(result) if result is not None else 0
+    except (asyncpg.PostgresError, OSError) as e:
+        logger.error(f"Scalar query failed: {e}", exc_info=True)
+        raise DatabaseServiceError(message=f"Database query failed: {e}", status_code=500)
+    finally:
+        if conn:
+            await conn.close()
+
+async def execute_query_as_dict(conn_str: str, query: str) -> List[Dict[str, Any]]:
+    """Executes a SQL query and returns the results as a list of dictionaries."""
+    conn = None
+    try:
+        conn = await asyncpg.connect(dsn=conn_str)
+        records = await conn.fetch(query)
+        return [dict(record) for record in records]
+    except (asyncpg.PostgresError, OSError) as e:
+        logger.error(f"Dictionary query failed: {e}", exc_info=True)
+        raise DatabaseServiceError(message=f"Database query failed: {e}", status_code=500)
+    finally:
+        if conn:
+            await conn.close()
+
+
+# =============================================================================
+# 3. OTHER UTILITY FUNCTIONS
+#    (For features like data governance and statement execution)
+# =============================================================================
+
 def _execute_statements_sync(conn_str: str, statements: list[str]):
-    """
-    Synchronously executes statements using SQLAlchemy.
-    This function is designed to be run in a separate thread.
-    """
-    # create_engine is a factory for connections and manages a connection pool.
+    """Synchronously executes a list of DDL/DML statements in a single transaction."""
     engine = create_engine(conn_str)
-    
-    # engine.connect() checks out a connection from the pool.
     with engine.connect() as connection:
-        # connection.begin() starts a transaction block.
         with connection.begin() as transaction:
             try:
                 for stmt in statements:
-                    # Ensure we don't execute empty strings
                     if stmt and stmt.strip():
                         connection.execute(text(stmt))
-                
-                # The transaction is automatically committed here if no exception was raised.
-                # The explicit `transaction.commit()` is not needed with `with connection.begin()`.
             except Exception as e:
-                # The transaction is automatically rolled back here upon exiting the `with`
-                # block due to an exception.
+                transaction.rollback()
+                logger.error(f"Failed during batch SQL execution: {e}", exc_info=True)
                 raise DatabaseServiceError(message=f"Failed to apply SQL: {e}", status_code=400)
 
-# This is your async wrapper function. We'll call this from the API endpoint.
 async def execute_statements(conn_str: str, statements: list[str]):
-    """
-    Asynchronously executes a list of SQL statements by running the
-    synchronous SQLAlchemy logic in a thread pool executor.
-    """
+    """Asynchronously executes a list of SQL statements in a thread."""
     loop = asyncio.get_running_loop()
-    # `run_in_executor` pushes the blocking function to a thread,
-    # freeing the event loop to handle other requests.
-    await loop.run_in_executor(
-        None,  # Use the default thread pool executor
-        _execute_statements_sync,
-        conn_str,
-        statements
-    )
+    await loop.run_in_executor(None, _execute_statements_sync, conn_str, statements)
 
 def _list_governed_views_sync(conn_str: str) -> List[str]:
     """Synchronously inspects the database for views ending in '_governed_view'."""
@@ -101,9 +137,7 @@ def _list_governed_views_sync(conn_str: str) -> List[str]:
         engine = create_engine(conn_str)
         inspector = inspect(engine)
         all_views = inspector.get_view_names()
-        # Filter the list to find only the views created by our governance process
-        governed_views = [v for v in all_views if v.endswith('_governed_view')]
-        return governed_views
+        return [v for v in all_views if v.endswith('_governed_view')]
     except Exception as e:
         logger.error(f"Failed to list governed views: {e}", exc_info=True)
         raise DatabaseServiceError(f"Failed to list views from database: {e}", 500)
@@ -113,81 +147,23 @@ async def list_governed_views(conn_str: str) -> List[str]:
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, _list_governed_views_sync, conn_str)
 
-
-# =============================================================================
-# NEW: Functions for Fetching Data from a View
-# =============================================================================
-
 def _fetch_view_data_sync(conn_str: str, view_name: str, limit: int, offset: int, role: str) -> List[Dict[str, Any]]:
-    """
-    Synchronously fetches paginated data from a specific view,
-    assuming a database role for the duration of the transaction.
-    """
+    """Synchronously fetches paginated data from a view using a specific role."""
     try:
         engine = create_engine(conn_str)
         with engine.connect() as connection:
-            # Step 1: Set the role for the current transaction.
-            # This is the crucial part that applies the masking rules.
-            # We use text() and parameter binding to safely handle the role name and prevent SQL injection.
             set_role_stmt = text("SET ROLE :role")
             connection.execute(set_role_stmt, {"role": role})
-
-            # Step 2: Execute the main SELECT query.
-            # This query will now run with the permissions of the role set above.
+            
             safe_view_name = f'"{view_name}"'
             query = text(f'SELECT * FROM {safe_view_name} LIMIT :limit OFFSET :offset')
             result = connection.execute(query, {"limit": limit, "offset": offset})
-            rows = [dict(row._mapping) for row in result.fetchall()]
-            
-            # Note: The role is automatically reset to the original user when the
-            # connection is closed and returned to the pool at the end of the `with` block.
-            return rows
-            
+            return [dict(row._mapping) for row in result.fetchall()]
     except Exception as e:
         logger.error(f"Failed to fetch data from view '{view_name}' as role '{role}': {e}", exc_info=True)
-        # Provide a more specific and helpful error message to the user.
-        raise DatabaseServiceError(f"Failed to fetch data from view '{view_name}'. Check if role '{role}' exists and has permissions on the view. Error: {e}", 400)
+        raise DatabaseServiceError(f"Failed to fetch data from view '{view_name}'. Check if role '{role}' exists and has permissions. Error: {e}", 400)
 
 async def fetch_view_data(conn_str: str, view_name: str, limit: int, offset: int, role: str) -> List[Dict[str, Any]]:
-    """
-    Asynchronously fetches view data by running the sync query (with SET ROLE) in a thread.
-    The function signature now correctly includes the 'role' parameter.
-    """
+    """Asynchronously fetches view data by running the sync query (with SET ROLE) in a thread."""
     loop = asyncio.get_running_loop()
-    # Pass the 'role' argument to the synchronous worker function.
-    return await loop.run_in_executor(
-        None, _fetch_view_data_sync, conn_str, view_name, limit, offset, role
-    )
-
-async def execute_scalar_query(conn_str: str, query: str) -> int:
-    """
-    Executes a SQL query that is expected to return a single value (a scalar), like a count.
-
-    Args:
-        conn_str: The database connection string.
-        query: The SQL query to execute (e.g., "SELECT COUNT(*) FROM my_table").
-
-    Returns:
-        The integer result of the query.
-
-    Raises:
-        DatabaseServiceError: If any database-related error occurs.
-    """
-    conn = None
-    try:
-        # Establish connection to the database
-        conn = await asyncpg.connect(dsn=conn_str)
-        
-        # fetchval() is the perfect method to get a single value from a query
-        result = await conn.fetchval(query)
-        
-        # Ensure we return an integer. If the query returns None, default to 0.
-        return int(result) if result is not None else 0
-
-    except (asyncpg.PostgresError, OSError) as e:
-        # Catch specific database or connection errors
-        raise DatabaseServiceError(message=f"Database query failed: {e}", status_code=500)
-    finally:
-        # CRITICAL: Always ensure the connection is closed to prevent leaks
-        if conn:
-            await conn.close()
+    return await loop.run_in_executor(None, _fetch_view_data_sync, conn_str, view_name, limit, offset, role)
