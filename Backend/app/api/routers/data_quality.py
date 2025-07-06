@@ -131,25 +131,37 @@ async def generate_quality_plan(
         all_tables = schema_dict.get("tables", {})
 
         qualified_name, target_table_schema = _find_table_schema(params.table_name, all_tables)
+        try:
+            schema_name, table_name = qualified_name.strip('"').split('.', 1)
+        except ValueError:
+            schema_name = 'public'
+            table_name = qualified_name.strip('"')
 
         system_prompt = f"""
+
         You are a Senior Data Quality Analyst specializing in PostgreSQL. Your task is to analyze the schema of a single database table and generate a JSON list of proposed data quality checks.
-        The table you are analyzing is named "{qualified_name}". Use this full name in your queries.
+        The table you are analyzing is named "{table_name}" and it resides within the schema "{schema_name}".
 
         **Core Task:**
         For the given table schema, proactively identify potential data quality issues. For each potential issue, you must formulate a specific check.
 
         **For each check, you must generate:**
         1.  `check_id`: A unique, machine-friendly snake_case identifier (e.g., 'email_format_check').
-        2.  `rule_name`: A human-readable title (e.g., 'Invalid Email Format').
-        3.  `rule_description`: A clear explanation of the rule.
-        4.  `check_sql`: A complete, executable PostgreSQL query that **COUNTS the number of rows VIOLATING the rule**. This query must always start with `SELECT COUNT(*) FROM`. All identifiers in the SQL, including the table name, must be double-quoted. Example: `SELECT COUNT(*) FROM "{qualified_name}" WHERE ...`.
-        5.  `check_sql`: A complete, executable PostgreSQL query that **COUNTS the number of rows VIOLATING the rule**. This query must always start with `SELECT COUNT(*) FROM`. All identifiers in the SQL, including the schema and table name, must be double-quoted *separately*. Example: `SELECT COUNT(*) FROM "your_schema"."your_table_name" WHERE ...`
+        2.  `rule_name`: A human-readable title for the check (e.g., 'Invalid Email Format').
+        3.  `rule_description`: A clear, human-readable explanation of what the rule is checking.
+        4.  `check_sql`: A complete, executable PostgreSQL query that **COUNTS the number of rows VIOLATING the rule**.
+            - The query MUST start with `SELECT COUNT(*) FROM`.
+            - The schema and table name MUST be quoted separately and correctly in the `FROM` clause, precisely like this: `FROM "{schema_name}"."{table_name}"`.
+            - All column identifiers within the query (e.g., in `WHERE` or `HAVING` clauses) MUST also be double-quoted.
+
+        **Example of a correctly formatted `check_sql`:**
+        `SELECT COUNT(*) FROM "{schema_name}"."{table_name}" WHERE "email" IS NULL;`
+
         **Output Format (Strict JSON Only):**
-        - Your ONLY output must be a single, valid JSON object.
-        - The root key must be `"proposed_checks"`, which is a list of the check objects you generated.
+        - Your ONLY output must be a single, valid JSON object. Do not include any text, explanations, or code formatting before or after the JSON.
+        - The root key of the JSON object must be `"proposed_checks"`, which is a list of the check objects you generated.
         """
-        user_prompt = f"Generate a data quality plan for the table `{qualified_name}` with the following schema:\n{json.dumps(target_table_schema, indent=2)}"
+        user_prompt = f"Generate a data quality plan for the table `{table_name}` with the following schema:\n{json.dumps(target_table_schema, indent=2)}"
 
         response_json_str = await llm_service_instance.call_llm(system_prompt, user_prompt, response_format={"type": "json_object"})
         logger.info(f"Raw quality plan from AI: {response_json_str}")

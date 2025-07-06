@@ -164,6 +164,38 @@ async def generate_masking_sql(
     llm_service_instance: llm_service.LLMService = Depends(llm_service.get_llm_service)
 ):
     try:
+        
+        # system_prompt = """
+        # You are an ultra-meticulous PostgreSQL security architect. Your sole function is to generate syntactically flawless SQL for dynamic data masking. Your primary mission is to create a set of select expressions for a view where every column's data type is identical to the underlying table's column data type, preventing all `CREATE OR REPLACE VIEW` errors.
+
+        # **The Prime Directive: Preserve Data Types At All Costs**
+        # A `CASE` statement has two branches: `THEN "column"` (which inherits the original data type from the table) and `ELSE [masked_value]`. To prevent errors, the `ELSE` branch **MUST** be explicitly cast to the **exact `data_type` string provided in the input JSON**. This is your most important rule and guarantees both branches of the `CASE` statement return the identical data type.
+
+        # **Golden Rules - You MUST follow these without exception:**
+
+        # **1. Apply the Prime Directive:**
+        # - For any column that requires masking, the `ELSE` clause of its `CASE` statement must cast the masked value to the exact `data_type` string from the input.
+        # - **Example:** If the input `data_type` is `character`, your `ELSE` clause **MUST** be `ELSE '***'::character`.
+
+        # **2. Masking Logic and Values:**
+        # - You will be given a `masking_strategy`. This determines the value to use *before* the cast in the `ELSE` clause.
+        # - **`FULL`**: The masked value is `'***'` for text/varchar, `0` for numeric/integer types, `FALSE` for boolean, etc.
+        # - **`PARTIAL_EMAIL`**: The masked value is the expression `regexp_replace("column_name", '^[a-zA-Z0-9.!#$%&''*+/=?^_`{|}~-]+@', '********@')`.
+        # - **`HASH`**: The masked value is the expression `md5("column_name"::text)`.
+        # - **`PK` / `FK` (Critical Rule):** The column is a Primary or Foreign Key. It **MUST NOT** be masked. Its `select_expression` is only the double-quoted column name (e.g., `"customer_id"`). There is no `CASE` statement.
+        # - **`NONE`**: The column is not sensitive. Select it directly. No `CASE` statement.
+
+        # **3. Unmasking Condition:**
+        # - The condition for seeing unmasked data is `current_user = 'admin'`.
+        # - The final `CASE` statement structure is: `CASE WHEN current_user = 'admin' THEN "column_name" ELSE [MASKING_LOGIC_WITH_CAST] END AS "column_name"`.
+
+        # **4. Absolute Identifier Quoting:**
+        # - Every database identifier (table names, column names, aliases) within your generated `select_expression` MUST be enclosed in double quotes (`""`).
+
+        # **5. Strict Input/Output Format:**
+        # - **Input:** A JSON object with a list of tables. The `table_name` key in the input JSON **should only contain the base name of the table** (e.g., "customers", NOT "public.customers").
+        # - **Output:** Your entire output must be a single, valid JSON object with no explanations. The root key is `"tables"`, an array of objects. Each table object has `"table_name"` and `"columns"`. Each column object has one key: `"select_expression"`.
+        # """
         system_prompt = """
         You are a meticulous, senior PostgreSQL database administrator. Your only task is to generate a JSON data masking plan that produces 100% syntactically correct and executable PostgreSQL SQL.
         **Golden Rules - You MUST follow these without exception:**
@@ -196,8 +228,8 @@ async def generate_masking_sql(
             `"select_expression": "\"id\""`
         *   **For a non-sensitive `created_at` column (data_type: timestamp):**
             `"select_expression": "\"created_at\""`
+        5. Output Response:-  - **Input:** A JSON object with a list of tables. The `table_name` key in the input JSON **should only contain the base name of the table** (e.g., "customers", NOT "public.customers"). 
         """
-
         user_prompt_data = [table.model_dump() for table in params.classification_results]
         user_prompt = f"Generate the JSON masking plan for this classification:\n{json.dumps(user_prompt_data, indent=2)}"
         

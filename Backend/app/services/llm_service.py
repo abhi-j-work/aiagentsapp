@@ -8,6 +8,7 @@ from app.services.errors import LLMServiceError # type: ignore
 logger = logging.getLogger(__name__)
 groq_client: Optional[Groq] = None
 model_name: str = "meta-llama/llama-4-maverick-17b-128e-instruct"
+# model_name:str="gemma2-9b-it"
 
 def initialize_groq_client(settings: Settings):
     """Initializes the Groq client singleton from server settings."""
