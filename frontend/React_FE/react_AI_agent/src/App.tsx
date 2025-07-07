@@ -12,6 +12,11 @@ import DataQualityAgentPage from './pages/DataQualityAgentPage';
 import DataQualityIntroPage from './pages/DataQualityIntroPage';
 import TalkToDbIntroPage from './pages/TalkToDbIntroPage';
 import CollaborativeAgentsPage from './pages/CollaborativeAgentsPage';
+import DataIntelligenceConsole from './pages/DataIntelligenceConsole';
+import MetadataSearchPage from './pages/MetaDataSearchPage';
+import DataVisualizationPage from './pages/DataVisualizationPage';
+import IcebergAIAgentPage from './pages/IceBergAiAgent';
+import DataVisualizationV1 from './pages/DataVisualizationV1';
 function App() {
   return (
     <Routes>
@@ -28,6 +33,11 @@ function App() {
         <Route path="/data-quality-intro" element ={ <DataQualityIntroPage/>} />
         <Route path="/talk-to-db-intro" element ={ <TalkToDbIntroPage/>} />
         <Route path="/collaborative-agents" element={<CollaborativeAgentsPage />} />
+        <Route path="/meta-console" element={<MetadataSearchPage/> }/>
+        <Route path="/visual-console" element={<DataVisualizationPage/> }/>
+        <Route path="/iceberg-console" element={<IcebergAIAgentPage/> }/>
+        <Route path="/ai-console" element={<DataIntelligenceConsole/> }/>
+        <Route path="/data-visual-console" element={<DataVisualizationV1/> }/>
       </Route>
     </Routes>
   );

@@ -3,7 +3,7 @@
 // ====================================================================
 
 // Use environment variables for the base URL for flexibility between environments.
-const API_BASE_URL ='http://localhost:10096';
+const API_BASE_URL ='http://localhost:10211';
 
 /**
  * A standardized helper function for making API requests using fetch.

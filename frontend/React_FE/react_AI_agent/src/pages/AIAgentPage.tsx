@@ -10,18 +10,18 @@ import {
 } from '../services/api';
 
 // ===================================================
-// SUB-COMPONENTS for displaying results
+// SUB-COMPONENTS for displaying results (Styling Updated)
 // ===================================================
 
 const SchemaDisplay = ({ schema }: { schema: ExtractedSchema }) => (
     <div className="animate-fade-in">
         <h4 className="font-semibold text-white flex items-center gap-2 mb-3"><Database className="w-4 h-4 text-indigo-400" />Extracted Schema</h4>
-        <div className="space-y-3 max-h-48 overflow-y-auto pr-2 bg-slate-800/60 rounded-md p-3">
+        <div className="space-y-4 max-h-48 overflow-y-auto pr-2 bg-slate-800/60 rounded-md p-3">
             {Object.entries(schema.tables).map(([tableName, tableData]) => (
-                <div key={tableName} className="text-xs">
-                    <p className="font-semibold text-slate-300 flex items-center gap-2"><Table className="w-3 h-3 text-slate-400" />{tableName}</p>
-                    <ul className="mt-2 pl-4 space-y-1">
-                        {tableData.columns.map(col => <li key={col.column_name} className="text-slate-400 flex items-center"><ChevronsRight className="w-3 h-3 mr-2 text-indigo-500" />{col.column_name} <span className="ml-2 text-indigo-400/70">({col.data_type})</span></li>)}
+                <div key={tableName} className="text-sm">
+                    <p className="font-semibold text-slate-200 flex items-center gap-2"><Table className="w-3 h-3 text-slate-400" />{tableName}</p>
+                    <ul className="mt-2 pl-4 space-y-1.5">
+                        {tableData.columns.map(col => <li key={col.column_name} className="text-slate-300 flex items-center"><ChevronsRight className="w-3 h-3 mr-2 text-indigo-500" />{col.column_name} <span className="ml-2 text-indigo-400/70">({col.data_type})</span></li>)}
                     </ul>
                 </div>
             ))}
@@ -33,10 +33,10 @@ const IntegrityReport = ({ data }: { data: ReferentialIntegrityResponse }) => (
     <div className="animate-fade-in">
         <h4 className="font-semibold text-white flex items-center gap-2 mb-3"><Link2 className="w-4 h-4 text-indigo-400" />AI Generated Integrity Report</h4>
         <div className="space-y-3 max-h-48 overflow-y-auto pr-2 bg-slate-800/60 rounded-md p-3">
-            <h5 className="text-sm font-semibold text-slate-300">Relationships</h5>
-            {data.relationship_explanations.map((rel, i) => <div key={i} className="text-xs p-2 bg-slate-900/70 rounded"><p className="font-semibold text-slate-300">{rel.business_rule}</p><p className="text-slate-400 mt-1"><span className="font-medium text-red-400/80">Impact:</span> {rel.impact_of_change}</p></div>)}
-            <h5 className="text-sm font-semibold text-slate-300 pt-2">Foundational Tables</h5>
-            {data.foundational_tables.map((tbl, i) => <div key={i} className="text-xs p-2 bg-slate-900/70 rounded"><p className="font-semibold text-slate-300">{tbl.table_name}: <span className="font-normal">{tbl.business_role}</span></p><p className="text-slate-400 mt-1"><span className="font-medium text-red-400/80">Impact:</span> {tbl.impact_of_change}</p></div>)}
+            <h5 className="text-sm font-semibold text-slate-200">Relationships</h5>
+            {data.relationship_explanations.map((rel, i) => <div key={i} className="text-sm p-2 bg-slate-900/70 rounded"><p className="font-semibold text-slate-200">{rel.business_rule}</p><p className="text-slate-300 mt-1"><span className="font-medium text-red-400/80">Impact:</span> {rel.impact_of_change}</p></div>)}
+            <h5 className="text-sm font-semibold text-slate-200 pt-2">Foundational Tables</h5>
+            {data.foundational_tables.map((tbl, i) => <div key={i} className="text-sm p-2 bg-slate-900/70 rounded"><p className="font-semibold text-slate-200">{tbl.table_name}: <span className="font-normal">{tbl.business_role}</span></p><p className="text-slate-300 mt-1"><span className="font-medium text-red-400/80">Impact:</span> {tbl.impact_of_change}</p></div>)}
         </div>
     </div>
 );
@@ -44,10 +44,10 @@ const IntegrityReport = ({ data }: { data: ReferentialIntegrityResponse }) => (
 const ClassificationDisplay = ({ classifications }: { classifications: ClassificationResult[] }) => (
     <div className="animate-fade-in">
         <h4 className="font-semibold text-white flex items-center gap-2 mb-3"><ShieldCheck className="w-4 h-4 text-indigo-400" />AI Data Classification</h4>
-        <div className="space-y-3 max-h-64 overflow-y-auto pr-2 bg-slate-800/60 rounded-md p-3">
+        <div className="space-y-4 max-h-64 overflow-y-auto pr-2 bg-slate-800/60 rounded-md p-3">
             {classifications.map(table => (
-                <div key={table.table_name} className="text-xs"><p className="font-semibold text-slate-300 flex items-center gap-2"><Table className="w-3 h-3 text-slate-400" />{table.table_name}</p>
-                    <ul className="mt-2 pl-4 space-y-1">{table.columns.map(col => <li key={col.column_name} className="text-slate-400 flex items-center justify-between"><span>{col.column_name}</span><span className={`font-medium px-2 py-0.5 rounded-full text-xs ${col.classification === 'PII' || col.classification === 'Sensitive' ? 'text-red-300 bg-red-900/50' : 'text-green-300 bg-green-900/50'}`}>{col.classification}</span></li>)}</ul>
+                <div key={table.table_name} className="text-sm"><p className="font-semibold text-slate-200 flex items-center gap-2"><Table className="w-3 h-3 text-slate-400" />{table.table_name}</p>
+                    <ul className="mt-2 pl-4 space-y-1.5">{table.columns.map(col => <li key={col.column_name} className="text-slate-300 flex items-center justify-between"><span>{col.column_name}</span><span className={`font-medium px-2 py-0.5 rounded-full text-xs ${col.classification === 'PII' || col.classification === 'Sensitive' ? 'text-red-300 bg-red-900/50' : 'text-green-300 bg-green-900/50'}`}>{col.classification}</span></li>)}</ul>
                 </div>
             ))}
         </div>
@@ -57,7 +57,7 @@ const ClassificationDisplay = ({ classifications }: { classifications: Classific
 const SqlDisplay = ({ statements }: { statements: string[] }) => (
     <div className="animate-fade-in">
         <h4 className="font-semibold text-white flex items-center gap-2 mb-3"><FileText className="w-4 h-4 text-indigo-400" />AI Generated SQL Plan</h4>
-        <div className="max-h-64 overflow-y-auto bg-black p-4 rounded-md border border-slate-700"><pre className="text-xs text-slate-300 whitespace-pre-wrap"><code>{statements.join('\n\n---\n\n')}</code></pre></div>
+        <div className="max-h-64 overflow-y-auto bg-black p-4 rounded-md border border-slate-700"><pre className="text-sm text-slate-200 whitespace-pre-wrap"><code>{statements.join('\n\n---\n\n')}</code></pre></div>
     </div>
 );
 
@@ -66,7 +66,7 @@ const GovernedViewList = ({ views, onSelectView, isLoading, selectedView }: { vi
         <h4 className="font-semibold text-white flex items-center gap-2 mb-3"><Eye className="w-4 h-4 text-indigo-400" />Governed Views</h4>
         <div className="space-y-2 bg-slate-800/60 rounded-md p-3">
             {views.length === 0 ? (
-                <p className="text-slate-400 text-sm text-center p-4">No governed views found.</p>
+                <p className="text-slate-300 text-sm text-center p-4">No governed views found.</p>
             ) : views.map(viewName => (
                 <button
                     key={viewName}
@@ -84,7 +84,7 @@ const GovernedViewList = ({ views, onSelectView, isLoading, selectedView }: { vi
 
 const ViewDataDisplay = ({ viewData }: { viewData: FetchViewDataResponse }) => {
     if (!viewData.data || viewData.data.length === 0) {
-        return <div className="text-center text-slate-400 p-4 mt-4 animate-fade-in">No data to display for this view.</div>;
+        return <div className="text-center text-slate-300 p-4 mt-4 animate-fade-in">No data to display for this view.</div>;
     }
     const headers = Object.keys(viewData.data[0]);
 
@@ -92,16 +92,16 @@ const ViewDataDisplay = ({ viewData }: { viewData: FetchViewDataResponse }) => {
         <div className="animate-fade-in mt-4">
             <h5 className="font-semibold text-white mb-3">Data from: <span className="text-indigo-400">{viewData.view_name}</span></h5>
             <div className="max-h-80 overflow-auto rounded-lg border border-slate-700">
-                <table className="w-full text-xs text-left">
+                <table className="w-full text-sm text-left">
                     <thead className="bg-slate-800 sticky top-0 z-10">
                         <tr>
-                            {headers.map(header => <th key={header} className="p-2 font-medium text-slate-300">{header}</th>)}
+                            {headers.map(header => <th key={header} className="p-3 font-medium text-slate-200">{header}</th>)}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800">
                         {viewData.data.map((row, rowIndex) => (
                             <tr key={rowIndex} className="bg-slate-900/70 hover:bg-slate-800">
-                                {headers.map(header => <td key={`${rowIndex}-${header}`} className="p-2 text-slate-400 whitespace-nowrap">{String(row[header])}</td>)}
+                                {headers.map(header => <td key={`${rowIndex}-${header}`} className="p-3 text-slate-300 whitespace-nowrap">{String(row[header])}</td>)}
                             </tr>
                         ))}
                     </tbody>
@@ -113,7 +113,7 @@ const ViewDataDisplay = ({ viewData }: { viewData: FetchViewDataResponse }) => {
 
 
 // ===================================================
-// MAIN PAGE COMPONENT
+// MAIN PAGE COMPONENT (No changes here)
 // ===================================================
 const AIAgentPage = () => {
     // UI State
@@ -278,16 +278,13 @@ const AIAgentPage = () => {
                                     {/* Action Buttons */}
                                     <div className="pt-4 text-center space-y-4">
 
-                                        {/* Step 2: Show "Classify" button. Appears after analysis. Disappears after classification. */}
                                         {schema && !classifications && (
                                             <button onClick={handleClassifyData} disabled={isLoading} className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:bg-slate-700 animate-fade-in">
                                                 {isLoading && currentStep === 'Classifying...' ? <LoaderCircle className="animate-spin" /> : <ShieldCheck />}
                                                 {isLoading && currentStep === 'Classifying...' ? 'Classifying...' : 'Proceed to Classify Data'}
                                             </button>
                                         )}
-
-                                        {/* Step 3: Show "Generate SQL" button. Appears after classification. Disappears after SQL generation OR after the plan is applied. */}
-                                        {/* THE FIX IS HERE: We add `&& !finalMessage` to the condition. */}
+                                        
                                         {classifications && !sqlStatements && !finalMessage && (
                                             <button onClick={handleGenerateSql} disabled={isLoading} className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:bg-slate-700 animate-fade-in">
                                                 {isLoading && currentStep === 'Generating...' ? <LoaderCircle className="animate-spin" /> : <FileText />}
@@ -295,7 +292,6 @@ const AIAgentPage = () => {
                                             </button>
                                         )}
 
-                                        {/* Step 4: Show "Apply Plan" button. Appears ONLY when SQL is ready to be applied. */}
                                         {sqlStatements && (
                                             <button onClick={handleApplyPlan} disabled={isLoading} className="w-full px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:bg-slate-700 animate-fade-in">
                                                 {isLoading && currentStep === 'Applying...' ? <LoaderCircle className="animate-spin" /> : <CheckCircle />}
@@ -303,7 +299,6 @@ const AIAgentPage = () => {
                                             </button>
                                         )}
 
-                                        {/* Step 5: Show "View Results" button. Appears ONLY after the plan has been successfully applied. */}
                                         {finalMessage && (
                                             <button onClick={handleListGovernedViews} disabled={isLoading} className="w-full px-6 py-3 bg-teal-600 hover:bg-teal-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:bg-slate-700 animate-fade-in">
                                                 {isLoading && currentStep === 'Listing Views...' ? <LoaderCircle className="animate-spin" /> : <Eye />}
