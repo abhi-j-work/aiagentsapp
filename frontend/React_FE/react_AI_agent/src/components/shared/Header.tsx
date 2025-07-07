@@ -3,11 +3,12 @@
   import { Infinity as InfinityIcon, Home } from 'lucide-react';
 
   // Define navigation items in an array for clean and manageable code
-  const navItems = [
-    { name: 'Data AI Agents', href: '/data-ai-agent' },
-    { name: 'Pricing', href: '/pricing' },
-    { name: 'Tech Stack', href: '/tech-stack' },
-  ];
+ const navItems = [
+  { name: 'Data AI Agents', href: '/data-ai-agent' },
+  { name: 'Pricing', href: '/pricing' },
+  { name: 'Tech Stack', href: '/tech-stack' },
+  { name: 'About', href: '/about' }, 
+];
 
   const Header: React.FC = () => {
     const location = useLocation();

@@ -17,6 +17,9 @@ import MetadataSearchPage from './pages/MetaDataSearchPage';
 import DataVisualizationPage from './pages/DataVisualizationPage';
 import IcebergAIAgentPage from './pages/IceBergAiAgent';
 import DataVisualizationV1 from './pages/DataVisualizationV1';
+import AIGovernancePitchInfographic from './pages/AIGovernancePitchInfographic';
+import MetaDataSearchIntroPage from './pages/MetaDataSearchIntroPage';
+import IcebergCatalogIntroPage from './pages/IcebergCatalogIntroPage';
 function App() {
   return (
     <Routes>
@@ -33,11 +36,15 @@ function App() {
         <Route path="/data-quality-intro" element ={ <DataQualityIntroPage/>} />
         <Route path="/talk-to-db-intro" element ={ <TalkToDbIntroPage/>} />
         <Route path="/collaborative-agents" element={<CollaborativeAgentsPage />} />
-        <Route path="/meta-console" element={<MetadataSearchPage/> }/>
+        <Route path="/metadata-console" element={<MetadataSearchPage/> }/>
         <Route path="/visual-console" element={<DataVisualizationPage/> }/>
         <Route path="/iceberg-console" element={<IcebergAIAgentPage/> }/>
         <Route path="/ai-console" element={<DataIntelligenceConsole/> }/>
         <Route path="/data-visual-console" element={<DataVisualizationV1/> }/>
+        <Route path="/metadata-search" element={<MetaDataSearchIntroPage/> }/>
+        <Route path="/iceberg-governance" element={<IcebergCatalogIntroPage/> }/>
+        {/* <Route path="/about" element={<DataGovernanceInfographic/> }/> */}
+        <Route path="/about" element={<AIGovernancePitchInfographic/> }/>
       </Route>
     </Routes>
   );

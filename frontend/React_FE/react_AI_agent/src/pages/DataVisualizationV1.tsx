@@ -130,7 +130,7 @@ const DataVisualizationV1 = () => {
           visual={<VisualizationAnimation />}
           title="Data Visualization Agent"
           description="Instantly generate insightful charts and dashboards. Ask questions in natural language and get stunning visualizations in return."
-          linkTo="/ai-visualizer" // New link for this agent's workflow
+          linkTo="/visual-console" 
         />
 
       </div>
