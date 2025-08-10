@@ -20,6 +20,7 @@ import DataVisualizationV1 from './pages/DataVisualizationV1';
 import AIGovernancePitchInfographic from './pages/AIGovernancePitchInfographic';
 import MetaDataSearchIntroPage from './pages/MetaDataSearchIntroPage';
 import IcebergCatalogIntroPage from './pages/IcebergCatalogIntroPage';
+import EvaluationPage from './pages/EvaluationPage';
 function App() {
   return (
     <Routes>
@@ -43,6 +44,7 @@ function App() {
         <Route path="/data-visual-console" element={<DataVisualizationV1/> }/>
         <Route path="/metadata-search" element={<MetaDataSearchIntroPage/> }/>
         <Route path="/iceberg-governance" element={<IcebergCatalogIntroPage/> }/>
+        <Route path="/evaluation" element={<EvaluationPage/> }/>
         {/* <Route path="/about" element={<DataGovernanceInfographic/> }/> */}
         <Route path="/about" element={<AIGovernancePitchInfographic/> }/>
       </Route>

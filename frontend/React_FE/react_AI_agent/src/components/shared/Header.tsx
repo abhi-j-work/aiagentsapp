@@ -7,6 +7,7 @@
   { name: 'Data AI Agents', href: '/data-ai-agent' },
   { name: 'Pricing', href: '/pricing' },
   { name: 'Tech Stack', href: '/tech-stack' },
+  { name: 'Evaluation', href: '/evaluation'},
   { name: 'About', href: '/about' }, 
 ];
 

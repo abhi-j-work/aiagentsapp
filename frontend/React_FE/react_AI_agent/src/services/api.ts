@@ -3,43 +3,45 @@
 // ====================================================================
 
 // Use environment variables for the base URL for flexibility between environments.
-const API_BASE_URL ='http://localhost:10211';
+const API_BASE_URL ='http://localhost:10239';
 
-/**
- * A standardized helper function for making API requests using fetch.
- * This handles URL construction, headers, and error handling consistently.
- * @param endpoint - The API endpoint to call (e.g., '/data-gov/schema').
- * @param options - Standard fetch RequestInit options (method, body, etc.).
- * @returns A promise that resolves with the JSON response data.
- */
+const VITE_API_BASE_URL='http://127.0.0.1:1023';
+
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
-  
-  const defaultHeaders = {
-    'Content-Type': 'application/json',
-    ...options.headers,
-  };
-
-  const config: RequestInit = {
-    ...options,
-    headers: defaultHeaders,
-  };
-
-  try {
-    const response = await fetch(url, config);
-    const responseData = await response.json();
-
-    if (!response.ok) {
-      // Throw an error with the detailed message from the backend if available.
-      throw new Error(responseData.detail || 'An unknown API error occurred');
-    }
     
-    return responseData as T;
-  } catch (error) {
-    console.error(`API request to ${endpoint} failed:`, error);
-    // Re-throw the error so the calling component can handle it.
-    throw error;
-  }
+    // --- START: BULLETPROOF URL CONSTRUCTION ---
+    // 1. Trim any accidental whitespace from the base URL and endpoint.
+    const cleanBase = API_BASE_URL.trim();
+    const cleanEndpoint = endpoint.trim();
+
+    // 2. Remove any trailing slash from the base URL to prevent double slashes.
+    const baseUrlNoSlash = cleanBase.endsWith('/') ? cleanBase.slice(0, -1) : cleanBase;
+    
+    // 3. Ensure the endpoint path starts with a single slash.
+    const endpointWithSlash = cleanEndpoint.startsWith('/') ? cleanEndpoint : `/${cleanEndpoint}`;
+
+    // 4. Join the base URL, the standard /api prefix, and the endpoint path.
+    const finalUrl = `${baseUrlNoSlash}/api${endpointWithSlash}`;
+    // --- END: BULLETPROOF URL CONSTRUCTION ---
+    
+    try {
+        const response = await fetch(finalUrl, {
+            headers: { 'Content-Type': 'application/json', ...options.headers },
+            ...options,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ 
+                detail: `Request to ${finalUrl} failed with HTTP status ${response.status}` 
+            }));
+            throw new Error(errorData.detail);
+        }
+        return response.json();
+    } catch (error: any) {
+        console.error(`API request to ${finalUrl} failed:`, error);
+        throw new Error(error.message || 'A network error occurred. Please check your browser console and ensure the backend server is running.');
+    }
 }
 
 
@@ -175,13 +177,6 @@ export type TalkToDbRequest = {
   prompt: string;
 };
 
-export type TalkToDbResponse = {
-  generated_sql: string;
-  data?: Record<string, any>[];
-  message?: string;
-};
-
-// --- API Function ---
 
 export const postTalkToDbQuery = (params: TalkToDbRequest): Promise<TalkToDbResponse> => {
     return request<TalkToDbResponse>('/talk-to-db/query', {
@@ -231,6 +226,7 @@ export interface GenerateQualityPlanResponse {
     data_profile: DataProfile;
     semantic_profile: LLMSemanticColumnProfile[] | null;
     proposed_checks: ProposedQualityCheck[];
+    evaluation?: EvaluationResult | null;
 }
 
 export interface ValidationResult {
@@ -247,39 +243,8 @@ export interface ExecuteQualityChecksResponse {
     validation_results: ValidationResult[];
 }
 
-// --- API Functions ---
 
-// export const postGenerateQualityPlan = (
-//     connectionString: string,
-//     tableName: string,
-//     enableSemanticProfiling: boolean
-// ): Promise<GenerateQualityPlanResponse> => {
-//     return request<GenerateQualityPlanResponse>('/data-quality/generate-quality-plan', {
-//         method: 'POST',
-//         body: JSON.stringify({
-//             connection_string: connectionString || null,
-//             table_name: tableName,
-//             enable_semantic_profiling: enableSemanticProfiling,
-//         }),
-//     });
-// };
 
-// export const postExecuteQualityChecks = (
-//     connectionString: string,
-//     tableName: string,
-//     checksToRun: ProposedQualityCheck[]
-// ): Promise<ExecuteQualityChecksResponse> => {
-//     return request<ExecuteQualityChecksResponse>('/data-quality/execute-quality-checks', {
-//         method: 'POST',
-//         body: JSON.stringify({
-//             connection_string: connectionString || null,
-//             table_name: tableName,
-//             checks_to_run: checksToRun,
-//         }),
-//     });
-// };
-
-// src/services/api.ts
 
 // --- Base Types ---
 export interface ProposedQualityCheck {
@@ -324,6 +289,7 @@ export interface ColumnProfile {
 }
 
 export interface GenerateDataProfileResponse {
+    columns: any;
     table_name: string;
     column_profiles: ColumnProfile[];
 }
@@ -437,18 +403,119 @@ export function postGenerateDataProfile(connection_string: string, table_name: s
     });
 }
 
-export function postGenerateQualityPlan(connection_string: string, table_name: string): Promise<GenerateQualityPlanResponse> {
+
+export function postGenerateQualityPlan(connection_string: string, table_name: string, customRules: string): Promise<GenerateQualityPlanResponse> {
     return apiFetch('/data-quality/generate-quality-plan', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ connection_string, table_name }),
     });
 }
 
+/**
+ * Executes a list of selected data quality checks against a table.
+ */
 export function postExecuteQualityChecks(connection_string: string, table_name: string, checks_to_run: ProposedQualityCheck[]): Promise<ExecuteQualityChecksResponse> {
     return apiFetch('/data-quality/execute-quality-checks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ connection_string, table_name, checks_to_run }),
     });
 }
+
+export type EvaluationResult = {
+  is_safe: boolean;
+  is_relevant: boolean;
+  reasoning: string;
+  score: number;
+};
+
+// Update the main response type to use the new EvaluationResult
+export type TalkToDbResponse = {
+  generated_sql: string;
+  data?: Record<string, any>[];
+  message?: string;
+  safety_warning?: string | null;
+  evaluation?: EvaluationResult | null; 
+};
+
+
+
+// async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
+//     // Ensure the URL starts with a slash and is prefixed for the proxy.
+//     const apiUrl = `/api${url}`; 
+    
+//     try {
+//         const response = await fetch(apiUrl, {
+//             headers: { 'Content-Type': 'application/json', ...options.headers },
+//             ...options,
+//         });
+
+//         if (!response.ok) {
+//             const errorData = await response.json().catch(() => ({ detail: `HTTP error! Status: ${response.status}` }));
+//             throw new Error(errorData.detail);
+//         }
+//         return response.json();
+//     } catch (error: any) {
+//         console.error(`API request to ${apiUrl} failed:`, error);
+//         // Re-throw a user-friendly error message.
+//         throw new Error(error.message || 'Network request failed. Please check the console and ensure the backend server is running.');
+//     }
+// }
+
+
+// --- Type Definitions for Evaluation ---
+
+/**
+ * Summary for a single agent's performance.
+ */
+export interface AgentEvaluationSummary {
+  agent: string;
+  status: 'Completed' | 'Not Run' | 'Failed' | 'No Dataset' | 'Not Implemented';
+  average_score: number;
+  total_prompts: number;
+}
+
+/**
+ * Detailed result for a single "Talk-to-DB" evaluation task.
+ * It has an extra `golden_sql` field.
+ */
+export interface TalkToDbDetailedResult {
+  prompt: string;
+  status: 'SUCCESS' | 'API_ERROR' | 'SCRIPT_ERROR';
+  generated_sql: string | null;
+  golden_sql: string;
+  score: number;
+  reasoning: string;
+  latency_ms: number;
+}
+
+/**
+ * Generic detailed result for other agent tasks (Data Quality, Data Governance).
+ */
+export interface AgentTaskDetailedResult {
+    prompt: string;
+    status: 'SUCCESS' | 'API_ERROR' | 'SCRIPT_ERROR';
+    score: number;
+    reasoning: string;
+    latency_ms: number;
+}
+
+/**
+ * The main structure for the full evaluation report from the backend.
+ */
+export interface FullEvaluationReport {
+  summary_report: AgentEvaluationSummary[];
+  detailed_results: {
+    talk_to_db: TalkToDbDetailedResult[];
+    data_quality: AgentTaskDetailedResult[];
+    data_governance: AgentTaskDetailedResult[];
+  };
+}
+
+/**
+ * API function to trigger the evaluation run and fetch the report.
+ */
+export const postRunAllEvaluations = (): Promise<FullEvaluationReport> => {
+    return request<FullEvaluationReport>('/evaluation/run-all', {
+        method: 'POST',
+    });
+};

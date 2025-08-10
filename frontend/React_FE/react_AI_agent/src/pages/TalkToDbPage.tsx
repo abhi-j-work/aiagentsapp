@@ -8,12 +8,17 @@ import {
     Database, 
     MessageSquareQuote, 
     Edit3,
-    CheckCircle // Added for the "Set Connection" button
+    CheckCircle,
+    ShieldCheck,
+    Sparkles,
+    XCircle
 } from 'lucide-react';
+
+// Make sure your api.ts file exports this updated type
 import { postTalkToDbQuery, type TalkToDbResponse } from '../services/api';
 
 // ===================================================
-// SUB-COMPONENTS for displaying results (No Changes)
+// SUB-COMPONENTS for displaying results
 // ===================================================
 
 const SqlDisplay = ({ sql }: { sql: string }) => (
@@ -57,6 +62,52 @@ const DataTable = ({ data, message }: { data?: Record<string, any>[], message?: 
     );
 };
 
+interface AiJudgeResultProps {
+    evaluation?: {
+        is_safe: boolean;
+        is_relevant: boolean;
+        reasoning: string;
+        score: number;
+    } | null;
+}
+
+const AiJudgeResult: React.FC<AiJudgeResultProps> = ({ evaluation }) => {
+    if (!evaluation) return null;
+
+    // A small component for the green/red tags
+    const JudgeTag: React.FC<{ label: string; passed: boolean }> = ({ label, passed }) => (
+        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm font-medium ${
+            passed 
+                ? 'bg-green-500/10 text-green-300' 
+                : 'bg-red-500/10 text-red-300'
+        }`}>
+            {passed ? <ShieldCheck className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+            {label}
+        </div>
+    );
+
+    return (
+        <div className="animate-fade-in p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
+            <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-white flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-indigo-400" />
+                    AI Judge
+                </h4>
+                <div className="flex items-center gap-2">
+                    <JudgeTag label="Safe" passed={evaluation.is_safe} />
+                    <JudgeTag label="Relevant" passed={evaluation.is_relevant} />
+                </div>
+            </div>
+            {!evaluation.is_safe && (
+                <p className="text-xs text-red-300 mt-2">
+                    Reasoning: This query was flagged as potentially unsafe and was blocked from running.
+                </p>
+            )}
+        </div>
+    );
+};
+
+
 // ===================================================
 // MAIN PAGE COMPONENT
 // ===================================================
@@ -81,7 +132,7 @@ const TalkToDbPage = () => {
             return;
         }
         setIsConnectionSet(true);
-        setError(null); // Clear previous errors
+        setError(null);
     };
 
     // Handler for submitting the prompt to the AI
@@ -109,7 +160,7 @@ const TalkToDbPage = () => {
     // Handler to show the connection string input again
     const handleEditConnection = () => {
         setIsConnectionSet(false);
-        setResult(null); // Clear old results when changing connection
+        setResult(null);
     };
 
     return (
@@ -140,7 +191,6 @@ const TalkToDbPage = () => {
                     </div>
 
                     <div className="p-6">
-                        {/* --- VIEW 1: Set Connection --- */}
                         {!isConnectionSet && (
                             <form onSubmit={handleSetConnection} className="space-y-4 animate-fade-in">
                                 <div>
@@ -166,7 +216,6 @@ const TalkToDbPage = () => {
                             </form>
                         )}
 
-                        {/* --- VIEW 2: Ask Question --- */}
                         {isConnectionSet && (
                              <form onSubmit={handleSubmitPrompt} className="space-y-4 animate-fade-in">
                                 <div>
@@ -194,7 +243,6 @@ const TalkToDbPage = () => {
                         )}
                     </div>
 
-                    {/* --- Results Area --- */}
                     <div className="p-6 pt-0">
                         {isLoading && (
                             <div className="text-center p-4 text-slate-400 animate-pulse">
@@ -210,6 +258,7 @@ const TalkToDbPage = () => {
                         )}
                         {result && (
                             <div className="space-y-6">
+                                <AiJudgeResult evaluation={result.evaluation} />
                                 <SqlDisplay sql={result.generated_sql} />
                                 <DataTable data={result.data} message={result.message} />
                             </div>

@@ -80,10 +80,14 @@ class ClassificationRequest(DBParams):
     schema_data: Optional[ExtractedSchema] = Field(
         None, description="Optional schema to classify. If null, it will be extracted from the DB first."
     )
-
+class EvaluationResult(BaseModel):
+    score: int
+    reasoning: str
+    
 class ClassificationResponse(BaseModel):
     """Response model for returning the results of a schema classification."""
     classification_results: List[ClassifiedTable]
+    evaluation: Optional[EvaluationResult] = None 
 
 
 # --- SQL Generation, Application, and Masking ---
@@ -349,6 +353,18 @@ class GenerateQualityPlanResponse(BaseModel):
 # Models for Quality Check Execution
 # ===================================================================
 
+class EvaluationResult(BaseModel):
+    score: int
+    reasoning: str
+
+class GenerateQualityPlanResponse(BaseModel):
+    """The response from the plan generation endpoint, containing a list of proposed checks."""
+    table_name: str
+    proposed_checks: List['ProposedQualityCheck']
+    # >>> THIS IS THE KEY ADDITION FOR THE JUDGE SUMMARY <<<
+    evaluation: Optional[EvaluationResult] = None
+
+
 class ExecuteQualityChecksRequest(BaseModel):
     """Request model for executing a set of data quality checks."""
     table_name: str = Field(..., description="The name of the table to run checks against.", example="users")
@@ -388,3 +404,26 @@ class GenerateDataProfileRequest(BaseModel):
 class GenerateDataProfileResponse(BaseModel):
     table_name: str
     columns: List[AIColumnProfile]
+
+
+class EvaluationResult(BaseModel):
+    score: int
+    reasoning: str
+
+class NaturalLanguageQueryResponse(BaseModel):
+    """Defines the successful response structure from the NLQ endpoint."""
+    generated_sql: str
+    data: List[Dict[str, Any]] | None = None
+    message: str | None = None
+    # ADD THIS NEW FIELD
+    evaluation: Optional[EvaluationResult] = None  
+
+class EvaluationResult(BaseModel):
+    """
+    Represents the structured feedback from the AI Judge.
+    """
+    is_safe: bool = Field(..., description="True if the query is deemed safe and read-only.")
+    is_relevant: bool = Field(..., description="True if the query is relevant to the user's prompt.")
+    reasoning: str = Field(..., description="A brief explanation of the evaluation.")
+    # The score is still useful for logging and metrics, so we keep it.
+    score: int  

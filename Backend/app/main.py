@@ -6,6 +6,8 @@ from app.core.logging_config import setup_logging # type: ignore
 from app.services import llm_service # type: ignore
 from app.api.routers import data_governance, data_quality,talktoDb # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
+from app.evaluation import run_evaluation
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Code to run on startup
@@ -37,6 +39,7 @@ app.add_middleware(
 app.include_router(data_governance.router)
 app.include_router(talktoDb.router) 
 app.include_router(data_quality.router) 
+app.include_router(run_evaluation.router)
 
 @app.get("/")
 def read_root():

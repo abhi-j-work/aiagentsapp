@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import {
-    LoaderCircle, AlertTriangle, PlayCircle, Database, Sparkles, ShieldCheck, CheckCircle,
-    XCircle, ChevronLeft, RefreshCw, ClipboardList, BarChart3, Fingerprint, Ban, PenTool,
-    KeyRound, HelpCircle, Sigma, Target, Eye, EyeOff
+    LoaderCircle, AlertTriangle, PlayCircle, Database, Sparkles, ShieldCheck,
+    ChevronLeft, RefreshCw, ClipboardList, BarChart3, Fingerprint, Ban, PenTool,
+    KeyRound, HelpCircle, Target, Eye, EyeOff, FileText, Bot, Gavel, Star, ArrowRight
 } from 'lucide-react';
 
 import {
@@ -16,7 +16,6 @@ import type {
     GenerateQualityPlanResponse,
     ExecuteQualityChecksResponse,
     ProposedQualityCheck,
-    ColumnProfile
 } from '../services/api';
 import ReportDashboard from './ReportDashboard';
 
@@ -31,16 +30,21 @@ interface DataProfileSidebarProps {
     profile: GenerateDataProfileResponse | null;
 }
 
-interface ReportSummaryProps {
-    report: ExecuteQualityChecksResponse;
-}
-
 interface StepIndicatorProps {
     currentStep: number;
 }
 
+// --- Style Constants for the new theme ---
+const cardContainerStyle = "card-border rounded-2xl bg-slate-900/70 backdrop-blur-sm animate-fade-in";
+const cardHeaderStyle = "p-6 border-b border-indigo-500/30 flex justify-between items-center";
+const cardTitleStyle = "text-xl font-semibold text-white flex items-center gap-3";
+const cardSubtitleStyle = "text-sm text-slate-400 mt-1";
+const cardBodyStyle = "p-6";
+const inputBaseStyle = "w-full px-4 py-2 glass rounded-lg border border-slate-700 bg-slate-800/50 text-white focus:border-indigo-400 focus:outline-none transition";
 
-// --- Sub-Components ---
+
+// --- Sub-Components (Fully Defined) ---
+
 const CheckItem: React.FC<CheckItemProps> = ({ check, isChecked, onCheckChange }) => {
     const getIcon = () => {
         const name = check.rule_name.toLowerCase();
@@ -52,96 +56,75 @@ const CheckItem: React.FC<CheckItemProps> = ({ check, isChecked, onCheckChange }
     };
 
     return (
-        <label className="flex items-start p-3 bg-slate-800/60 rounded-lg cursor-pointer hover:bg-slate-700/80 border border-slate-700/50 hover:border-amber-500/50 transition-all">
+        <label className="flex items-start p-3 bg-slate-800/60 rounded-lg cursor-pointer hover:bg-slate-700/80 border border-slate-700/50 hover:border-indigo-500/50 transition-all">
             <div className="flex-shrink-0 mt-0.5 mr-4">{getIcon()}</div>
             <div className="flex-grow">
                 <p className="font-medium text-slate-100">{check.rule_name}</p>
                 <p className="text-slate-400 mt-1 text-sm">{check.rule_description}</p>
             </div>
-            <input type="checkbox" className="ml-4 mt-1 h-4 w-4 rounded border-slate-600 bg-slate-700 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900" checked={isChecked} onChange={(e) => onCheckChange(check.check_id, e.target.checked)} />
+            <input type="checkbox" className="ml-4 mt-1 h-4 w-4 rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900" checked={isChecked} onChange={(e) => onCheckChange(check.check_id, e.target.checked)} />
         </label>
     );
 };
 
 const DataProfileSidebar: React.FC<DataProfileSidebarProps> = ({ profile }) => {
-    // ==========================================================
-    // FIXED LINE: Added a check for `!profile.column_profiles`
-    // ==========================================================
-    if (!profile || !profile.column_profiles || profile.column_profiles.length === 0) {
+    if (!profile || !profile.columns || profile.columns.length === 0) {
         return (
              <div className="w-full lg:w-[320px] xl:w-[360px] flex-shrink-0">
                  <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-700/80">
-                     <h5 className="font-semibold text-white flex items-center gap-2 mb-2"><BarChart3 className="w-5 h-5 text-sky-400" />Data Profile</h5>
+                     <h5 className="font-semibold text-white flex items-center gap-2 mb-2"><BarChart3 className="w-5 h-5 text-indigo-400" />Data Profile</h5>
                      <p className="text-sm text-slate-400">Profile data will appear here after analysis.</p>
                 </div>
             </div>
         );
     }
-    
-    const totalRows = profile.column_profiles[0]?.total_values ?? 0;
 
-    const formatStat = (value: number | null | undefined) => {
-        if (value === null || typeof value === 'undefined') return 'N/A';
-        return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
-    };
+    interface AIColumnProfile {
+        column_name: string;
+        inferred_type: string;
+        assumptions_about_data: string;
+        potential_quality_risks: string;
+        common_patterns_or_values: string;
+    }
 
     return (
         <div className="w-full lg:w-[320px] xl:w-[360px] flex-shrink-0">
              <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-700/80">
                 <h5 className="font-semibold text-white flex items-center gap-2 mb-3 border-b border-slate-700 pb-2">
-                    <BarChart3 className="w-5 h-5 text-sky-400" />
-                    Data Profile: <span className="text-amber-300">{profile.table_name}</span>
+                    <BarChart3 className="w-5 h-5 text-indigo-400" />
+                    AI Data Profile: <span className="text-indigo-300">{profile.table_name}</span>
                 </h5>
                 <ul className="text-sm space-y-2 pt-2">
-                    <li className="flex justify-between items-center text-slate-300"><span><Sigma className="inline w-4 h-4 mr-2"/>Total Rows</span> <span className="font-mono text-sky-300">{totalRows.toLocaleString()}</span></li>
-                    <li className="flex justify-between items-center text-slate-300"><span><Database className="inline w-4 h-4 mr-2"/>Columns</span> <span className="font-mono text-sky-300">{profile.column_profiles.length}</span></li>
+                    <li className="flex justify-between items-center text-slate-300">
+                        <span><Database className="inline w-4 h-4 mr-2"/>Columns Analyzed</span>
+                        <span className="font-mono text-indigo-300">{profile.columns.length}</span>
+                    </li>
                 </ul>
-
-                <div className="mt-4 max-h-[20rem] overflow-y-auto space-y-2 pr-2">
-                    {profile.column_profiles.map((col: ColumnProfile) => (
+                <div className="mt-4 max-h-[28rem] overflow-y-auto space-y-2 pr-2">
+                    {profile.columns.map((col: AIColumnProfile) => (
                         <details key={col.column_name} className="bg-slate-800/50 rounded-md transition-colors hover:bg-slate-800/80">
                              <summary className="p-2 cursor-pointer font-medium text-slate-200 text-sm list-none flex items-center justify-between">
                                 {col.column_name}
-                                <span className="text-xs font-mono text-sky-300 bg-sky-900/50 px-2 py-0.5 rounded-md">{col.data_type}</span>
+                                <span className="text-xs font-mono text-indigo-300 bg-indigo-900/50 px-2 py-0.5 rounded-md">{col.inferred_type}</span>
                             </summary>
-                            <div className="p-3 border-t border-slate-700 text-xs text-slate-400 grid grid-cols-2 gap-x-4 gap-y-1">
-                                <span className="font-semibold">Nulls:</span><span>{col.null_count} ({(col.null_percentage * 100).toFixed(1)}%)</span>
-                                <span className="font-semibold">Distinct:</span><span>{col.distinct_count} ({(col.distinct_percentage * 100).toFixed(1)}%)</span>
-                                {typeof col.min_value === 'number' && <><span>Min:</span><span>{formatStat(col.min_value)}</span></>}
-                                {typeof col.max_value === 'number' && <><span>Max:</span><span>{formatStat(col.max_value)}</span></>}
-                                {typeof col.avg_value === 'number' && <><span>Avg:</span><span>{formatStat(col.avg_value)}</span></>}
-                                {typeof col.min_length === 'number' && <><span>Min Len:</span><span>{formatStat(col.min_length)}</span></>}
-                                {typeof col.max_length === 'number' && <><span>Max Len:</span><span>{formatStat(col.max_length)}</span></>}
-                                {col.earliest_date && <><span>Earliest:</span><span>{col.earliest_date}</span></>}
-                                {col.latest_date && <><span>Latest:</span><span>{col.latest_date}</span></>}
+                            <div className="p-3 border-t border-slate-700 text-xs text-slate-400 space-y-2">
+                                <div>
+                                    <span className="font-semibold text-slate-300 block mb-0.5">Assumptions:</span>
+                                    <span>{col.assumptions_about_data}</span>
+                                </div>
+                                <div>
+                                    <span className="font-semibold text-slate-300 block mb-0.5">Potential Risks:</span>
+                                    <span>{col.potential_quality_risks}</span>
+                                </div>
+                                <div>
+                                    <span className="font-semibold text-slate-300 block mb-0.5">Hypothetical Patterns:</span>
+                                    <span>{col.common_patterns_or_values}</span>
+                                </div>
                             </div>
                         </details>
                     ))}
                 </div>
             </div>
-        </div>
-    );
-};
-
-
-const ReportSummary: React.FC<ReportSummaryProps> = ({ report }) => {
-    const passedCount = report.validation_results.filter(r => r.is_valid).length;
-    const totalCount = report.validation_results.length;
-    const qualityScore = totalCount > 0 ? Math.round((passedCount / totalCount) * 100) : 100;
-    const totalIssues = report.validation_results.reduce((acc, r) => acc + r.invalid_count, 0);
-
-    return (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 p-4 rounded-xl bg-slate-900/50 border border-slate-700/80">
-             <div className="flex flex-col items-center justify-center p-2">
-                <div className="relative w-24 h-24">
-                    <svg className="w-full h-full" viewBox="0 0 36 36"><path className="text-slate-700" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="2.5"></path><path className="text-amber-500" strokeDasharray={`${qualityScore}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"></path></svg>
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-white">{qualityScore}<span className="text-sm">%</span></div>
-                </div>
-                <p className="mt-2 text-sm font-semibold text-amber-400">Quality Score</p>
-            </div>
-             <div className="flex flex-col items-center justify-center text-center"><p className="text-3xl font-bold text-green-400">{passedCount}</p><p className="text-sm text-slate-300 mt-1">Checks Passed</p></div>
-             <div className="flex flex-col items-center justify-center text-center"><p className="text-3xl font-bold text-red-400">{totalCount - passedCount}</p><p className="text-sm text-slate-300 mt-1">Checks Failed</p></div>
-             <div className="flex flex-col items-center justify-center text-center"><p className="text-3xl font-bold text-slate-100">{totalIssues.toLocaleString()}</p><p className="text-sm text-slate-300 mt-1">Total Issues Found</p></div>
         </div>
     );
 };
@@ -158,18 +141,44 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => {
             {steps.map((step, index) => (
                 <React.Fragment key={step.name}>
                     <div className="flex flex-col items-center text-center">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${currentStep >= step.num ? 'bg-amber-500 border-amber-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${currentStep >= step.num ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
                            {React.cloneElement(step.icon, { className: 'w-6 h-6' })}
                         </div>
-                        <p className={`mt-2 text-xs font-medium w-24 ${currentStep >= step.num ? 'text-amber-400' : 'text-slate-500'}`}>{step.name}</p>
+                        <p className={`mt-2 text-xs font-medium w-24 ${currentStep >= step.num ? 'text-indigo-400' : 'text-slate-500'}`}>{step.name}</p>
                     </div>
-                    {index < steps.length - 1 && <div className={`flex-1 h-0.5 transition-all duration-500 ${currentStep > step.num ? 'bg-amber-500' : 'bg-slate-700'}`}></div>}
+                    {index < steps.length - 1 && <div className={`flex-1 h-0.5 transition-all duration-500 ${currentStep > step.num ? 'bg-indigo-500' : 'bg-slate-700'}`}></div>}
                 </React.Fragment>
             ))}
         </nav>
     );
 };
 
+const AiJudgeResult: React.FC<{ evaluation?: { score: number; reasoning: string } | null }> = ({ evaluation }) => {
+    if (!evaluation) return null;
+
+    const getStarColor = (score: number) => {
+        if (score >= 4) return 'text-green-400';
+        if (score === 3) return 'text-yellow-400';
+        return 'text-red-400';
+    };
+
+    return (
+        <div className="p-4 bg-slate-800/50 border border-slate-700 rounded-lg mb-6">
+            <h4 className="font-semibold text-white flex items-center gap-2 mb-2 text-base">
+                <Gavel className="w-5 h-5 text-indigo-400" />
+                AI Judge: Plan Evaluation
+            </h4>
+            <div className="flex items-start gap-4">
+                <div className={`flex items-center gap-1 font-bold text-lg ${getStarColor(evaluation.score)}`}>
+                    {evaluation.score} <Star className="w-5 h-5 fill-current" />
+                </div>
+                <p className="text-sm text-slate-400 flex-1 pt-0.5">{evaluation.reasoning}</p>
+            </div>
+        </div>
+    );
+};
+
+const modelOptions = [ "llama-3-70b","gpt-4o", "claude-3-opus", "gemini-1.5-pro" ];
 
 // --- Main Page Component ---
 const DataQualityAgentPage: React.FC = () => {
@@ -183,6 +192,8 @@ const DataQualityAgentPage: React.FC = () => {
     const [selectedChecks, setSelectedChecks] = useState<Set<string>>(new Set());
     const [validationReport, setValidationReport] = useState<ExecuteQualityChecksResponse | null>(null);
     const [showConnStr, setShowConnStr] = useState<boolean>(false);
+    const [customRules, setCustomRules] = useState<string>('');
+    const [selectedModel, setSelectedModel] = useState<string>(modelOptions[0]);
 
     const proposedChecks = useMemo(() => planResponse?.proposed_checks || [], [planResponse]);
 
@@ -190,12 +201,9 @@ const DataQualityAgentPage: React.FC = () => {
         if (!tableName) { setError("Table name is required."); return; }
         setIsLoading(true); setError(null); setDataProfile(null); setPlanResponse(null);
         try {
-            // Step 1: Generate the data profile
             const profileRes = await postGenerateDataProfile(connectionString, tableName);
             setDataProfile(profileRes);
-
-            // Step 2: Generate the quality check plan
-            const planRes = await postGenerateQualityPlan(connectionString, tableName);
+            const planRes = await postGenerateQualityPlan(connectionString, tableName, customRules);
             setPlanResponse(planRes);
             setSelectedChecks(new Set(planRes.proposed_checks.map(c => c.check_id)));
             setStep(2);
@@ -218,13 +226,7 @@ const DataQualityAgentPage: React.FC = () => {
         setIsLoading(true); setError(null);
         const checksToRun = proposedChecks.filter(c => selectedChecks.has(c.check_id));
         try {
-            const fullTableName = planResponse.table_name;
-            const quotedTableName = fullTableName
-            .split('.')
-            .map(part => `"${part}"`)
-            .join('.');
-            console.log(quotedTableName);
-            const res = await postExecuteQualityChecks(connectionString, quotedTableName, checksToRun);
+            const res = await postExecuteQualityChecks(connectionString, planResponse.table_name, checksToRun);
             setValidationReport(res);
             setStep(3);
         } catch (err: any) { setError(err.message || 'Failed to execute checks.'); }
@@ -247,61 +249,103 @@ const DataQualityAgentPage: React.FC = () => {
                         <StepIndicator currentStep={step} />
                         
                         {error && (
-                            <div className="mb-6 flex items-center gap-3 p-3 bg-red-900/40 border border-red-500/50 rounded-lg text-red-300 text-sm animate-fade-in max-w-3xl mx-auto">
+                            <div className="mb-6 flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm animate-fade-in max-w-3xl mx-auto">
                                 <AlertTriangle className="w-5 h-5 flex-shrink-0" />
                                 <span>{error}</span>
                             </div>
                         )}
                         
                         {step === 1 && (
-                            <div className="card-border rounded-2xl bg-slate-900/70 backdrop-blur-sm max-w-lg mx-auto p-8 space-y-6 animate-fade-in">
-                                <div className="text-center">
-                                    <h3 className="text-xl font-semibold text-white flex items-center justify-center gap-2">
-                                        <Target className="text-amber-400"/> Define Scope
-                                    </h3>
-                                    <p className="text-slate-400 mt-1 text-sm">Provide details to profile data and generate a quality plan.</p>
+                            <div className={`${cardContainerStyle} max-w-2xl mx-auto`}>
+                                <div className={cardHeaderStyle}>
+                                    <div>
+                                        <h3 className={cardTitleStyle}><Target className="w-6 h-6 text-indigo-400"/> Define Scope</h3>
+                                        <p className={cardSubtitleStyle}>Provide details to generate a quality plan.</p>
+                                    </div>
                                 </div>
-                                <fieldset className="space-y-4">
-                                    <div>
-                                        <label htmlFor="connStr" className="text-sm font-medium text-slate-300 block mb-2">Connection String (Optional)</label>
-                                        <div className="relative">
-                                            <input id="connStr" type={showConnStr ? 'text' : 'password'} value={connectionString} onChange={(e) => setConnectionString(e.target.value)} placeholder="Defaults to server configuration" className="w-full input-glass pr-10"/>
-                                            <button type="button" onClick={() => setShowConnStr(!showConnStr)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-200" aria-label={showConnStr ? "Hide connection string" : "Show connection string"}>
-                                                {showConnStr ? <EyeOff className="w-5 h-5"/> : <Eye className="w-5 h-5"/>}
-                                            </button>
+                                <div className={cardBodyStyle}>
+                                    <fieldset className="space-y-5">
+                                        <div>
+                                            <label htmlFor="connStr" className="text-sm font-medium text-slate-300 block mb-2">Connection String (Optional)</label>
+                                            <div className="relative">
+                                                <input id="connStr" type={showConnStr ? 'text' : 'password'} value={connectionString} onChange={(e) => setConnectionString(e.target.value)} placeholder="Defaults to server configuration" className={`${inputBaseStyle} pr-10`}/>
+                                                <button type="button" onClick={() => setShowConnStr(!showConnStr)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-200" aria-label={showConnStr ? "Hide connection string" : "Show connection string"}>
+                                                    {showConnStr ? <EyeOff className="w-5 h-5"/> : <Eye className="w-5 h-5"/>}
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div>
-                                        <label htmlFor="tableName" className="text-sm font-medium text-slate-300 block mb-2">Table Name</label>
-                                        <input id="tableName" type="text" value={tableName} onChange={(e) => setTableName(e.target.value)} placeholder="e.g., public.users" className="w-full input-glass"/>
-                                    </div>
-                                </fieldset>
-                                <div className="pt-4 flex justify-end">
-                                    <button onClick={handleGeneratePlan} disabled={isLoading || !tableName} className="btn-primary bg-teal-600 hover:bg-teal-500">
-                                        {isLoading ? <><LoaderCircle className="animate-spin w-5 h-5"/> Analyzing...</> : <><PlayCircle className="w-5 h-5"/> Generate Plan</>}
+                                        <div className="grid md:grid-cols-2 gap-5">
+                                            <div>
+                                                <label htmlFor="tableName" className="text-sm font-medium text-slate-300 block mb-2">Table Name</label>
+                                                <input id="tableName" type="text" value={tableName} onChange={(e) => setTableName(e.target.value)} placeholder="e.g., public.users" className={inputBaseStyle}/>
+                                            </div>
+                                            <div>
+                                                <label htmlFor="modelChoice" className="text-sm font-medium text-slate-300 block mb-2 flex items-center gap-2"><Bot className="w-4 h-4" /> Model</label>
+                                                <select id="modelChoice" value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} className={inputBaseStyle}>
+                                                    {modelOptions.map(model => ( <option key={model} value={model} className="bg-slate-800 text-white">{model}</option>))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <hr className="border-t border-slate-700/60" />
+                                        <div>
+                                            <label htmlFor="customRules" className="text-sm font-medium text-slate-300 block mb-2 flex items-center gap-2"><FileText className="w-4 h-4" /> Custom Rules (Optional)</label>
+                                            <textarea id="customRules" value={customRules} onChange={(e) => setCustomRules(e.target.value)} placeholder="e.g., Ensure all SKU values start with 'PROD-'." className={`${inputBaseStyle} !h-20`} rows={3}/>
+                                        </div>
+                                    </fieldset>
+                                </div>
+                                <div className="p-6 pt-2 flex justify-end">
+                                    <button 
+                                        onClick={handleGeneratePlan} 
+                                        disabled={isLoading || !tableName} 
+                                        className="group btn-primary bg-indigo-600 text-white hover:bg-indigo-500 transition-all flex items-center text-sm font-semibold px-4 py-2 rounded-lg shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isLoading ? <><LoaderCircle className="animate-spin w-5 h-5 mr-2"/> Analyzing...</> : <>Generate Plan <ArrowRight className="w-4 h-4 ml-1.5 transition-transform duration-300 group-hover:translate-x-1" /></>}
                                     </button>
                                 </div>
                             </div>
                         )}
                         
-                        {(step === 2 && planResponse) && (
-                             <div className="w-full bg-slate-900/70 backdrop-blur-sm border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/20 p-6 md:p-8 animate-fade-in">
-                                <div className="flex flex-col lg:flex-row gap-8">
+                        {step === 2 && planResponse && (
+                             <div className={`${cardContainerStyle} max-w-5xl mx-auto`}>
+                                <div className={cardHeaderStyle}>
+                                    <h3 className={cardTitleStyle}><ShieldCheck className="w-6 h-6 text-indigo-400"/>Review AI-Generated Plan</h3>
+                                </div>
+                                <div className="flex flex-col lg:flex-row gap-8 p-6">
                                     <DataProfileSidebar profile={dataProfile} />
-                                    <div className="flex-grow space-y-6 lg:border-l lg:border-slate-700/80 lg:pl-8">
-                                        <div className="space-y-3">
+                                    <div className="flex-grow flex flex-col space-y-6 lg:border-l lg:border-slate-700/80 lg:pl-8">
+                                        
+                                        {/* >>> THIS IS THE FIX <<< */}
+                                        {/* The AiJudgeResult component is now rendered here, in the main content area */}
+                                        <AiJudgeResult evaluation={planResponse.evaluation} />
+
+                                        <div className="flex-grow space-y-3">
                                             <div className="flex justify-between items-center">
-                                                <h4 className="font-semibold text-white flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-amber-400"/>Review AI-Generated Plan</h4>
-                                                <div className="flex gap-4"><button onClick={() => setSelectedChecks(new Set(proposedChecks.map(c => c.check_id)))} className="text-xs font-medium text-slate-300 hover:text-white transition-colors">Select All</button><button onClick={() => setSelectedChecks(new Set())} className="text-xs font-medium text-slate-300 hover:text-white transition-colors">Deselect All</button></div>
+                                                <h4 className="font-semibold text-white">Select checks to run:</h4>
+                                                <div className="flex gap-4">
+                                                    <button onClick={() => setSelectedChecks(new Set(proposedChecks.map(c => c.check_id)))} className="text-xs font-medium text-slate-300 hover:text-white transition-colors">Select All</button>
+                                                    <button onClick={() => setSelectedChecks(new Set())} className="text-xs font-medium text-slate-300 hover:text-white transition-colors">Deselect All</button>
+                                                </div>
                                             </div>
                                             <div className="max-h-[34rem] overflow-y-auto space-y-3 rounded-lg bg-slate-900/50 p-3 border border-slate-800 shadow-inner shadow-black/20">
                                                 {proposedChecks.length > 0 ? proposedChecks.map((check) => (<CheckItem key={check.check_id} check={check} isChecked={selectedChecks.has(check.check_id)} onCheckChange={handleCheckChange} />)) : <p className="text-slate-400 text-center p-4">No checks were proposed by the AI.</p>}
                                             </div>
                                         </div>
-                                        <div className="flex gap-4 pt-4 border-t border-slate-700/80">
-                                            <button onClick={handleReset} disabled={isLoading} className="w-1/3 btn-secondary"><ChevronLeft className="w-5 h-5"/> Back</button>
-                                            <button onClick={handleExecuteChecks} disabled={isLoading || selectedChecks.size === 0} className="w-2/3 btn-primary bg-amber-600 hover:bg-amber-500">
-                                                {isLoading ? <><LoaderCircle className="animate-spin w-5 h-5"/> Executing...</> : <><PlayCircle className="w-5 h-5"/> Run Selected Checks ({selectedChecks.size})</>}
+                                        <div className="flex justify-between items-center pt-6 border-t border-slate-700/80">
+                                            {/* >>> THIS IS THE FIX <<< */}
+                                            {/* The "Back" button now uses the primary button style */}
+                                            <button 
+                                                onClick={handleReset} 
+                                                disabled={isLoading} 
+                                                className="group btn-primary bg-indigo-600 text-white hover:bg-indigo-500 transition-all flex items-center text-sm font-semibold px-4 py-2 rounded-lg shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <ChevronLeft className="w-5 h-5 mr-1.5 transition-transform duration-300 group-hover:-translate-x-1"/> Back
+                                            </button>
+                                            <button 
+                                                onClick={handleExecuteChecks} 
+                                                disabled={isLoading || selectedChecks.size === 0} 
+                                                className="group btn-primary bg-indigo-600 text-white hover:bg-indigo-500 transition-all flex items-center text-sm font-semibold px-4 py-2 rounded-lg shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {isLoading ? <><LoaderCircle className="animate-spin w-5 h-5 mr-2"/> Executing...</> : <>Run Checks ({selectedChecks.size}) <ArrowRight className="w-4 h-4 ml-1.5 transition-transform duration-300 group-hover:translate-x-1" /></>}
                                             </button>
                                         </div>
                                     </div>
@@ -309,32 +353,22 @@ const DataQualityAgentPage: React.FC = () => {
                             </div>
                         )}
                         
-                        {/* {(step === 3 && validationReport) && (
-                             <div className="w-full bg-slate-900/70 backdrop-blur-sm border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/20 p-6 md:p-8 animate-fade-in">
-                                <ReportSummary report={validationReport} />
-                                <div className="space-y-3">
-                                    <h4 className="font-semibold text-white flex items-center gap-2 mb-4">
-                                        <Sparkles className="w-5 h-5 text-amber-400"/>Detailed Report: <span className="text-amber-300">{validationReport.table_name}</span>
-                                    </h4>
-                                    <div className="max-h-[30rem] overflow-y-auto space-y-2 rounded-lg bg-slate-900/50 p-3 border border-slate-800 shadow-inner shadow-black/20">
-                                        {validationReport.validation_results.map((result) => (
-                                            <div key={result.check_id} className={`p-4 rounded-lg border ${result.is_valid ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
-                                                <div className="flex items-center justify-between"><p className="font-medium text-slate-100">{result.rule_name}</p>{result.is_valid ? (<span className="flex items-center gap-1.5 text-xs font-semibold text-green-400"><CheckCircle className="w-4 h-4"/> PASS</span>) : (<span className="flex items-center gap-1.5 text-xs font-semibold text-red-400"><XCircle className="w-4 h-4"/> FAIL</span>)}</div>
-                                                {!result.is_valid && (<p className="text-sm text-red-300 mt-2 font-mono bg-red-900/30 px-2 py-1 rounded w-fit">{result.invalid_count.toLocaleString()} of {result.total_rows.toLocaleString()} rows failed this check.</p>)}
-                                            </div>
-                                        ))}
+                        {step === 3 && validationReport && (
+                             <div className={`${cardContainerStyle} max-w-5xl mx-auto`}>
+                                <div className={cardHeaderStyle}>
+                                    <h3 className={cardTitleStyle}><Sparkles className="w-6 h-6 text-indigo-400"/>Detailed Report</h3>
+                                </div>
+                                <div className={cardBodyStyle}>
+                                    <ReportDashboard report={validationReport} />
+                                    <div className="pt-6 mt-6 border-t border-slate-700/80 flex justify-center">
+                                      <button 
+                                        onClick={handleReset} 
+                                        className="group btn-secondary flex items-center text-sm font-semibold px-4 py-2 rounded-lg bg-indigo-900/50 text-indigo-300 hover:bg-indigo-900 border border-indigo-700/50"
+                                      >
+                                        <RefreshCw className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:rotate-180"/> 
+                                        Start New Analysis
+                                      </button>
                                     </div>
-                                </div>
-                                <div className="pt-6 mt-6 border-t border-slate-700/80">
-                                  <button onClick={handleReset} className="w-full btn-secondary"><RefreshCw className="w-5 h-5"/> Start New Analysis</button>
-                                </div>
-                            </div>
-                        )} */}
-                        {(step === 3 && validationReport) && (
-                             <div>
-                                <ReportDashboard report={validationReport} />
-                                <div className="pt-6 mt-6 border-t border-slate-700/80">
-                                  <button onClick={handleReset} className="w-full btn-secondary"><RefreshCw className="w-5 h-5"/> Start New Analysis</button>
                                 </div>
                             </div>
                         )}

@@ -6,7 +6,7 @@ from pydantic import ValidationError
 
 from app.core.config import Settings, get_settings # type: ignore
 from app.api import models # type: ignore
-from app.services import db_service, llm_service # type: ignore
+from app.services import db_service, evaluation_service, llm_service, notification # type: ignore
 from app.services.errors import DatabaseServiceError, LLMServiceError # type: ignore
 
 logger = logging.getLogger(__name__)    
@@ -149,6 +149,21 @@ async def classify_data(
             system_prompt, user_prompt, response_format={"type": "json_object"}
         )
         
+        classification_report = models.ClassificationResponse.model_validate_json(response_json_str)
+        
+        logger.info("Evaluating generated classification with LLM Judge...")
+        evaluation_result = await evaluation_service.judge_data_classification(
+            schema_str=json.dumps(schema_to_classify.model_dump(mode='json'), indent=2),
+            classification_results=classification_report.model_dump(mode='json')["classification_results"]
+        )
+        classification_report.evaluation = evaluation_result
+        
+        try:
+            await notification.send_data_classification_alert(classification_report)
+        except Exception as e:
+            logger.error(f"Failed to send data classification notification: {e}")
+        
+        return classification_report
         logger.info(f"Raw classification response from AI: {response_json_str}")
         return models.ClassificationResponse.model_validate_json(response_json_str)
     except (ValidationError, json.JSONDecodeError) as e:
@@ -210,6 +225,9 @@ async def generate_masking_sql(
             - For `timestamp`, `timestamptz`, `date`: Use `'1970-01-01 00:00:00'::timestamp`.
             - For `boolean`: Use `FALSE::boolean`.
             - For `uuid`: Use `'00000000-0000-0000-0000-000000000000'::uuid`.
+            - The condition for seeing unmasked data is `current_user = 'admin'`.
+            - The final `CASE` statement structure is: `CASE WHEN current_user = 'admin' THEN "column_name" ELSE [MASKING_LOGIC_WITH_CAST] END AS "column_name"`.
+            - Provide default date only for timestamp columns and not for other data types.
         4.  **Referential Integrity is Sacred:** Columns classified as 'PK' (Primary Key) or 'FK' (Foreign Key) MUST NEVER be masked. Their `select_expression` must be only the double-quoted column name.
         **Input Context:**
         You will receive a JSON array describing tables. For each column, you are given its `column_name`, `data_type`, and `classification`. Use this information to apply the Golden Rules correctly.
