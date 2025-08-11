@@ -1,0 +1,4 @@
+{"id": "TTDB-001", "prompt": "Show me the first 5 customers, ordered by when they were created.", "golden_sql": "SELECT * FROM \"customers\" ORDER BY \"created_at\" ASC LIMIT 5;"}
+{"id": "TTDB-002", "prompt": "How many orders have been placed in total?", "golden_sql": "SELECT COUNT(*) FROM \"orders\";"}
+{"id": "TTDB-003", "prompt": "What is the average order value?", "golden_sql": "SELECT AVG(\"total_amount\") FROM \"orders\";"}
+{"id": "TTDB-004", "prompt": "Show me the 3 most recent orders.", "golden_sql": "SELECT * FROM \"orders\" ORDER BY \"order_date\" DESC LIMIT 3;"}

@@ -427,3 +427,12 @@ class EvaluationResult(BaseModel):
     reasoning: str = Field(..., description="A brief explanation of the evaluation.")
     # The score is still useful for logging and metrics, so we keep it.
     score: int  
+
+
+class DownloadGovernanceReportRequest(BaseModel):
+    """
+    Request body for downloading the full governance report.
+    It contains data from both referential integrity and the SQL masking plan.
+    """
+    referential_integrity: ReferentialIntegrityResponse
+    masking_sql: SQLGenerationResponse

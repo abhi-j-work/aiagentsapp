@@ -1,4 +1,0 @@
-{"id": "TTDB-001", "prompt": "Show me the first 5 customers, ordered by when they were created.", "golden_sql": "SELECT * FROM \"public\".\"customers\" ORDER BY \"created_at\" ASC LIMIT 5;"}
-{"id": "TTDB-002", "prompt": "What is the total number of users with a '.gov' email address?", "golden_sql": "SELECT COUNT(*) FROM \"public\".\"users\" WHERE \"email\" LIKE '%.gov';"}
-{"id": "TTDB-003", "prompt": "List the different account statuses and how many users have each status.", "golden_sql": "SELECT \"status\", COUNT(\"user_id\") AS \"user_count\" FROM \"public\".\"users\" GROUP BY \"status\" ORDER BY \"user_count\" DESC;"}
-{"id": "TTDB-004", "prompt": "Who are the top 3 sales representatives by total sales amount?", "golden_sql": "SELECT \"rep_name\", SUM(\"sale_amount\") AS \"total_sales\" FROM \"public\".\"sales\" GROUP BY \"rep_name\" ORDER BY \"total_sales\" DESC LIMIT 3;"}

@@ -15,3 +15,6 @@ pydantic-settings
 sqlglot
 asyncpg
 python-telegram-bot
+pandas
+openpyxl
+python-docx
