@@ -26,7 +26,7 @@ interface CheckItemProps {
     onCheckChange: (id: string, isChecked: boolean) => void;
 }
 
-interface DataProfileSidebarProps {
+interface DataProfileDisplayProps {
     profile: GenerateDataProfileResponse | null;
 }
 
@@ -34,27 +34,27 @@ interface StepIndicatorProps {
     currentStep: number;
 }
 
-// --- Style Constants for the new theme ---
+// --- Style Constants ---
 const cardContainerStyle = "card-border rounded-2xl bg-slate-900/70 backdrop-blur-sm animate-fade-in";
 const cardHeaderStyle = "p-6 border-b border-indigo-500/30 flex justify-between items-center";
 const cardTitleStyle = "text-xl font-semibold text-white flex items-center gap-3";
 const cardSubtitleStyle = "text-sm text-slate-400 mt-1";
 const cardBodyStyle = "p-6";
 const inputBaseStyle = "w-full px-4 py-2 glass rounded-lg border border-slate-700 bg-slate-800/50 text-white focus:border-indigo-400 focus:outline-none transition";
+const primaryButtonStyle = "group btn-primary bg-indigo-600 text-white hover:bg-indigo-500 transition-all flex items-center text-sm font-semibold px-4 py-2 rounded-lg shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed";
 
-
-// --- Sub-Components (Fully Defined) ---
+// --- Sub-Components (Unchanged) ---
 
 const CheckItem: React.FC<CheckItemProps> = ({ check, isChecked, onCheckChange }) => {
+    // ... No changes to this component ...
     const getIcon = () => {
         const name = check.rule_name.toLowerCase();
-        if (name.includes('unique') || name.includes('uniqueness')) return <Fingerprint className="w-5 h-5 text-indigo-400" />;
-        if (name.includes('null') || name.includes('missing')) return <Ban className="w-5 h-5 text-rose-400" />;
-        if (name.includes('format') || name.includes('regex') || name.includes('pattern')) return <PenTool className="w-5 h-5 text-sky-400" />;
+        if (name.includes('unique')) return <Fingerprint className="w-5 h-5 text-indigo-400" />;
+        if (name.includes('null')) return <Ban className="w-5 h-5 text-rose-400" />;
+        if (name.includes('format')) return <PenTool className="w-5 h-5 text-sky-400" />;
         if (name.includes('primary key')) return <KeyRound className="w-5 h-5 text-amber-400" />;
         return <HelpCircle className="w-5 h-5 text-slate-500" />;
     };
-
     return (
         <label className="flex items-start p-3 bg-slate-800/60 rounded-lg cursor-pointer hover:bg-slate-700/80 border border-slate-700/50 hover:border-indigo-500/50 transition-all">
             <div className="flex-shrink-0 mt-0.5 mr-4">{getIcon()}</div>
@@ -67,73 +67,50 @@ const CheckItem: React.FC<CheckItemProps> = ({ check, isChecked, onCheckChange }
     );
 };
 
-const DataProfileSidebar: React.FC<DataProfileSidebarProps> = ({ profile }) => {
+const DataProfileDisplay: React.FC<DataProfileDisplayProps> = ({ profile }) => {
+    // ... No changes to this component, renamed for clarity ...
     if (!profile || !profile.columns || profile.columns.length === 0) {
-        return (
-             <div className="w-full lg:w-[320px] xl:w-[360px] flex-shrink-0">
-                 <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-700/80">
-                     <h5 className="font-semibold text-white flex items-center gap-2 mb-2"><BarChart3 className="w-5 h-5 text-indigo-400" />Data Profile</h5>
-                     <p className="text-sm text-slate-400">Profile data will appear here after analysis.</p>
-                </div>
-            </div>
-        );
+        return <p className="text-sm text-slate-400">Profile data will appear here after analysis.</p>;
     }
-
-    interface AIColumnProfile {
-        column_name: string;
-        inferred_type: string;
-        assumptions_about_data: string;
-        potential_quality_risks: string;
-        common_patterns_or_values: string;
-    }
-
+    interface AIColumnProfile { column_name: string; inferred_type: string; assumptions_about_data: string; potential_quality_risks: string; common_patterns_or_values: string; }
     return (
-        <div className="w-full lg:w-[320px] xl:w-[360px] flex-shrink-0">
-             <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-700/80">
-                <h5 className="font-semibold text-white flex items-center gap-2 mb-3 border-b border-slate-700 pb-2">
-                    <BarChart3 className="w-5 h-5 text-indigo-400" />
-                    AI Data Profile: <span className="text-indigo-300">{profile.table_name}</span>
-                </h5>
-                <ul className="text-sm space-y-2 pt-2">
-                    <li className="flex justify-between items-center text-slate-300">
-                        <span><Database className="inline w-4 h-4 mr-2"/>Columns Analyzed</span>
-                        <span className="font-mono text-indigo-300">{profile.columns.length}</span>
-                    </li>
-                </ul>
-                <div className="mt-4 max-h-[28rem] overflow-y-auto space-y-2 pr-2">
-                    {profile.columns.map((col: AIColumnProfile) => (
-                        <details key={col.column_name} className="bg-slate-800/50 rounded-md transition-colors hover:bg-slate-800/80">
-                             <summary className="p-2 cursor-pointer font-medium text-slate-200 text-sm list-none flex items-center justify-between">
-                                {col.column_name}
-                                <span className="text-xs font-mono text-indigo-300 bg-indigo-900/50 px-2 py-0.5 rounded-md">{col.inferred_type}</span>
-                            </summary>
-                            <div className="p-3 border-t border-slate-700 text-xs text-slate-400 space-y-2">
-                                <div>
-                                    <span className="font-semibold text-slate-300 block mb-0.5">Assumptions:</span>
-                                    <span>{col.assumptions_about_data}</span>
-                                </div>
-                                <div>
-                                    <span className="font-semibold text-slate-300 block mb-0.5">Potential Risks:</span>
-                                    <span>{col.potential_quality_risks}</span>
-                                </div>
-                                <div>
-                                    <span className="font-semibold text-slate-300 block mb-0.5">Hypothetical Patterns:</span>
-                                    <span>{col.common_patterns_or_values}</span>
-                                </div>
-                            </div>
-                        </details>
-                    ))}
-                </div>
+        <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-700/80">
+            <h5 className="font-semibold text-white flex items-center gap-2 mb-3 border-b border-slate-700 pb-2">
+                <BarChart3 className="w-5 h-5 text-indigo-400" />
+                AI Data Profile: <span className="text-indigo-300">{profile.table_name}</span>
+            </h5>
+            <ul className="text-sm space-y-2 pt-2">
+                <li className="flex justify-between items-center text-slate-300">
+                    <span><Database className="inline w-4 h-4 mr-2"/>Columns Analyzed</span>
+                    <span className="font-mono text-indigo-300">{profile.columns.length}</span>
+                </li>
+            </ul>
+            <div className="mt-4 max-h-[60vh] overflow-y-auto space-y-2 pr-2">
+                {profile.columns.map((col: AIColumnProfile) => (
+                    <details key={col.column_name} className="bg-slate-800/50 rounded-md transition-colors hover:bg-slate-800/80">
+                         <summary className="p-2 cursor-pointer font-medium text-slate-200 text-sm list-none flex items-center justify-between">
+                            {col.column_name}
+                            <span className="text-xs font-mono text-indigo-300 bg-indigo-900/50 px-2 py-0.5 rounded-md">{col.inferred_type}</span>
+                        </summary>
+                        <div className="p-3 border-t border-slate-700 text-xs text-slate-400 space-y-2">
+                            <div><span className="font-semibold text-slate-300 block mb-0.5">Assumptions:</span><span>{col.assumptions_about_data}</span></div>
+                            <div><span className="font-semibold text-slate-300 block mb-0.5">Potential Risks:</span><span>{col.potential_quality_risks}</span></div>
+                            <div><span className="font-semibold text-slate-300 block mb-0.5">Hypothetical Patterns:</span><span>{col.common_patterns_or_values}</span></div>
+                        </div>
+                    </details>
+                ))}
             </div>
         </div>
     );
 };
 
+// --- UPDATED Step Indicator ---
 const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => {
     const steps = [
         { num: 1, name: "Define Scope", icon: <Target/> },
-        { num: 2, name: "Review Plan", icon: <ClipboardList/> },
-        { num: 3, name: "View Report", icon: <Sparkles/> }
+        { num: 2, name: "Profile & Define Rules", icon: <FileText/> }, // NEW STEP
+        { num: 3, name: "Review AI Plan", icon: <ClipboardList/> },
+        { num: 4, name: "View Report", icon: <Sparkles/> }
     ];
 
     return (
@@ -154,24 +131,18 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => {
 };
 
 const AiJudgeResult: React.FC<{ evaluation?: { score: number; reasoning: string } | null }> = ({ evaluation }) => {
+    // ... No changes to this component ...
     if (!evaluation) return null;
-
     const getStarColor = (score: number) => {
         if (score >= 4) return 'text-green-400';
         if (score === 3) return 'text-yellow-400';
         return 'text-red-400';
     };
-
     return (
         <div className="p-4 bg-slate-800/50 border border-slate-700 rounded-lg mb-6">
-            <h4 className="font-semibold text-white flex items-center gap-2 mb-2 text-base">
-                <Gavel className="w-5 h-5 text-indigo-400" />
-                AI Judge: Plan Evaluation
-            </h4>
+            <h4 className="font-semibold text-white flex items-center gap-2 mb-2 text-base"><Gavel className="w-5 h-5 text-indigo-400" />AI Judge: Plan Evaluation</h4>
             <div className="flex items-start gap-4">
-                <div className={`flex items-center gap-1 font-bold text-lg ${getStarColor(evaluation.score)}`}>
-                    {evaluation.score} <Star className="w-5 h-5 fill-current" />
-                </div>
+                <div className={`flex items-center gap-1 font-bold text-lg ${getStarColor(evaluation.score)}`}>{evaluation.score} <Star className="w-5 h-5 fill-current" /></div>
                 <p className="text-sm text-slate-400 flex-1 pt-0.5">{evaluation.reasoning}</p>
             </div>
         </div>
@@ -180,9 +151,9 @@ const AiJudgeResult: React.FC<{ evaluation?: { score: number; reasoning: string 
 
 const modelOptions = [ "llama-3-70b","gpt-4o", "claude-3-opus", "gemini-1.5-pro" ];
 
-// --- Main Page Component ---
+// --- Main Page Component (UPDATED) ---
 const DataQualityAgentPage: React.FC = () => {
-    const [step, setStep] = useState<1 | 2 | 3>(1);
+    const [step, setStep] = useState<1 | 2 | 3 | 4>(1); // UPDATED to 4 steps
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [connectionString, setConnectionString] = useState<string>('');
@@ -197,23 +168,37 @@ const DataQualityAgentPage: React.FC = () => {
 
     const proposedChecks = useMemo(() => planResponse?.proposed_checks || [], [planResponse]);
 
-    const handleGeneratePlan = async () => {
+    // UPDATED: Step 1 now only generates the profile
+    const handleGenerateProfile = async () => {
         if (!tableName) { setError("Table name is required."); return; }
-        setIsLoading(true); setError(null); setDataProfile(null); setPlanResponse(null);
+        setIsLoading(true); setError(null); setDataProfile(null);
         try {
             const profileRes = await postGenerateDataProfile(connectionString, tableName);
             setDataProfile(profileRes);
-            const planRes = await postGenerateQualityPlan(connectionString, tableName, customRules);
-            setPlanResponse(planRes);
-            setSelectedChecks(new Set(planRes.proposed_checks.map(c => c.check_id)));
-            setStep(2);
+            setStep(2); // Move to the new Step 2
         } catch (err: any) { 
-            setError(err.message || 'Failed to generate plan.'); 
+            setError(err.message || 'Failed to generate data profile.'); 
         } finally { 
             setIsLoading(false); 
         }
     };
     
+    // NEW: Step 2 generates the plan using custom rules
+    const handleGeneratePlanWithRules = async () => {
+        if (!tableName) { setError("Table name is missing."); return; }
+        setIsLoading(true); setError(null); setPlanResponse(null);
+        try {
+            const planRes = await postGenerateQualityPlan(connectionString, tableName, customRules);
+            setPlanResponse(planRes);
+            setSelectedChecks(new Set(planRes.proposed_checks.map(c => c.check_id)));
+            setStep(3); // Move to Step 3
+        } catch (err: any) {
+            setError(err.message || 'Failed to generate plan.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleCheckChange = (id: string, isChecked: boolean) => {
         const newSet = new Set(selectedChecks);
         if (isChecked) { newSet.add(id); } else { newSet.delete(id); }
@@ -228,7 +213,7 @@ const DataQualityAgentPage: React.FC = () => {
         try {
             const res = await postExecuteQualityChecks(connectionString, planResponse.table_name, checksToRun);
             setValidationReport(res);
-            setStep(3);
+            setStep(4); // Move to Step 4
         } catch (err: any) { setError(err.message || 'Failed to execute checks.'); }
         finally { setIsLoading(false); }
     };
@@ -241,6 +226,11 @@ const DataQualityAgentPage: React.FC = () => {
         setValidationReport(null);
         setSelectedChecks(new Set());
     };
+
+    const handleBack = (targetStep: 1 | 2 | 3) => {
+        setStep(targetStep);
+        setError(null);
+    }
 
     return (
         <div className="min-h-[calc(100vh-80px)] w-full bg-slate-900 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] flex items-start justify-center p-4 sm:p-6 lg:p-8">
@@ -259,20 +249,15 @@ const DataQualityAgentPage: React.FC = () => {
                             <div className={`${cardContainerStyle} max-w-2xl mx-auto`}>
                                 <div className={cardHeaderStyle}>
                                     <div>
-                                        <h3 className={cardTitleStyle}><Target className="w-6 h-6 text-indigo-400"/> Define Scope</h3>
-                                        <p className={cardSubtitleStyle}>Provide details to generate a quality plan.</p>
+                                        <h3 className={cardTitleStyle}><Target className="w-6 h-6 text-indigo-400"/> Step 1: Define Scope</h3>
+                                        <p className={cardSubtitleStyle}>Provide connection details and the target table name.</p>
                                     </div>
                                 </div>
                                 <div className={cardBodyStyle}>
                                     <fieldset className="space-y-5">
                                         <div>
                                             <label htmlFor="connStr" className="text-sm font-medium text-slate-300 block mb-2">Connection String (Optional)</label>
-                                            <div className="relative">
-                                                <input id="connStr" type={showConnStr ? 'text' : 'password'} value={connectionString} onChange={(e) => setConnectionString(e.target.value)} placeholder="Defaults to server configuration" className={`${inputBaseStyle} pr-10`}/>
-                                                <button type="button" onClick={() => setShowConnStr(!showConnStr)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-200" aria-label={showConnStr ? "Hide connection string" : "Show connection string"}>
-                                                    {showConnStr ? <EyeOff className="w-5 h-5"/> : <Eye className="w-5 h-5"/>}
-                                                </button>
-                                            </div>
+                                            <div className="relative"><input id="connStr" type={showConnStr ? 'text' : 'password'} value={connectionString} onChange={(e) => setConnectionString(e.target.value)} placeholder="Defaults to server configuration" className={`${inputBaseStyle} pr-10`}/><button type="button" onClick={() => setShowConnStr(!showConnStr)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-200" aria-label={showConnStr ? "Hide" : "Show"}>{showConnStr ? <EyeOff className="w-5 h-5"/> : <Eye className="w-5 h-5"/>}</button></div>
                                         </div>
                                         <div className="grid md:grid-cols-2 gap-5">
                                             <div>
@@ -281,93 +266,71 @@ const DataQualityAgentPage: React.FC = () => {
                                             </div>
                                             <div>
                                                 <label htmlFor="modelChoice" className="text-sm font-medium text-slate-300 block mb-2 flex items-center gap-2"><Bot className="w-4 h-4" /> Model</label>
-                                                <select id="modelChoice" value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} className={inputBaseStyle}>
-                                                    {modelOptions.map(model => ( <option key={model} value={model} className="bg-slate-800 text-white">{model}</option>))}
-                                                </select>
+                                                <select id="modelChoice" value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} className={inputBaseStyle}>{modelOptions.map(model => ( <option key={model} value={model} className="bg-slate-800 text-white">{model}</option>))}</select>
                                             </div>
-                                        </div>
-                                        <hr className="border-t border-slate-700/60" />
-                                        <div>
-                                            <label htmlFor="customRules" className="text-sm font-medium text-slate-300 block mb-2 flex items-center gap-2"><FileText className="w-4 h-4" /> Custom Rules (Optional)</label>
-                                            <textarea id="customRules" value={customRules} onChange={(e) => setCustomRules(e.target.value)} placeholder="e.g., Ensure all SKU values start with 'PROD-'." className={`${inputBaseStyle} !h-20`} rows={3}/>
                                         </div>
                                     </fieldset>
                                 </div>
                                 <div className="p-6 pt-2 flex justify-end">
-                                    <button 
-                                        onClick={handleGeneratePlan} 
-                                        disabled={isLoading || !tableName} 
-                                        className="group btn-primary bg-indigo-600 text-white hover:bg-indigo-500 transition-all flex items-center text-sm font-semibold px-4 py-2 rounded-lg shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {isLoading ? <><LoaderCircle className="animate-spin w-5 h-5 mr-2"/> Analyzing...</> : <>Generate Plan <ArrowRight className="w-4 h-4 ml-1.5 transition-transform duration-300 group-hover:translate-x-1" /></>}
-                                    </button>
+                                    <button onClick={handleGenerateProfile} disabled={isLoading || !tableName} className={primaryButtonStyle}>{isLoading ? <><LoaderCircle className="animate-spin w-5 h-5 mr-2"/> Profiling...</> : <>Profile Table <ArrowRight className="w-4 h-4 ml-1.5 transition-transform duration-300 group-hover:translate-x-1" /></>}</button>
                                 </div>
                             </div>
                         )}
-                        
-                        {step === 2 && planResponse && (
-                             <div className={`${cardContainerStyle} max-w-5xl mx-auto`}>
+
+                        {step === 2 && (
+                            <div className={`${cardContainerStyle} max-w-5xl mx-auto`}>
                                 <div className={cardHeaderStyle}>
-                                    <h3 className={cardTitleStyle}><ShieldCheck className="w-6 h-6 text-indigo-400"/>Review AI-Generated Plan</h3>
+                                    <h3 className={cardTitleStyle}><FileText className="w-6 h-6 text-indigo-400"/> Step 2: Profile & Define Rules</h3>
                                 </div>
                                 <div className="flex flex-col lg:flex-row gap-8 p-6">
-                                    <DataProfileSidebar profile={dataProfile} />
+                                    <div className="w-full lg:w-[320px] xl:w-[360px] flex-shrink-0"><DataProfileDisplay profile={dataProfile} /></div>
                                     <div className="flex-grow flex flex-col space-y-6 lg:border-l lg:border-slate-700/80 lg:pl-8">
-                                        
-                                        {/* >>> THIS IS THE FIX <<< */}
-                                        {/* The AiJudgeResult component is now rendered here, in the main content area */}
-                                        <AiJudgeResult evaluation={planResponse.evaluation} />
-
-                                        <div className="flex-grow space-y-3">
-                                            <div className="flex justify-between items-center">
-                                                <h4 className="font-semibold text-white">Select checks to run:</h4>
-                                                <div className="flex gap-4">
-                                                    <button onClick={() => setSelectedChecks(new Set(proposedChecks.map(c => c.check_id)))} className="text-xs font-medium text-slate-300 hover:text-white transition-colors">Select All</button>
-                                                    <button onClick={() => setSelectedChecks(new Set())} className="text-xs font-medium text-slate-300 hover:text-white transition-colors">Deselect All</button>
-                                                </div>
-                                            </div>
-                                            <div className="max-h-[34rem] overflow-y-auto space-y-3 rounded-lg bg-slate-900/50 p-3 border border-slate-800 shadow-inner shadow-black/20">
-                                                {proposedChecks.length > 0 ? proposedChecks.map((check) => (<CheckItem key={check.check_id} check={check} isChecked={selectedChecks.has(check.check_id)} onCheckChange={handleCheckChange} />)) : <p className="text-slate-400 text-center p-4">No checks were proposed by the AI.</p>}
-                                            </div>
+                                        <div>
+                                            <label htmlFor="customRules" className="text-base font-medium text-slate-200 block mb-2">Custom Business Rules</label>
+                                            <p className="text-sm text-slate-400 mb-3">Add any specific rules the AI must follow. The AI will see the profile on the left for context.</p>
+                                            <textarea id="customRules" value={customRules} onChange={(e) => setCustomRules(e.target.value)} placeholder="e.g., Ensure all 'order_id' values are positive integers." className={`${inputBaseStyle} !h-40`} rows={5}/>
                                         </div>
                                         <div className="flex justify-between items-center pt-6 border-t border-slate-700/80">
-                                            {/* >>> THIS IS THE FIX <<< */}
-                                            {/* The "Back" button now uses the primary button style */}
-                                            <button 
-                                                onClick={handleReset} 
-                                                disabled={isLoading} 
-                                                className="group btn-primary bg-indigo-600 text-white hover:bg-indigo-500 transition-all flex items-center text-sm font-semibold px-4 py-2 rounded-lg shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                <ChevronLeft className="w-5 h-5 mr-1.5 transition-transform duration-300 group-hover:-translate-x-1"/> Back
-                                            </button>
-                                            <button 
-                                                onClick={handleExecuteChecks} 
-                                                disabled={isLoading || selectedChecks.size === 0} 
-                                                className="group btn-primary bg-indigo-600 text-white hover:bg-indigo-500 transition-all flex items-center text-sm font-semibold px-4 py-2 rounded-lg shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                {isLoading ? <><LoaderCircle className="animate-spin w-5 h-5 mr-2"/> Executing...</> : <>Run Checks ({selectedChecks.size}) <ArrowRight className="w-4 h-4 ml-1.5 transition-transform duration-300 group-hover:translate-x-1" /></>}
-                                            </button>
+                                            <button onClick={() => handleBack(1)} disabled={isLoading} className={`${primaryButtonStyle} bg-slate-700 hover:bg-slate-600`}><ChevronLeft className="w-5 h-5 mr-1.5"/> Back</button>
+                                            <button onClick={handleGeneratePlanWithRules} disabled={isLoading} className={primaryButtonStyle}>{isLoading ? <><LoaderCircle className="animate-spin w-5 h-5 mr-2"/> Generating...</> : <>Generate AI Plan <ArrowRight className="w-4 h-4 ml-1.5 transition-transform duration-300 group-hover:translate-x-1" /></>}</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         )}
                         
-                        {step === 3 && validationReport && (
+                        {step === 3 && planResponse && (
                              <div className={`${cardContainerStyle} max-w-5xl mx-auto`}>
                                 <div className={cardHeaderStyle}>
-                                    <h3 className={cardTitleStyle}><Sparkles className="w-6 h-6 text-indigo-400"/>Detailed Report</h3>
+                                    <h3 className={cardTitleStyle}><ShieldCheck className="w-6 h-6 text-indigo-400"/>Step 3: Review AI-Generated Plan</h3>
                                 </div>
+                                <div className="p-6">
+                                    <AiJudgeResult evaluation={planResponse.evaluation} />
+                                    <div className="flex justify-between items-center mb-3">
+                                        <h4 className="font-semibold text-white">Select checks to run:</h4>
+                                        <div className="flex gap-4">
+                                            <button onClick={() => setSelectedChecks(new Set(proposedChecks.map(c => c.check_id)))} className="text-xs font-medium text-slate-300 hover:text-white transition-colors">Select All</button>
+                                            <button onClick={() => setSelectedChecks(new Set())} className="text-xs font-medium text-slate-300 hover:text-white transition-colors">Deselect All</button>
+                                        </div>
+                                    </div>
+                                    <div className="max-h-[28rem] overflow-y-auto space-y-3 rounded-lg bg-slate-900/50 p-3 border border-slate-800 shadow-inner">
+                                        {proposedChecks.length > 0 ? proposedChecks.map((check) => (<CheckItem key={check.check_id} check={check} isChecked={selectedChecks.has(check.check_id)} onCheckChange={handleCheckChange} />)) : <p className="text-slate-400 text-center p-4">No checks were proposed.</p>}
+                                    </div>
+                                    <div className="flex justify-between items-center pt-6 mt-6 border-t border-slate-700/80">
+                                        <button onClick={() => handleBack(2)} disabled={isLoading} className={`${primaryButtonStyle} bg-slate-700 hover:bg-slate-600`}><ChevronLeft className="w-5 h-5 mr-1.5"/> Back</button>
+                                        <button onClick={handleExecuteChecks} disabled={isLoading || selectedChecks.size === 0} className={primaryButtonStyle}>{isLoading ? <><LoaderCircle className="animate-spin w-5 h-5 mr-2"/> Executing...</> : <>Run Checks ({selectedChecks.size}) <ArrowRight className="w-4 h-4 ml-1.5" /></>}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {step === 4 && validationReport && (
+                             <div className={`${cardContainerStyle} max-w-5xl mx-auto`}>
+                                <div className={cardHeaderStyle}><h3 className={cardTitleStyle}><Sparkles className="w-6 h-6 text-indigo-400"/>Step 4: Detailed Report</h3></div>
                                 <div className={cardBodyStyle}>
                                     <ReportDashboard report={validationReport} />
                                     <div className="pt-6 mt-6 border-t border-slate-700/80 flex justify-center">
-                                      <button 
-                                        onClick={handleReset} 
-                                        className="group btn-secondary flex items-center text-sm font-semibold px-4 py-2 rounded-lg bg-indigo-900/50 text-indigo-300 hover:bg-indigo-900 border border-indigo-700/50"
-                                      >
-                                        <RefreshCw className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:rotate-180"/> 
-                                        Start New Analysis
-                                      </button>
+                                      <button onClick={handleReset} className="group btn-secondary flex items-center text-sm font-semibold px-4 py-2 rounded-lg bg-indigo-900/50 text-indigo-300 hover:bg-indigo-900 border border-indigo-700/50"><RefreshCw className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:rotate-180"/> Start New Analysis</button>
                                     </div>
                                 </div>
                             </div>

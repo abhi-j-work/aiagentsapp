@@ -1,22 +1,17 @@
-# File: app/api/routers/data_governance_router.py
-
+import io
 import logging
 import json
-import io
+from turtle import pd
 from typing import Optional
-
-# Imports for file generation
-import pandas as pd
 import docx
-
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import ValidationError
 
-from app.core.config import Settings, get_settings
-from app.api import models
-from app.services import db_service, evaluation_service, llm_service, notification
-from app.services.errors import DatabaseServiceError, LLMServiceError
+from app.core.config import Settings, get_settings # type: ignore
+from app.api import models # type: ignore
+from app.services import db_service, evaluation_service, llm_service, notification # type: ignore
+from app.services.errors import DatabaseServiceError, LLMServiceError # type: ignore
 
 logger = logging.getLogger(__name__)    
 
@@ -56,7 +51,7 @@ async def explain_referential_integrity(
         schema_dict = await db_service.extract_db_schema(conn_str)
         validated_schema = models.ExtractedSchema.model_validate(schema_dict)
         
-        all_table_names = list(validated_schema.tables.keys())
+        all_table_names = [table for table in validated_schema.tables]
         foreign_keys_data = [fk.model_dump() for fk in validated_schema.foreign_keys]
 
         user_prompt_data = {
@@ -98,7 +93,9 @@ async def explain_referential_integrity(
         return validated_explanation
 
     except (ValidationError, json.JSONDecodeError) as e:
-        raw_response = locals().get('response_json_str', 'N/A')
+        raw_response = "N/A"
+        if 'response_json_str' in locals():
+            raw_response = response_json_str
         logger.error(f"LLM returned data in an invalid format: {e}\nRaw Response: {raw_response}")
         raise HTTPException(status_code=502, detail=f"The AI agent returned data in an invalid format: {e}")
     except (DatabaseServiceError, LLMServiceError) as e:
@@ -119,8 +116,37 @@ async def classify_data(
             schema_to_classify = models.ExtractedSchema.model_validate(schema_dict)
 
         system_prompt = """
-        You are an expert data privacy and governance analyst... 
-        """ # Omitted for brevity
+        You are an expert data privacy and governance analyst. Your task is to classify each column in the provided database schema.
+        RULES:
+        1. You MUST return ONLY a single, valid JSON object.
+        2. The root key of the JSON object must be "classification_results".
+        3. The value of "classification_results" MUST be a JSON array (a list of objects `[]`).
+        4. Each object in the array represents a table and must have a "table_name" and a "columns" key.
+        5. For each column, provide a `classification` from this exact list: ["Public/Non-Sensitive", "Internal/Confidential", "PII", "Sensitive"].
+        6. Also provide a brief `reasoning` string for your classification choice.
+        ### EXAMPLE OF DESIRED JSON OUTPUT ###
+        {
+        "classification_results": [
+            {
+            "table_name": "users",
+            "columns": [
+                {
+                "column_name": "id",
+                "data_type": "INTEGER",
+                "classification": "Internal/Confidential",
+                "reasoning": "Internal identifier, not sensitive."
+                },
+                {
+                "column_name": "email",
+                "data_type": "VARCHAR",
+                "classification": "PII",
+                "reasoning": "Email is Personally Identifiable Information."
+                }
+            ]
+            }
+        ]
+        }
+        """
         user_prompt = f"Classify the columns in this schema:\n{json.dumps(schema_to_classify.model_dump(), indent=2)}"
         
         response_json_str = await llm_service_instance.call_llm(
@@ -129,31 +155,21 @@ async def classify_data(
         
         classification_report = models.ClassificationResponse.model_validate_json(response_json_str)
         
-        # --- ROBUST EVALUATION FIX ---
         logger.info("Evaluating generated classification with LLM Judge...")
-        evaluation_result_dict = await evaluation_service.judge_data_classification(
+        evaluation_result = await evaluation_service.judge_data_classification(
             schema_str=json.dumps(schema_to_classify.model_dump(mode='json'), indent=2),
             classification_results=classification_report.model_dump(mode='json')["classification_results"]
         )
+        classification_report.evaluation = evaluation_result
         
-        try:
-            validated_evaluation = models.EvaluationResult.model_validate(evaluation_result_dict)
-        except ValidationError as e:
-            logger.error(f"LLM Judge returned an invalid evaluation structure: {e}. Raw data: {evaluation_result_dict}")
-            validated_evaluation = models.EvaluationResult(
-                is_safe=False, is_relevant=False, score=0, reasoning=f"LLM Judge returned malformed data: {e}"
-            )
-        
-        classification_report.evaluation = validated_evaluation
-        # --- END OF FIX ---
-
         try:
             await notification.send_data_classification_alert(classification_report)
         except Exception as e:
             logger.error(f"Failed to send data classification notification: {e}")
         
-        return classification_report
-
+        # return classification_report
+        logger.info(f"Raw classification response from AI: {response_json_str}")
+        return models.ClassificationResponse.model_validate_json(response_json_str)
     except (ValidationError, json.JSONDecodeError) as e:
         raise HTTPException(status_code=502, detail=f"The AI agent returned data in an invalid format: {e}")
     except (DatabaseServiceError, LLMServiceError) as e:
@@ -166,10 +182,44 @@ async def generate_masking_sql(
     settings: Settings = Depends(get_settings),
     llm_service_instance: llm_service.LLMService = Depends(llm_service.get_llm_service)
 ):
-    try:
+    try:    
         system_prompt = """
-        You are a meticulous, senior PostgreSQL database administrator...
-        """ # Omitted for brevity
+        You are a meticulous, senior PostgreSQL database administrator. Your only task is to generate a JSON data masking plan that produces 100% syntactically correct and executable PostgreSQL SQL.
+        **Golden Rules - You MUST follow these without exception:**
+        1.  **Absolute Identifier Quoting:** Every single identifier (table names, column names, and aliases) MUST be enclosed in double quotes ("").
+            - Correct: `"users"`, `"email"`, `AS "email"`
+            - Incorrect: `users`, `email`, `AS email`
+        2.  **User Check Logic:** The masking logic MUST use the simple user check: `current_user = 'admin'`. This logic determines if the user sees real data or masked data.
+        3.  **Strict Type Safety in CASE Statements:** Every branch of a `CASE` statement MUST return the exact same data type. To guarantee this, you MUST explicitly cast the masked value in the `ELSE` clause to match the original column's data type.
+            - For `text`, `varchar`, `char`: Use `'***'::text`.
+            - For `numeric`, `decimal`: Use `0::numeric`.
+            - For `integer`, `bigint`, `smallint`: Use `0::integer`.
+            - For `timestamp`, `timestamptz`, `date`: Use `'1970-01-01 00:00:00'::timestamp`.
+            - For `boolean`: Use `FALSE::boolean`.
+            - For `uuid`: Use `'00000000-0000-0000-0000-000000000000'::uuid`.
+            - The condition for seeing unmasked data is `current_user = 'admin'`.
+            - The final `CASE` statement structure is: `CASE WHEN current_user = 'admin' THEN "column_name" ELSE [MASKING_LOGIC_WITH_CAST] END AS "column_name"`.
+            - Provide default date only for timestamp columns and not for other data types.
+        4.  **Referential Integrity is Sacred:** Columns classified as 'PK' (Primary Key) or 'FK' (Foreign Key) MUST NEVER be masked. Their `select_expression` must be only the double-quoted column name.
+        **Input Context:**
+        You will receive a JSON array describing tables. For each column, you are given its `column_name`, `data_type`, and `classification`. Use this information to apply the Golden Rules correctly.
+        **Output Format (JSON Only):**
+        - Your entire output must be a single JSON object. No explanations or markdown ````json.
+        - The root key is `"tables"`, an array of objects.
+        - Each table object has two keys: `"table_name"` and `"columns"`.
+        - Each column object has one key: `"select_expression"`.
+        ---
+        **Example Walkthrough (Corrected and Consistent)**
+        *   **For a sensitive `email` column (data_type: text):**
+            `"select_expression": "CASE WHEN current_user = 'admin' THEN \"email\" ELSE '***'::text END AS \"email\""`
+        *   **For a sensitive `balance` column (data_type: numeric):**
+            `"select_expression": "CASE WHEN current_user = 'admin' THEN \"balance\" ELSE 0::numeric END AS \"balance\""`
+        *   **For a primary key `id` column (data_type: integer, classification: PK):**
+            `"select_expression": "\"id\""`
+        *   **For a non-sensitive `created_at` column (data_type: timestamp):**
+            `"select_expression": "\"created_at\""`
+        5. Output Response:-  - **Input:** A JSON object with a list of tables. The `table_name` key in the input JSON **should only contain the base name of the table** (e.g., "customers", NOT "public.customers"). 
+        """
         user_prompt_data = [table.model_dump() for table in params.classification_results]
         user_prompt = f"Generate the JSON masking plan for this classification:\n{json.dumps(user_prompt_data, indent=2)}"
         
@@ -205,11 +255,17 @@ async def generate_masking_sql(
         )
 
     except json.JSONDecodeError as e:
-        logger.error(f"LLM returned non-JSON response: {e}\nRaw Response: {locals().get('response_json_str', 'N/A')}")
-        raise HTTPException(status_code=502, detail="The AI agent returned a malformed response.")
+        logger.error(f"LLM returned non-JSON response: {e}\nRaw Response: {response_json_str}")
+        raise HTTPException(
+            status_code=502,
+            detail="The AI agent returned a malformed response that could not be parsed as JSON."
+        )
     except ValidationError as e:
-        logger.error(f"LLM response failed validation: {e}\nRaw Data: {locals().get('llm_data', 'N/A')}")
-        raise HTTPException(status_code=502, detail=f"The AI agent returned data in an unexpected format: {e}")
+        logger.error(f"LLM response failed validation: {e}\nRaw Data: {llm_data}")
+        raise HTTPException(
+            status_code=502,
+            detail=f"The AI agent returned data in an unexpected format. Validation errors: {e}"
+        )
     except LLMServiceError as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
 
@@ -219,9 +275,15 @@ async def apply_masking_plan(params: models.ApplyMaskingRequest, settings: Setti
     try:
         if not params.sql_statements:
             raise HTTPException(status_code=400, detail="No SQL statements provided to apply.")
+
         conn_str = _get_conn_str(params.connection_string, settings)
         await db_service.execute_statements(conn_str, params.sql_statements)
-        return models.ApplyPlanResponse(message=f"Successfully applied {len(params.sql_statements)} SQL statement(s).")
+        
+        statement_count = len(params.sql_statements)
+        return models.ApplyPlanResponse(
+            message=f"Successfully applied {statement_count} SQL statement(s) to the database."
+        )
+        
     except DatabaseServiceError as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
 
@@ -229,35 +291,67 @@ async def apply_masking_plan(params: models.ApplyMaskingRequest, settings: Setti
 async def list_governed_views(params: models.DBParams, settings: Settings = Depends(get_settings)):
     try:
         conn_str = _get_conn_str(params.connection_string, settings)
+        logger.info(f"Listing governed views for connection.")
+        
         view_list = await db_service.list_governed_views(conn_str)
+        
         return models.ListViewsResponse(governed_views=view_list)
+
     except DatabaseServiceError as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
+    except Exception as e:
+        logger.error(f"Unexpected error listing views: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
+
 
 @router.post("/fetch-view-data", response_model=models.FetchViewDataResponse)
-async def fetch_governed_view_data(params: models.FetchViewDataRequest, settings: Settings = Depends(get_settings)):
+async def fetch_governed_view_data(
+    # The 'params' object now automatically includes the 'role' field
+    # thanks to our change in models.py.
+    params: models.FetchViewDataRequest, 
+    settings: Settings = Depends(get_settings)
+):
+    """
+    Fetches paginated data from a specified governed view, assuming a specific
+    database role for the duration of the query.
+    """
     try:
         conn_str = _get_conn_str(params.connection_string, settings)
         view_name = params.view_name
+        
         if not view_name.endswith('_governed_view'):
-            raise HTTPException(status_code=400, detail="Invalid view name.")
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Invalid view name. Only views ending in '_governed_view' can be queried by this endpoint."
+            )
+        
+        # Add a log message to show which role is being used for the query.
+        logger.info(f"Fetching data from view '{view_name}' as role '{params.role}' with limit {params.limit}, offset {params.offset}.")
+        
+        # Pass the new 'role' parameter to the service function call.
         data_rows = await db_service.fetch_view_data(
-            conn_str=conn_str, view_name=view_name, limit=params.limit, offset=params.offset, role=params.role)
-        return models.FetchViewDataResponse(view_name=view_name, row_count=len(data_rows), data=data_rows)
+            conn_str=conn_str,
+            view_name=view_name,
+            limit=params.limit,
+            offset=params.offset,
+            role=params.role  
+        )
+        
+        return models.FetchViewDataResponse(
+            view_name=view_name,
+            row_count=len(data_rows),
+            data=data_rows
+        )
+
     except DatabaseServiceError as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
-
-
-# --- NEW DOWNLOAD ENDPOINTS ---
-
+    except Exception as e:
+        logger.error(f"Unexpected error fetching view data: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
+    
 @router.post("/download/governance-report/excel", response_class=StreamingResponse)
 async def download_governance_report_excel(params: models.DownloadGovernanceReportRequest):
-    """
-    Generates and streams a multi-sheet Excel report containing referential
-    integrity, foundational tables, and the SQL masking plan.
-    """
     try:
-        # Create DataFrames from the input data
         relationships_df = pd.DataFrame([item.model_dump() for item in params.referential_integrity.relationship_explanations])
         foundational_df = pd.DataFrame([item.model_dump() for item in params.referential_integrity.foundational_tables])
         sql_df = pd.DataFrame(params.masking_sql.sql_statements, columns=["SQL Masking Statement"])
@@ -269,10 +363,8 @@ async def download_governance_report_excel(params: models.DownloadGovernanceRepo
             sql_df.to_excel(writer, sheet_name='Masking SQL Plan', index=False)
         
         buffer.seek(0)
-
         headers = {'Content-Disposition': 'attachment; filename=Data_Governance_Report.xlsx'}
         return StreamingResponse(buffer, media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers=headers)
-
     except Exception as e:
         logger.error(f"Failed to generate Excel report: {e}")
         raise HTTPException(status_code=500, detail="Could not generate Excel file.")
@@ -280,54 +372,33 @@ async def download_governance_report_excel(params: models.DownloadGovernanceRepo
 
 @router.post("/download/governance-report/word", response_class=StreamingResponse)
 async def download_governance_report_word(params: models.DownloadGovernanceReportRequest):
-    """
-    Generates and streams a Word document report containing referential
-    integrity, foundational tables, and the SQL masking plan.
-    """
     try:
         document = docx.Document()
         document.add_heading('Data Governance Report', level=0)
-
-        # --- Referential Integrity Section ---
+        
         document.add_heading('Data Relationships (Referential Integrity)', level=1)
         for item in params.referential_integrity.relationship_explanations:
-            p = document.add_paragraph()
-            p.add_run('Rule: ').bold = True
-            p.add_run(f'Every entry in `{item.from_table}` must correspond to an entry in `{item.to_table}`.')
-            p = document.add_paragraph()
-            p.add_run('Business Context: ').bold = True
-            p.add_run(item.business_rule)
-            p = document.add_paragraph()
-            p.add_run('Impact of Change: ').bold = True
-            p.add_run(item.impact_of_change)
-            document.add_paragraph() 
-
-        # --- Foundational Tables Section ---
+            document.add_paragraph(f"Rule: Every entry in `{item.from_table}` must correspond to an entry in `{item.to_table}`.", style='Intense Quote')
+            document.add_paragraph(f"Business Context: {item.business_rule}")
+            document.add_paragraph(f"Impact of Change: {item.impact_of_change}\n")
+        
         document.add_heading('Foundational Data Tables', level=1)
         for item in params.referential_integrity.foundational_tables:
             p = document.add_paragraph()
             p.add_run('Table: ').bold = True
             p.add_run(item.table_name).bold = True
-            p = document.add_paragraph()
-            p.add_run('Business Role: ').bold = True
-            p.add_run(item.business_role)
-            p = document.add_paragraph()
-            p.add_run('Impact of Change: ').bold = True
-            p.add_run(item.impact_of_change)
-            document.add_paragraph()
+            document.add_paragraph(f"Business Role: {item.business_role}")
+            document.add_paragraph(f"Impact of Change: {item.impact_of_change}\n")
 
-        # --- SQL Masking Plan Section ---
         document.add_heading('Data Masking SQL Plan', level=1)
         full_sql_script = ";\n\n".join(params.masking_sql.sql_statements) + ";"
         document.add_paragraph(full_sql_script)
-
+        
         buffer = io.BytesIO()
         document.save(buffer)
         buffer.seek(0)
-
         headers = {'Content-Disposition': 'attachment; filename=Data_Governance_Report.docx'}
         return StreamingResponse(buffer, media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document', headers=headers)
-
     except Exception as e:
         logger.error(f"Failed to generate Word report: {e}")
         raise HTTPException(status_code=500, detail="Could not generate Word file.")

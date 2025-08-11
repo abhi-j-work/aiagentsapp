@@ -1,3 +1,5 @@
+# File: app/api/routers/data_quality_router.py
+
 import logging
 import json
 from typing import List, Optional, Dict, Any
@@ -53,8 +55,9 @@ def _find_table_schema(user_table_name: str, all_tables: Dict[str, Any]) -> tupl
     raise HTTPException(status_code=404, detail=f"Table '{user_table_name}' not found in the database.")
 
 # ===================================================================
-# ENDPOINT 1: Generate a plan of proposed checks
-# ===================================================================
+# ===========================================================
+
+
 @router.post("/generate-quality-plan", response_model=models.GenerateQualityPlanResponse)
 async def generate_quality_plan(
     request: Request, 
@@ -65,72 +68,54 @@ async def generate_quality_plan(
         body = await request.json()
         params = models.GenerateDataProfileRequest(**body)
         user_custom_rules = body.get("custom_rules", "")
-
         conn_str = _get_conn_str(params.connection_string, settings)
         schema_dict = await db_service.extract_db_schema(conn_str)
         all_tables = schema_dict.get("tables", {})
         qualified_name, target_table_schema = _find_table_schema(params.table_name, all_tables)
         schema_name, table_name = qualified_name.strip('"').split('.', 1)
-        
         final_custom_rules_prompt = ""
         if user_custom_rules and user_custom_rules.strip():
-            final_custom_rules_prompt = f"---\n**Mandatory Custom Rules:**\n{user_custom_rules}\n---"
-
+            final_custom_rules_prompt = f"---\n**Mandatory Custom Rules To Follow:**\n{user_custom_rules}\n---"
+        
+        # --- START: THE FINAL FIX FOR THE GROQ ERROR ---
         system_prompt = f"""
-        You are a Senior Data Quality Analyst. Your task is to analyze a database schema and generate a JSON list of data quality checks.
-        The table you are analyzing is named "{table_name}" in schema "{schema_name}".
+        You are a Senior Data Quality Analyst. Your task is to generate a comprehensive JSON list of data quality checks for the table "{schema_name}"."{table_name}".
 
-        **CRITICAL INSTRUCTIONS:**
-        1.  **`check_sql`:** Your generated SQL query MUST count the number of rows that are **INVALID** or **VIOLATE** the rule.
-        2.  **`rule_name`:** Because the SQL counts failures, the `rule_name` MUST describe the failure condition. It should be named from a "negative" perspective.
-            - **Correct:** "Invalid Email Format", "Duplicate User IDs", "Missing Order Date"
-            - **Incorrect:** "Valid Emails", "Unique Users", "Orders Have Dates"
-        3.  **`rule_description`:** The description should clearly state what condition is being checked for.
-
-        **Instructions for Each Check:**
-        For every check you generate, you must provide:
-        1.  `check_id`: A unique, machine-friendly snake_case identifier (e.g., 'invalid_email_format').
-        2.  `rule_name`: A human-readable title describing the **FAILURE** condition (e.g., 'Invalid Email Format').
-        3.  `rule_description`: A clear explanation of what the rule is checking.
-        4.  `check_sql`: A PostgreSQL query that `SELECT COUNT(*)` of rows VIOLATING the rule.
-            - The query must start with `SELECT COUNT(*) FROM`.
-            - All identifiers MUST be double-quoted. `FROM "{schema_name}"."{table_name}"`.
+        **CRITICAL INSTRUCTIONS FOR ALL CHECKS:**
+        1.  For every check you generate, you **MUST** provide these four and only these four keys: `check_id`, `rule_name`, `rule_description`, and `check_sql`.
+        2.  **`check_sql`:** The SQL query MUST count rows that are **INVALID**.
+        3.  **`rule_name`:** The name MUST describe the failure condition (e.g., "Invalid Email Format").
         
         {final_custom_rules_prompt}
 
         **Output Format (Strict JSON Only):**
-        - The root key of the JSON object must be `"proposed_checks"`.
+        - The root key of your JSON object MUST be `"proposed_checks"`.
+        - The value for `"proposed_checks"` MUST be a JSON array `[]`.
+        - Each object in the array MUST follow the structure with the four required keys.
         """
+        # --- END: THE FINAL FIX ---
 
         user_prompt = f"Generate a data quality plan for the table `{qualified_name}` which has the following schema:\n{json.dumps(target_table_schema, indent=2)}"
         
         response_json_str = await llm_service_instance.call_llm(system_prompt, user_prompt, response_format={"type": "json_object"})
         
-        class LLMPlanResponse(BaseModel):
-            proposed_checks: List[models.ProposedQualityCheck]
+        validated_response = models.GenerateQualityPlanResponse.model_validate_json(response_json_str)
         
-        validated_plan = LLMPlanResponse.model_validate_json(response_json_str)
+        evaluation_result_dict = await evaluation_service.judge_data_quality_plan(
+            table_name=qualified_name,
+            proposed_checks=validated_response.model_dump()["proposed_checks"]
+        )
         
-        logger.info("Evaluating generated DQ plan with LLM Judge...")
-        evaluation_result = await evaluation_service.judge_data_quality_plan(
-            table_name=qualified_name,
-            proposed_checks=validated_plan.model_dump()["proposed_checks"]
-        )
+        validated_response.evaluation = models.DQEvaluationResult.model_validate(evaluation_result_dict)
+        return validated_response
 
-        return models.GenerateQualityPlanResponse(
-            table_name=qualified_name,
-            proposed_checks=validated_plan.proposed_checks,
-            evaluation=evaluation_result
-        )
-
+    except (ValidationError, json.JSONDecodeError) as e:
+        logger.error(f"The AI agent returned an invalid plan format. Error: {e}. Raw response: {locals().get('response_json_str', 'N/A')}")
+        raise HTTPException(status_code=502, detail=f"The AI agent returned an invalid plan format: {e}")
     except Exception as e:
         logger.exception(f"An unexpected error occurred during quality plan generation: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-       
-
-# ===================================================================
-# ENDPOINT 2: Execute the selected checks
 # ===================================================================
 @router.post("/execute-quality-checks", response_model=models.ExecuteQualityChecksResponse)
 async def execute_quality_checks(
@@ -189,21 +174,26 @@ async def generate_data_profile(
         conn_str = _get_conn_str(params.connection_string, settings)
         schema_dict = await db_service.extract_db_schema(conn_str)
         all_tables = schema_dict.get("tables", {})
-        
         qualified_name, target_table_schema = _find_table_schema(params.table_name, all_tables)
 
+        # --- START: THE FINAL FIX FOR THE PROFILE ERROR ---
+        # This new prompt is extremely strict to prevent validation errors.
         system_prompt = f"""
-        You are a senior data analyst AI capable of profiling PostgreSQL tables using only schema metadata.
-        You are given the table name and its column metadata. Based on this, generate a descriptive data profile.
+        You are a senior data analyst AI. Your task is to generate a descriptive data profile for a PostgreSQL table using only its schema metadata.
 
-        For each column, provide:
-        - column_name
-        - inferred_type (based on data_type)
-        - assumptions_about_data (based on name/type)
-        - potential_quality_risks (e.g., missing values, inconsistent formats)
-        - common_patterns_or_values (hypothetical patterns)
+        **CRITICAL OUTPUT INSTRUCTIONS:**
+        1.  Your entire response **MUST** be a single JSON object.
+        2.  The root of this JSON object **MUST** have exactly two keys: `table_name` and `columns`.
+        3.  **DO NOT** wrap your response in any other keys like "data_profile" or "profile".
 
-        Output JSON format:
+        **Content Guidelines for each column:**
+        - `column_name`: The name of the column.
+        - `inferred_type`: A human-friendly type based on the data_type (e.g., "Integer ID", "Timestamp", "User Email").
+        - `assumptions_about_data`: Your professional assumptions based on the column name and type.
+        - `potential_quality_risks`: Common data quality issues for this type of column.
+        - `common_patterns_or_values`: Hypothetical examples of data you might find in this column.
+        
+        **Example of the EXACT required output structure:**
         {{
           "table_name": "{qualified_name}",
           "columns": [
@@ -217,32 +207,20 @@ async def generate_data_profile(
           ]
         }}
         """
+        # --- END: THE FINAL FIX ---
 
-        user_prompt = f"""
-        Table schema: {json.dumps(target_table_schema, indent=2)}
-        You do not have access to live data. Only use this metadata.
-        """
+        user_prompt = f"Profile the table with the following schema:\n{json.dumps(target_table_schema, indent=2)}"
 
         response_str = await llm_service_instance.call_llm(
             system_prompt, user_prompt, response_format={"type": "json_object"}
         )
         logger.info(f"Data profile from AI: {response_str}")
 
-        class AIColumnProfile(BaseModel):
-            column_name: str
-            inferred_type: str
-            assumptions_about_data: str
-            potential_quality_risks: str
-            common_patterns_or_values: str
-
-        class AIProfileResponse(BaseModel):
-            table_name: str
-            columns: List[AIColumnProfile]
-
-        profile_obj = AIProfileResponse.model_validate_json(response_str)
-        return profile_obj
+        # Pydantic validation will now pass because the prompt forces the correct structure.
+        return models.GenerateDataProfileResponse.model_validate_json(response_str)
 
     except (ValidationError, json.JSONDecodeError) as e:
+        logger.error(f"The AI agent returned an invalid profile format: {e}. Raw response: {locals().get('response_str', 'N/A')}")
         raise HTTPException(status_code=502, detail=f"The AI agent returned an invalid profile format: {e}")
     except (DatabaseServiceError, LLMServiceError) as e:
         raise HTTPException(status_code=getattr(e, 'status_code', 500), detail=str(e))

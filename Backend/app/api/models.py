@@ -428,11 +428,66 @@ class EvaluationResult(BaseModel):
     # The score is still useful for logging and metrics, so we keep it.
     score: int  
 
-
 class DownloadGovernanceReportRequest(BaseModel):
-    """
-    Request body for downloading the full governance report.
-    It contains data from both referential integrity and the SQL masking plan.
-    """
     referential_integrity: ReferentialIntegrityResponse
     masking_sql: SQLGenerationResponse
+
+
+class AIColumnProfile(BaseModel):
+    column_name: str
+    inferred_type: str
+    assumptions_about_data: str
+    potential_quality_risks: str
+    common_patterns_or_values: str
+
+class GenerateDataProfileRequest(DBParams):
+    table_name: str
+
+class GenerateDataProfileResponse(BaseModel):
+    table_name: str
+    columns: List[AIColumnProfile]
+
+class ProposedQualityCheck(BaseModel):
+    check_id: str
+    rule_name: str
+    rule_description: str
+    check_sql: str
+
+class GenerateQualityPlanResponse(BaseModel):
+    table_name: str
+    proposed_checks: List[ProposedQualityCheck]
+    evaluation: Optional[EvaluationResult] = None
+
+class ExecuteQualityChecksRequest(DBParams):
+    table_name: str
+    checks_to_run: List[ProposedQualityCheck]
+
+class ValidationResult(BaseModel):
+    check_id: str
+    rule_name: str
+    is_valid: bool
+    invalid_count: int
+    total_rows: int
+    check_query: str
+
+class DQEvaluationResult(BaseModel):
+    score: int
+    reasoning: str  
+
+class AIColumnProfile(BaseModel):
+    column_name: str; inferred_type: str; assumptions_about_data: str; potential_quality_risks: str; common_patterns_or_values: str
+class GenerateDataProfileRequest(DBParams):
+    table_name: str
+class GenerateDataProfileResponse(BaseModel):
+    table_name: str; columns: List[AIColumnProfile]
+class ProposedQualityCheck(BaseModel):
+    check_id: str; rule_name: str; rule_description: str; check_sql: str
+class GenerateQualityPlanResponse(BaseModel):
+    table_name: str; proposed_checks: List[ProposedQualityCheck]; evaluation: Optional[DQEvaluationResult] = None
+class ExecuteQualityChecksRequest(DBParams):
+    table_name: str; checks_to_run: List[ProposedQualityCheck]
+class ValidationResult(BaseModel):
+    check_id: str; rule_name: str; is_valid: bool; invalid_count: int; total_rows: int; check_query: str
+class ExecuteQualityChecksResponse(BaseModel):
+    table_name: str; validation_results: List[ValidationResult]
+

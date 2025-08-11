@@ -2,10 +2,10 @@ import React from 'react';
 import { ShieldCheck } from 'lucide-react';
 
 const complianceItems = [
-    { name: 'GDPR Compliant' },
-    { name: 'SOC 2 Certified' },
-    { name: 'HIPAA Ready' },
-    { name: 'ISO 27001' }
+    // { name: 'GDPR Compliant' },
+    // { name: 'SOC 2 Certified' },
+    // { name: 'HIPAA Ready' },
+    // { name: 'ISO 27001' }
 ];
 
 const Footer: React.FC = () => {

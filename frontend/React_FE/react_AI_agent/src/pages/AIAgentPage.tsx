@@ -1,19 +1,24 @@
 import { useState } from 'react';
 import {
     Database, LoaderCircle, AlertTriangle, PlayCircle, Table, ChevronsRight, Link2,
-    ShieldCheck, FileText, CheckCircle, Eye, UserCircle
+    ShieldCheck, FileText, CheckCircle, Eye, UserCircle,
+    FileSpreadsheet
 } from 'lucide-react';
 import {
     postExtractSchema, postExplainIntegrity, postClassifyData, postGenerateMaskingSQL, postApplyMaskingPlan,
     postListGovernedViews, postFetchViewData,
-    type ExtractedSchema, type ReferentialIntegrityResponse, type ClassificationResult, type FetchViewDataResponse
+    // --- NEW: Import download functions and types from your api.ts file ---
+    downloadExcelReport, downloadWordReport,
+    type ExtractedSchema, type ReferentialIntegrityResponse, type ClassificationResult, 
+    type SQLGenerationResponse, type FetchViewDataResponse
 } from '../services/api';
 
 // ===================================================
-// SUB-COMPONENTS for displaying results (Styling Updated)
+// SUB-COMPONENTS (No changes in these display components)
 // ===================================================
 
 const SchemaDisplay = ({ schema }: { schema: ExtractedSchema }) => (
+    // ... No changes here ...
     <div className="animate-fade-in">
         <h4 className="font-semibold text-white flex items-center gap-2 mb-3"><Database className="w-4 h-4 text-indigo-400" />Extracted Schema</h4>
         <div className="space-y-4 max-h-48 overflow-y-auto pr-2 bg-slate-800/60 rounded-md p-3">
@@ -30,6 +35,7 @@ const SchemaDisplay = ({ schema }: { schema: ExtractedSchema }) => (
 );
 
 const IntegrityReport = ({ data }: { data: ReferentialIntegrityResponse }) => (
+    // ... No changes here ...
     <div className="animate-fade-in">
         <h4 className="font-semibold text-white flex items-center gap-2 mb-3"><Link2 className="w-4 h-4 text-indigo-400" />AI Generated Integrity Report</h4>
         <div className="space-y-3 max-h-48 overflow-y-auto pr-2 bg-slate-800/60 rounded-md p-3">
@@ -42,6 +48,7 @@ const IntegrityReport = ({ data }: { data: ReferentialIntegrityResponse }) => (
 );
 
 const ClassificationDisplay = ({ classifications }: { classifications: ClassificationResult[] }) => (
+    // ... No changes here ...
     <div className="animate-fade-in">
         <h4 className="font-semibold text-white flex items-center gap-2 mb-3"><ShieldCheck className="w-4 h-4 text-indigo-400" />AI Data Classification</h4>
         <div className="space-y-4 max-h-64 overflow-y-auto pr-2 bg-slate-800/60 rounded-md p-3">
@@ -55,6 +62,7 @@ const ClassificationDisplay = ({ classifications }: { classifications: Classific
 );
 
 const SqlDisplay = ({ statements }: { statements: string[] }) => (
+    // ... No changes here ...
     <div className="animate-fade-in">
         <h4 className="font-semibold text-white flex items-center gap-2 mb-3"><FileText className="w-4 h-4 text-indigo-400" />AI Generated SQL Plan</h4>
         <div className="max-h-64 overflow-y-auto bg-black p-4 rounded-md border border-slate-700"><pre className="text-sm text-slate-200 whitespace-pre-wrap"><code>{statements.join('\n\n---\n\n')}</code></pre></div>
@@ -62,6 +70,7 @@ const SqlDisplay = ({ statements }: { statements: string[] }) => (
 );
 
 const GovernedViewList = ({ views, onSelectView, isLoading, selectedView }: { views: string[], onSelectView: (viewName: string) => void, isLoading: boolean, selectedView: string | null }) => (
+    // ... No changes here ...
     <div className="animate-fade-in">
         <h4 className="font-semibold text-white flex items-center gap-2 mb-3"><Eye className="w-4 h-4 text-indigo-400" />Governed Views</h4>
         <div className="space-y-2 bg-slate-800/60 rounded-md p-3">
@@ -83,20 +92,18 @@ const GovernedViewList = ({ views, onSelectView, isLoading, selectedView }: { vi
 );
 
 const ViewDataDisplay = ({ viewData }: { viewData: FetchViewDataResponse }) => {
+    // ... No changes here ...
     if (!viewData.data || viewData.data.length === 0) {
         return <div className="text-center text-slate-300 p-4 mt-4 animate-fade-in">No data to display for this view.</div>;
     }
     const headers = Object.keys(viewData.data[0]);
-
     return (
         <div className="animate-fade-in mt-4">
             <h5 className="font-semibold text-white mb-3">Data from: <span className="text-indigo-400">{viewData.view_name}</span></h5>
             <div className="max-h-80 overflow-auto rounded-lg border border-slate-700">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-slate-800 sticky top-0 z-10">
-                        <tr>
-                            {headers.map(header => <th key={header} className="p-3 font-medium text-slate-200">{header}</th>)}
-                        </tr>
+                        <tr>{headers.map(header => <th key={header} className="p-3 font-medium text-slate-200">{header}</th>)}</tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800">
                         {viewData.data.map((row, rowIndex) => (
@@ -111,9 +118,42 @@ const ViewDataDisplay = ({ viewData }: { viewData: FetchViewDataResponse }) => {
     );
 };
 
+// --- NEW: Download Actions Component ---
+interface DownloadActionsProps {
+    integrityData: ReferentialIntegrityResponse;
+    sqlData: SQLGenerationResponse;
+}
+const DownloadActions = ({ integrityData, sqlData }: DownloadActionsProps) => {
+    
+    const handleDownload = (format: 'excel' | 'word') => {
+        const reportData = {
+            referential_integrity: integrityData,
+            masking_sql: sqlData,
+        };
+        if (format === 'excel') {
+            downloadExcelReport(reportData);
+        } else {
+            downloadWordReport(reportData);
+        }
+    };
+    
+    return (
+        <div className="mt-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700 animate-fade-in">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <span className="text-slate-200 font-semibold">Governance Report Complete</span>
+                <div className="h-6 w-px bg-slate-600 hidden sm:block"></div>
+                <span className="text-slate-300">Download As:</span>
+                <button onClick={() => handleDownload('word')} className="group bg-blue-600 text-white hover:bg-blue-500 transition-all flex items-center text-sm font-semibold px-4 py-2 rounded-lg shadow-lg">
+                    <FileText className="w-4 h-4 mr-2" /> Word
+                </button>
+            </div>
+        </div>
+    );
+};
+// --- END NEW ---
 
 // ===================================================
-// MAIN PAGE COMPONENT (No changes here)
+// MAIN PAGE COMPONENT (State and Handlers updated)
 // ===================================================
 const AIAgentPage = () => {
     // UI State
@@ -134,6 +174,11 @@ const AIAgentPage = () => {
     const [viewData, setViewData] = useState<FetchViewDataResponse | null>(null);
     const [viewingRole, setViewingRole] = useState<string>('admin');
 
+    // --- NEW: State to hold data for the final download ---
+    const [downloadableIntegrityData, setDownloadableIntegrityData] = useState<ReferentialIntegrityResponse | null>(null);
+    const [downloadableSqlData, setDownloadableSqlData] = useState<SQLGenerationResponse | null>(null);
+    // --- END NEW ---
+
     // API Handlers
     const handleRunAnalysis = async () => {
         if (!connectionString) { setError("Please provide a database connection string."); return; }
@@ -141,11 +186,20 @@ const AIAgentPage = () => {
         setSchema(null); setIntegrityReport(null); setClassifications(null);
         setSqlStatements(null); setFinalMessage(null); setGovernedViews(null);
         setViewData(null); setSelectedView(null);
+        // --- NEW: Reset downloadable data ---
+        setDownloadableIntegrityData(null);
+        setDownloadableSqlData(null);
+        // --- END NEW ---
         try {
             const [schemaResponse, integrityResponse] = await Promise.all([postExtractSchema(connectionString), postExplainIntegrity(connectionString)]);
             const extractedSchemaData = (schemaResponse as any).schema_data || schemaResponse;
             if (extractedSchemaData?.tables) setSchema(extractedSchemaData); else throw new Error("Invalid schema structure.");
-            if (integrityResponse?.relationship_explanations) setIntegrityReport(integrityResponse); else throw new Error("Invalid integrity report.");
+            if (integrityResponse?.relationship_explanations) {
+                setIntegrityReport(integrityResponse);
+                setDownloadableIntegrityData(integrityResponse); // --- NEW: Cache for download ---
+            } else {
+                throw new Error("Invalid integrity report.");
+            }
             setViewMode('results');
         } catch (err: any) { setError(err.message || 'Analysis failed.'); }
         finally { setIsLoading(false); setCurrentStep(''); }
@@ -155,7 +209,7 @@ const AIAgentPage = () => {
         if (!schema) return;
         setIsLoading(true); setCurrentStep('Classifying...'); setError(null);
         try {
-            const res = await postClassifyData(schema);
+            const res: any = await postClassifyData(schema); // Using 'any' to handle flexible response structure
             setClassifications(res.classification_results);
         } catch (err: any) { setError(err.message || 'Classification failed.'); }
         finally { setIsLoading(false); setCurrentStep(''); }
@@ -167,6 +221,7 @@ const AIAgentPage = () => {
         try {
             const res = await postGenerateMaskingSQL(classifications);
             setSqlStatements(res.sql_statements);
+            setDownloadableSqlData(res); // --- NEW: Cache for download ---
         } catch (err: any) { setError(err.message || 'SQL Generation failed.'); }
         finally { setIsLoading(false); setCurrentStep(''); }
     };
@@ -178,12 +233,14 @@ const AIAgentPage = () => {
         try {
             const res = await postApplyMaskingPlan(connectionString, sqlStatements);
             setFinalMessage(res.message);
-            setSqlStatements(null);
+            // Do not clear SQL statements here, so the download component can use them
+            // setSqlStatements(null); 
         } catch (err: any) { setError(err.message || 'Failed to apply plan.'); }
         finally { setIsLoading(false); setCurrentStep(''); }
     };
 
     const handleListGovernedViews = async () => {
+        // ... No changes here ...
         setIsLoading(true); setCurrentStep('Listing Views...'); setError(null);
         setViewData(null); setSelectedView(null);
         try {
@@ -194,6 +251,7 @@ const AIAgentPage = () => {
     };
 
     const handleFetchViewData = async (viewName: string) => {
+        // ... No changes here ...
         if (!viewingRole) {
             setError("Please specify a role to view data as.");
             return;
@@ -225,8 +283,8 @@ const AIAgentPage = () => {
                             </div>
                             <button onClick={handleRunAnalysis} disabled={isLoading}
                                 className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-500 transition disabled:bg-slate-700 flex items-center justify-center gap-2">
-                                {isLoading && currentStep === 'Analyzing...' ? <LoaderCircle className="w-5 h-5 animate-spin" /> : <PlayCircle className="w-5 h-5" />}
-                                {isLoading && currentStep === 'Analyzing...' ? 'Analyzing...' : 'Run Analysis'}
+                                {isLoading && !currentStep ? <LoaderCircle className="w-5 h-5 animate-spin" /> : <PlayCircle className="w-5 h-5" />}
+                                {isLoading && !currentStep ? 'Analyzing...' : 'Run Analysis'}
                             </button>
                             {error && viewMode === 'initial' && (
                                 <div className="flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm animate-fade-in">
@@ -243,62 +301,50 @@ const AIAgentPage = () => {
                         <div className="card-border rounded-2xl overflow-hidden animate-fade-in">
                             <div className="p-6">
                                 <h2 className="text-xl font-semibold text-white mb-4">Analysis & Action Plan</h2>
-                                {error && (
-                                    <div className="flex items-center gap-3 p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
-                                        <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-                                        <span>{error}</span>
-                                    </div>
-                                )}
-
+                                {error && ( <div className="flex items-center gap-3 p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm"><AlertTriangle className="w-5 h-5 flex-shrink-0" /><span>{error}</span></div> )}
                                 <div className="space-y-6">
                                     {schema && <SchemaDisplay schema={schema} />}
                                     {integrityReport && <IntegrityReport data={integrityReport} />}
                                     {classifications && <ClassificationDisplay classifications={classifications} />}
                                     {sqlStatements && <SqlDisplay statements={sqlStatements} />}
                                     {finalMessage && !governedViews && <div className="p-4 bg-green-500/20 rounded-lg text-center text-green-300 animate-fade-in">{finalMessage}</div>}
-
                                     {governedViews && (
                                         <div className="space-y-4">
                                             <div className="relative">
                                                 <UserCircle className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                                <input
-                                                    type="text"
-                                                    value={viewingRole}
-                                                    onChange={(e) => setViewingRole(e.target.value)}
-                                                    placeholder="e.g., admin, analyst"
-                                                    className="w-full pl-10 pr-4 py-2 glass rounded-lg border border-white/20 text-white focus:border-indigo-400 focus:outline-none transition"
-                                                    disabled={isLoading}
-                                                />
+                                                <input type="text" value={viewingRole} onChange={(e) => setViewingRole(e.target.value)} placeholder="e.g., admin, analyst" className="w-full pl-10 pr-4 py-2 glass rounded-lg border border-white/20 text-white focus:border-indigo-400 focus:outline-none transition" disabled={isLoading} />
                                             </div>
                                             <GovernedViewList views={governedViews} onSelectView={handleFetchViewData} isLoading={isLoading} selectedView={selectedView} />
                                         </div>
                                     )}
                                     {viewData && <ViewDataDisplay viewData={viewData} />}
-
+                                    
+                                    {/* --- NEW: Conditionally render download buttons --- */}
+                                    {finalMessage && downloadableIntegrityData && downloadableSqlData && (
+                                        <DownloadActions integrityData={downloadableIntegrityData} sqlData={downloadableSqlData} />
+                                    )}
+                                    {/* --- END NEW --- */}
+                                    
                                     {/* Action Buttons */}
                                     <div className="pt-4 text-center space-y-4">
-
                                         {schema && !classifications && (
                                             <button onClick={handleClassifyData} disabled={isLoading} className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:bg-slate-700 animate-fade-in">
                                                 {isLoading && currentStep === 'Classifying...' ? <LoaderCircle className="animate-spin" /> : <ShieldCheck />}
                                                 {isLoading && currentStep === 'Classifying...' ? 'Classifying...' : 'Proceed to Classify Data'}
                                             </button>
                                         )}
-                                        
                                         {classifications && !sqlStatements && !finalMessage && (
                                             <button onClick={handleGenerateSql} disabled={isLoading} className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:bg-slate-700 animate-fade-in">
                                                 {isLoading && currentStep === 'Generating...' ? <LoaderCircle className="animate-spin" /> : <FileText />}
                                                 {isLoading && currentStep === 'Generating...' ? 'Generating...' : 'Generate SQL Masking Plan'}
                                             </button>
                                         )}
-
-                                        {sqlStatements && (
+                                        {sqlStatements && !finalMessage && (
                                             <button onClick={handleApplyPlan} disabled={isLoading} className="w-full px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:bg-slate-700 animate-fade-in">
                                                 {isLoading && currentStep === 'Applying...' ? <LoaderCircle className="animate-spin" /> : <CheckCircle />}
                                                 {isLoading && currentStep === 'Applying...' ? 'Applying...' : 'Approve and Apply Plan'}
                                             </button>
                                         )}
-
                                         {finalMessage && (
                                             <button onClick={handleListGovernedViews} disabled={isLoading} className="w-full px-6 py-3 bg-teal-600 hover:bg-teal-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:bg-slate-700 animate-fade-in">
                                                 {isLoading && currentStep === 'Listing Views...' ? <LoaderCircle className="animate-spin" /> : <Eye />}

@@ -3,9 +3,7 @@
 // ====================================================================
 
 // Use environment variables for the base URL for flexibility between environments.
-const API_BASE_URL ='http://localhost:1029';
-
-const VITE_API_BASE_URL='http://127.0.0.1:1029';
+const API_BASE_URL ='http://localhost:1038';
 
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -43,6 +41,47 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
         throw new Error(error.message || 'A network error occurred. Please check your browser console and ensure the backend server is running.');
     }
 }
+
+// --- NEW ---
+/**
+ * A helper function to stream a file from the backend and trigger a browser download.
+ * @param endpoint The API endpoint for the download.
+ * @param body The request body to send.
+ * @param filename The desired name for the downloaded file.
+ */
+async function streamDownload(endpoint: string, body: any, filename: string): Promise<void> {
+    const url = `${API_BASE_URL}${endpoint}`;
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({
+                detail: `Download request to ${url} failed with HTTP status ${response.status}`
+            }));
+            throw new Error(errorData.detail);
+        }
+
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        
+        window.URL.revokeObjectURL(downloadUrl);
+        link.remove();
+
+    } catch (error: any) {
+        console.error(`File download from ${url} failed:`, error);
+        alert(`Failed to download file: ${error.message}`);
+    }
+}
+// --- END NEW ---
 
 
 // ====================================================================
@@ -103,6 +142,20 @@ export type FetchViewDataResponse = {
     data: Record<string, any>[];
 };
 
+
+// --- NEW ---
+// These types are required for the download functionality.
+export interface SQLGenerationResponse {
+  sql_statements: string[];
+  message: string;
+}
+export interface DownloadGovernanceReportRequest {
+  referential_integrity: ReferentialIntegrityResponse;
+  masking_sql: SQLGenerationResponse;
+}
+// --- END NEW ---
+
+
 // --- API Functions ---
 
 export const postExtractSchema = (connection_string: string) => {
@@ -112,7 +165,7 @@ export const postExtractSchema = (connection_string: string) => {
   });
 };
 
-export const postExplainIntegrity = (connection_string: string) => {
+export const postExplainIntegrity = (connection_string: string): Promise<ReferentialIntegrityResponse> => {
     return request<ReferentialIntegrityResponse>('/data-gov/explain_referential_integrity', {
         method: 'POST',
         body: JSON.stringify({ connection_string }),
@@ -126,8 +179,8 @@ export const postClassifyData = (schema_data: ExtractedSchema) => {
   });
 };
 
-export const postGenerateMaskingSQL = (classification_results: ClassificationResult[]) => {
-  return request<{ sql_statements: string[]; message: string }>('/data-gov/generate_masking_sql', {
+export const postGenerateMaskingSQL = (classification_results: ClassificationResult[]): Promise<SQLGenerationResponse> => {
+  return request<SQLGenerationResponse>('/data-gov/generate_masking_sql', {
     method: 'POST',
     body: JSON.stringify({ classification_results }),
   });
@@ -164,6 +217,25 @@ export const postFetchViewData = (
         }),
     });
 };
+
+
+// --- NEW ---
+/**
+ * Downloads the full governance report as an Excel file.
+ * @param data The combined report data containing integrity and SQL info.
+ */
+export const downloadExcelReport = (data: DownloadGovernanceReportRequest): Promise<void> => {
+    return streamDownload('/data-gov/download/governance-report/excel', data, 'Data_Governance_Report.xlsx');
+};
+
+/**
+ * Downloads the full governance report as a Word document.
+ * @param data The combined report data containing integrity and SQL info.
+ */
+export const downloadWordReport = (data: DownloadGovernanceReportRequest): Promise<void> => {
+    return streamDownload('/data-gov/download/governance-report/word', data, 'Data_Governance_Report.docx');
+};
+// --- END NEW ---
 
 
 // ====================================================================
@@ -247,6 +319,7 @@ export interface ExecuteQualityChecksResponse {
 
 
 // --- Base Types ---
+// This is your original code block, unchanged.
 export interface ProposedQualityCheck {
     check_id: string;
     rule_name: string;
@@ -322,6 +395,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
     return response.json();
 }
 
+// This is your original code block, unchanged.
 export interface ColumnProfile {
     column_name: string;
     data_type: string;
@@ -346,6 +420,7 @@ export interface GenerateDataProfileResponse {
     column_profiles: ColumnProfile[];
 }
 
+// This is your original code block, unchanged.
 export interface ProposedQualityCheck {
     check_id: string;
     rule_name: string;
@@ -385,7 +460,6 @@ async function apiFetch<T>(endpoint: string, options: RequestInit): Promise<T> {
         let errorMessage = `API Error: ${response.status} ${response.statusText}`;
         try {
             const errorData = await response.json();
-            // FastAPI validation errors are in `detail`, other custom errors might be too
             errorMessage = errorData.detail || JSON.stringify(errorData);
         } catch (e) {
             // The response was not JSON, stick with the status text
@@ -439,6 +513,7 @@ export type TalkToDbResponse = {
 
 
 
+// This is your original commented out code block, unchanged.
 // async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
 //     // Ensure the URL starts with a slash.
 //     const apiUrl = url; 
