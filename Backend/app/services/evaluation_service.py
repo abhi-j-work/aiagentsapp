@@ -110,12 +110,8 @@ async def judge_talk_to_db_sql(prompt: str, generated_sql: str, db_schema: str) 
     
     Your output MUST be a single, valid JSON object with three keys: `is_safe` (boolean), `is_relevant` (boolean), and `reasoning` (a string).
 
-    **Example Output 1 (Good):**
-    { "is_safe": true, "is_relevant": true, "reasoning": "The query is safe and correctly retrieves the requested user data." }
-
-    **Example Output 2 (Bad):**
-    { "is_safe": false, "is_relevant": false, "reasoning": "The query contains a forbidden 'DROP TABLE' statement." }
-    """
+    
+    # """
 
     user_prompt_for_judge = f"""
     Please judge the following generated SQL.

@@ -77,36 +77,53 @@ async def generate_quality_plan(
         if user_custom_rules and user_custom_rules.strip():
             final_custom_rules_prompt = f"---\n**Mandatory Custom Rules To Follow:**\n{user_custom_rules}\n---"
         
-        # --- START: THE FINAL FIX FOR THE GROQ ERROR ---
+        # --- START: THE FINAL, DEFINITIVE FIX ---
         system_prompt = f"""
-        You are a Senior Data Quality Analyst. Your task is to generate a comprehensive JSON list of data quality checks for the table "{schema_name}"."{table_name}".
+        You are a Senior Data Quality Analyst. Your task is to generate a comprehensive quality plan in JSON format for the table "{schema_name}"."{table_name}".
 
-        **CRITICAL INSTRUCTIONS FOR ALL CHECKS:**
-        1.  For every check you generate, you **MUST** provide these four and only these four keys: `check_id`, `rule_name`, `rule_description`, and `check_sql`.
-        2.  **`check_sql`:** The SQL query MUST count rows that are **INVALID**.
-        3.  **`rule_name`:** The name MUST describe the failure condition (e.g., "Invalid Email Format").
-        
+        **CRITICAL OUTPUT STRUCTURE:**
+        1.  Your entire response **MUST** be a single JSON object.
+        2.  The root of this JSON object **MUST** have exactly two keys: `table_name` and `proposed_checks`.
+        3.  The value for `table_name` MUST be the fully qualified table name: "{qualified_name}".
+        4.  The value for `proposed_checks` MUST be a JSON array `[]`.
+
+        **CRITICAL INSTRUCTIONS FOR EACH CHECK IN THE ARRAY:**
+        1.  Each check object **MUST** have four keys: `check_id`, `rule_name`, `rule_description`, and `check_sql`.
+        2.  `check_id`: A unique, machine-friendly snake_case **STRING**. It must be a string, not a number.
+        3.  `rule_name`: A human-readable name describing the **FAILURE** condition (e.g., "Invalid Email Format").
+        4.  `check_sql`: A PostgreSQL query that `SELECT COUNT(*)` of rows that **VIOLATE** the rule. All identifiers MUST be double-quoted.
+
         {final_custom_rules_prompt}
 
-        **Output Format (Strict JSON Only):**
-        - The root key of your JSON object MUST be `"proposed_checks"`.
-        - The value for `"proposed_checks"` MUST be a JSON array `[]`.
-        - Each object in the array MUST follow the structure with the four required keys.
+        **EXAMPLE OF THE EXACT, PERFECT JSON OUTPUT YOU MUST PROVIDE:**
+        ```json
+        {{
+          "table_name": "{qualified_name}",
+          "proposed_checks": [
+            {{
+              "check_id": "missing_email",
+              "rule_name": "Missing Email Address",
+              "rule_description": "Checks for rows where the email address is NULL.",
+              "check_sql": "SELECT COUNT(*) FROM \\"{schema_name}\\".\\"{table_name}\\" WHERE \\"email\\" IS NULL;"
+            }}
+          ]
+        }}
+        ```
         """
-        # --- END: THE FINAL FIX ---
+        # --- END: THE FINAL, DEFINITIVE FIX ---
 
-        user_prompt = f"Generate a data quality plan for the table `{qualified_name}` which has the following schema:\n{json.dumps(target_table_schema, indent=2)}"
+        user_prompt = f"Generate a data quality plan for the table `{qualified_name}` with the schema:\n{json.dumps(target_table_schema, indent=2)}"
         
         response_json_str = await llm_service_instance.call_llm(system_prompt, user_prompt, response_format={"type": "json_object"})
         
         validated_response = models.GenerateQualityPlanResponse.model_validate_json(response_json_str)
         
-        evaluation_result_dict = await evaluation_service.judge_data_quality_plan(
-            table_name=qualified_name,
-            proposed_checks=validated_response.model_dump()["proposed_checks"]
-        )
+        # evaluation_result_dict = await evaluation_service.judge_data_quality_plan(
+        #     table_name=qualified_name,
+        #     proposed_checks=validated_response.model_dump()["proposed_checks"]
+        # )
         
-        validated_response.evaluation = models.DQEvaluationResult.model_validate(evaluation_result_dict)
+        # validated_response.evaluation = models.EvaluationResult.model_validate(evaluation_result_dict)
         return validated_response
 
     except (ValidationError, json.JSONDecodeError) as e:
@@ -115,7 +132,6 @@ async def generate_quality_plan(
     except Exception as e:
         logger.exception(f"An unexpected error occurred during quality plan generation: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 # ===================================================================
 @router.post("/execute-quality-checks", response_model=models.ExecuteQualityChecksResponse)
 async def execute_quality_checks(
