@@ -3,9 +3,9 @@
 // ====================================================================
 
 // Use environment variables for the base URL for flexibility between environments.
-const API_BASE_URL ='http://localhost:10239';
+const API_BASE_URL ='http://localhost:1028';
 
-const VITE_API_BASE_URL='http://127.0.0.1:1023';
+const VITE_API_BASE_URL='http://127.0.0.1:1028';
 
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -21,8 +21,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     // 3. Ensure the endpoint path starts with a single slash.
     const endpointWithSlash = cleanEndpoint.startsWith('/') ? cleanEndpoint : `/${cleanEndpoint}`;
 
-    // 4. Join the base URL, the standard /api prefix, and the endpoint path.
-    const finalUrl = `${baseUrlNoSlash}/api${endpointWithSlash}`;
+    // 4. Join the base URL and the endpoint path.
+    const finalUrl = `${baseUrlNoSlash}${endpointWithSlash}`;
     // --- END: BULLETPROOF URL CONSTRUCTION ---
     
     try {
@@ -440,8 +440,8 @@ export type TalkToDbResponse = {
 
 
 // async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
-//     // Ensure the URL starts with a slash and is prefixed for the proxy.
-//     const apiUrl = `/api${url}`; 
+//     // Ensure the URL starts with a slash.
+//     const apiUrl = url; 
     
 //     try {
 //         const response = await fetch(apiUrl, {

@@ -12,7 +12,7 @@ import {
 } from '../services/api';
 
 import type {
-    GenerateDataProfileResponse,
+    GenerateDataProfileResponse,    
     GenerateQualityPlanResponse,
     ExecuteQualityChecksResponse,
     ProposedQualityCheck,
