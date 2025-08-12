@@ -155,12 +155,12 @@ async def classify_data(
         
         classification_report = models.ClassificationResponse.model_validate_json(response_json_str)
         
-        logger.info("Evaluating generated classification with LLM Judge...")
-        evaluation_result = await evaluation_service.judge_data_classification(
-            schema_str=json.dumps(schema_to_classify.model_dump(mode='json'), indent=2),
-            classification_results=classification_report.model_dump(mode='json')["classification_results"]
-        )
-        classification_report.evaluation = evaluation_result
+        # logger.info("Evaluating generated classification with LLM Judge...")
+        # evaluation_result = await evaluation_service.judge_data_classification(
+        #     schema_str=json.dumps(schema_to_classify.model_dump(mode='json'), indent=2),
+        #     classification_results=classification_report.model_dump(mode='json')["classification_results"]
+        # )
+        # classification_report.evaluation = evaluation_result
         
         try:
             await notification.send_data_classification_alert(classification_report)

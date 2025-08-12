@@ -16,23 +16,14 @@ import type {
     GenerateQualityPlanResponse,
     ExecuteQualityChecksResponse,
     ProposedQualityCheck,
+    DQEvaluationResult, 
 } from '../services/api';
 import ReportDashboard from './ReportDashboard';
 
-// --- Prop Types for Sub-Components ---
-interface CheckItemProps {
-    check: ProposedQualityCheck;
-    isChecked: boolean;
-    onCheckChange: (id: string, isChecked: boolean) => void;
-}
-
-interface DataProfileDisplayProps {
-    profile: GenerateDataProfileResponse | null;
-}
-
-interface StepIndicatorProps {
-    currentStep: number;
-}
+// --- Prop Types ---
+interface CheckItemProps { check: ProposedQualityCheck; isChecked: boolean; onCheckChange: (id: string, isChecked: boolean) => void; }
+interface DataProfileDisplayProps { profile: GenerateDataProfileResponse | null; }
+interface StepIndicatorProps { currentStep: number; }
 
 // --- Style Constants ---
 const cardContainerStyle = "card-border rounded-2xl bg-slate-900/70 backdrop-blur-sm animate-fade-in";
@@ -43,10 +34,9 @@ const cardBodyStyle = "p-6";
 const inputBaseStyle = "w-full px-4 py-2 glass rounded-lg border border-slate-700 bg-slate-800/50 text-white focus:border-indigo-400 focus:outline-none transition";
 const primaryButtonStyle = "group btn-primary bg-indigo-600 text-white hover:bg-indigo-500 transition-all flex items-center text-sm font-semibold px-4 py-2 rounded-lg shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed";
 
-// --- Sub-Components (Unchanged) ---
+// --- Sub-Components ---
 
 const CheckItem: React.FC<CheckItemProps> = ({ check, isChecked, onCheckChange }) => {
-    // ... No changes to this component ...
     const getIcon = () => {
         const name = check.rule_name.toLowerCase();
         if (name.includes('unique')) return <Fingerprint className="w-5 h-5 text-indigo-400" />;
@@ -68,7 +58,6 @@ const CheckItem: React.FC<CheckItemProps> = ({ check, isChecked, onCheckChange }
 };
 
 const DataProfileDisplay: React.FC<DataProfileDisplayProps> = ({ profile }) => {
-    // ... No changes to this component, renamed for clarity ...
     if (!profile || !profile.columns || profile.columns.length === 0) {
         return <p className="text-sm text-slate-400">Profile data will appear here after analysis.</p>;
     }
@@ -79,12 +68,6 @@ const DataProfileDisplay: React.FC<DataProfileDisplayProps> = ({ profile }) => {
                 <BarChart3 className="w-5 h-5 text-indigo-400" />
                 AI Data Profile: <span className="text-indigo-300">{profile.table_name}</span>
             </h5>
-            <ul className="text-sm space-y-2 pt-2">
-                <li className="flex justify-between items-center text-slate-300">
-                    <span><Database className="inline w-4 h-4 mr-2"/>Columns Analyzed</span>
-                    <span className="font-mono text-indigo-300">{profile.columns.length}</span>
-                </li>
-            </ul>
             <div className="mt-4 max-h-[60vh] overflow-y-auto space-y-2 pr-2">
                 {profile.columns.map((col: AIColumnProfile) => (
                     <details key={col.column_name} className="bg-slate-800/50 rounded-md transition-colors hover:bg-slate-800/80">
@@ -104,15 +87,13 @@ const DataProfileDisplay: React.FC<DataProfileDisplayProps> = ({ profile }) => {
     );
 };
 
-// --- UPDATED Step Indicator ---
 const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => {
     const steps = [
         { num: 1, name: "Define Scope", icon: <Target/> },
-        { num: 2, name: "Profile & Define Rules", icon: <FileText/> }, // NEW STEP
+        { num: 2, name: "Data Profile & Custom Rules Engine", icon: <FileText/> },
         { num: 3, name: "Review AI Plan", icon: <ClipboardList/> },
         { num: 4, name: "View Report", icon: <Sparkles/> }
     ];
-
     return (
         <nav className="flex items-center justify-center space-x-2 md:space-x-4 mb-10" aria-label="Progress">
             {steps.map((step, index) => (
@@ -130,30 +111,29 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => {
     );
 };
 
-const AiJudgeResult: React.FC<{ evaluation?: { score: number; reasoning: string } | null }> = ({ evaluation }) => {
-    // ... No changes to this component ...
+const AiJudgeResult: React.FC<{ evaluation?: DQEvaluationResult | null }> = ({ evaluation }) => {
     if (!evaluation) return null;
     const getStarColor = (score: number) => {
-        if (score >= 4) return 'text-green-400';
-        if (score === 3) return 'text-yellow-400';
+        if (score >= 8) return 'text-green-400';
+        if (score >= 5) return 'text-yellow-400';
         return 'text-red-400';
     };
     return (
         <div className="p-4 bg-slate-800/50 border border-slate-700 rounded-lg mb-6">
             <h4 className="font-semibold text-white flex items-center gap-2 mb-2 text-base"><Gavel className="w-5 h-5 text-indigo-400" />AI Judge: Plan Evaluation</h4>
             <div className="flex items-start gap-4">
-                <div className={`flex items-center gap-1 font-bold text-lg ${getStarColor(evaluation.score)}`}>{evaluation.score} <Star className="w-5 h-5 fill-current" /></div>
+                <div className={`flex items-center gap-1 font-bold text-lg ${getStarColor(evaluation.score)}`}>{evaluation.score} / 10 <Star className="w-5 h-5 fill-current" /></div>
                 <p className="text-sm text-slate-400 flex-1 pt-0.5">{evaluation.reasoning}</p>
             </div>
         </div>
     );
 };
 
-const modelOptions = [ "llama-3-70b","gpt-4o", "claude-3-opus", "gemini-1.5-pro" ];
+const modelOptions = [ "llama-4-maverick (Default)","llama-3-70b","gpt-4o", "claude-3-opus", "gemini-1.5-pro" ];
 
-// --- Main Page Component (UPDATED) ---
+// --- Main Page Component ---
 const DataQualityAgentPage: React.FC = () => {
-    const [step, setStep] = useState<1 | 2 | 3 | 4>(1); // UPDATED to 4 steps
+    const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [connectionString, setConnectionString] = useState<string>('');
@@ -168,22 +148,17 @@ const DataQualityAgentPage: React.FC = () => {
 
     const proposedChecks = useMemo(() => planResponse?.proposed_checks || [], [planResponse]);
 
-    // UPDATED: Step 1 now only generates the profile
     const handleGenerateProfile = async () => {
         if (!tableName) { setError("Table name is required."); return; }
         setIsLoading(true); setError(null); setDataProfile(null);
         try {
             const profileRes = await postGenerateDataProfile(connectionString, tableName);
             setDataProfile(profileRes);
-            setStep(2); // Move to the new Step 2
-        } catch (err: any) { 
-            setError(err.message || 'Failed to generate data profile.'); 
-        } finally { 
-            setIsLoading(false); 
-        }
+            setStep(2);
+        } catch (err: any) { setError(err.message || 'Failed to generate data profile.'); } 
+        finally { setIsLoading(false); }
     };
     
-    // NEW: Step 2 generates the plan using custom rules
     const handleGeneratePlanWithRules = async () => {
         if (!tableName) { setError("Table name is missing."); return; }
         setIsLoading(true); setError(null); setPlanResponse(null);
@@ -191,12 +166,9 @@ const DataQualityAgentPage: React.FC = () => {
             const planRes = await postGenerateQualityPlan(connectionString, tableName, customRules);
             setPlanResponse(planRes);
             setSelectedChecks(new Set(planRes.proposed_checks.map(c => c.check_id)));
-            setStep(3); // Move to Step 3
-        } catch (err: any) {
-            setError(err.message || 'Failed to generate plan.');
-        } finally {
-            setIsLoading(false);
-        }
+            setStep(3);
+        } catch (err: any) { setError(err.message || 'Failed to generate plan.'); } 
+        finally { setIsLoading(false); }
     };
 
     const handleCheckChange = (id: string, isChecked: boolean) => {
@@ -213,8 +185,8 @@ const DataQualityAgentPage: React.FC = () => {
         try {
             const res = await postExecuteQualityChecks(connectionString, planResponse.table_name, checksToRun);
             setValidationReport(res);
-            setStep(4); // Move to Step 4
-        } catch (err: any) { setError(err.message || 'Failed to execute checks.'); }
+            setStep(4);
+        } catch (err: any) { setError(err.message || 'Failed to execute checks.'); } 
         finally { setIsLoading(false); }
     };
     
@@ -286,7 +258,7 @@ const DataQualityAgentPage: React.FC = () => {
                                     <div className="w-full lg:w-[320px] xl:w-[360px] flex-shrink-0"><DataProfileDisplay profile={dataProfile} /></div>
                                     <div className="flex-grow flex flex-col space-y-6 lg:border-l lg:border-slate-700/80 lg:pl-8">
                                         <div>
-                                            <label htmlFor="customRules" className="text-base font-medium text-slate-200 block mb-2">Custom Business Rules</label>
+                                            <label htmlFor="customRules" className="text-base font-medium text-slate-200 block mb-2">Custom Rules Engine</label>
                                             <p className="text-sm text-slate-400 mb-3">Add any specific rules the AI must follow. The AI will see the profile on the left for context.</p>
                                             <textarea id="customRules" value={customRules} onChange={(e) => setCustomRules(e.target.value)} placeholder="e.g., Ensure all 'order_id' values are positive integers." className={`${inputBaseStyle} !h-40`} rows={5}/>
                                         </div>

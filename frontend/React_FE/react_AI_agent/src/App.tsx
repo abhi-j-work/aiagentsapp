@@ -21,6 +21,8 @@ import AIGovernancePitchInfographic from './pages/AIGovernancePitchInfographic';
 import MetaDataSearchIntroPage from './pages/MetaDataSearchIntroPage';
 import IcebergCatalogIntroPage from './pages/IcebergCatalogIntroPage';
 import EvaluationPage from './pages/EvaluationPage';
+import LineageDisplay from './pages/DataLineageAgentPage';
+import DataLineageAgentPage from './pages/DataLineageAgentPage';
 function App() {
   return (
     <Routes>
@@ -45,8 +47,8 @@ function App() {
         <Route path="/metadata-search" element={<MetaDataSearchIntroPage/> }/>
         <Route path="/iceberg-governance" element={<IcebergCatalogIntroPage/> }/>
         <Route path="/evaluation" element={<EvaluationPage/> }/>
-        {/* <Route path="/about" element={<DataGovernanceInfographic/> }/> */}
         <Route path="/about" element={<AIGovernancePitchInfographic/> }/>
+        <Route path="/data-lineage" element={<DataLineageAgentPage/>} />
       </Route>
     </Routes>
   );
