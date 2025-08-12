@@ -1,16 +1,26 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
-    Database, LoaderCircle, AlertTriangle, PlayCircle, Table, Eye, Workflow, Search, Network
+    LoaderCircle, AlertTriangle, Table, Eye, Workflow, Search, Network
 } from 'lucide-react';
 import { postListDatabaseObjects, postGetDataLineage } from '../services/api';
 import type { LineageResponse, DatabaseObjectsResponse } from '../services/api';
 import LineageDisplay from '../components/LineageDisplay'; // Ensure path is correct
 
-// A small sub-component for the object list to keep the main component cleaner
+// --- THE FIX IS HERE: This sub-component is now correctly defined ---
 const ObjectSelector = ({
-    objects, title, onSelect, selectedObject, icon: Icon
+    objects,
+    title,
+    objectType, // Added prop to know if we are rendering 'table' or 'view'
+    onSelect,
+    selectedObject,
+    icon: Icon
 }: {
-    objects: string[], title: string, onSelect: (name: string) => void, selectedObject: string | null, icon: React.ElementType
+    objects: string[],
+    title: string,
+    objectType: 'table' | 'view', // This prop is crucial
+    onSelect: (name: string, type: 'table' | 'view') => void, // onSelect now expects the type
+    selectedObject: string | null,
+    icon: React.ElementType
 }) => (
     <div>
         <h3 className="font-semibold text-slate-300 flex items-center gap-2 mb-2">
@@ -20,7 +30,8 @@ const ObjectSelector = ({
             {objects.map(name => (
                 <button
                     key={name}
-                    onClick={() => onSelect(name)}
+                    // This now correctly calls onSelect with BOTH the name and the type
+                    onClick={() => onSelect(name, objectType)}
                     className={`w-full text-left text-sm px-3 py-1.5 rounded-md transition-colors flex items-center gap-2 ${selectedObject === name ? 'bg-indigo-600 text-white font-semibold' : 'bg-slate-800/60 text-slate-300 hover:bg-slate-700'}`}
                 >
                     {name}
@@ -40,7 +51,7 @@ const DataLineageAgentPage = () => {
     
     // Data State
     const [dbObjects, setDbObjects] = useState<DatabaseObjectsResponse | null>(null);
-    const [selectedObject, setSelectedObject] = useState<string | null>(null);
+    const [selectedObject, setSelectedObject] = useState<{ label: string; id: string; } | null>(null);
     const [lineageData, setLineageData] = useState<LineageResponse | null>(null);
 
     const handleListObjects = async () => {
@@ -61,9 +72,11 @@ const DataLineageAgentPage = () => {
         }
     };
 
-    const handleSelectObject = async (objectName: string) => {
+    const handleSelectObject = async (objectName: string, objectType: 'table' | 'view') => {
+        const nodeId = `${objectType}_${objectName}`;
+        setSelectedObject({ label: objectName, id: nodeId });
+        
         setIsLineageLoading(true);
-        setSelectedObject(objectName);
         setLineageData(null);
         setError(null);
         
@@ -108,8 +121,22 @@ const DataLineageAgentPage = () => {
                 
                 {dbObjects && (
                     <div className="flex-grow card-border p-4 rounded-xl bg-slate-800/30 overflow-y-auto space-y-4 animate-fade-in">
-                        <ObjectSelector objects={dbObjects.tables} title="Tables" onSelect={handleSelectObject} selectedObject={selectedObject} icon={Table} />
-                        <ObjectSelector objects={dbObjects.views} title="Views" onSelect={handleSelectObject} selectedObject={selectedObject} icon={Eye} />
+                        <ObjectSelector 
+                            objects={dbObjects.tables} 
+                            title="Tables" 
+                            objectType="table" // Pass the type
+                            onSelect={handleSelectObject}
+                            selectedObject={selectedObject?.label || null} 
+                            icon={Table} 
+                        />
+                        <ObjectSelector 
+                            objects={dbObjects.views} 
+                            title="Views" 
+                            objectType="view" // Pass the type
+                            onSelect={handleSelectObject}
+                            selectedObject={selectedObject?.label || null} 
+                            icon={Eye} 
+                        />
                     </div>
                 )}
             </aside>
@@ -121,8 +148,8 @@ const DataLineageAgentPage = () => {
                         <LoaderCircle className="w-10 h-10 animate-spin text-indigo-400" />
                         <span>Building Lineage Graph...</span>
                     </div>
-                ) : lineageData ? (
-                    <LineageDisplay data={lineageData} />
+                ) : lineageData && selectedObject ? (
+                    <LineageDisplay data={lineageData} centralNodeId={selectedObject.id} />
                 ) : (
                     <div className="text-center text-slate-400">
                         <Workflow className="w-16 h-16 mx-auto text-slate-600 mb-4" />
