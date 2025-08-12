@@ -23,6 +23,7 @@ import IcebergCatalogIntroPage from './pages/IcebergCatalogIntroPage';
 import EvaluationPage from './pages/EvaluationPage';
 import LineageDisplay from './pages/DataLineageAgentPage';
 import DataLineageAgentPage from './pages/DataLineageAgentPage';
+import DataLineageIntroPage from './pages/DataLineageIntroPage';
 function App() {
   return (
     <Routes>
@@ -49,6 +50,7 @@ function App() {
         <Route path="/evaluation" element={<EvaluationPage/> }/>
         <Route path="/about" element={<AIGovernancePitchInfographic/> }/>
         <Route path="/data-lineage" element={<DataLineageAgentPage/>} />
+        <Route path="/data-lineage-intro" element={<DataLineageIntroPage />} />
       </Route>
     </Routes>
   );
