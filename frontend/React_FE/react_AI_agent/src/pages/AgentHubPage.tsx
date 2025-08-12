@@ -180,7 +180,7 @@ const AgentHubPage = () => {
                   title="Data Lineage Agent"
                   description="Visually trace data's journey. See how tables and views are connected and understand the impact of changes."
                   features={["Upstream/Downstream Lineage", "Interactive Graph View", "Impact Analysis"]}
-                  linkTo="/data-lineage"
+                  linkTo="/data-lineage-intro"
                   colorClass="green"
                   glowColor="#22c55e" // Tailwind's green-500
                 />
