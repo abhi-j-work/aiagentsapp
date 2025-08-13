@@ -1,7 +1,7 @@
 # In file: app/services/db_service.py
 import logging
 import asyncio
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from app.services.errors import DatabaseServiceError
 from sqlalchemy import create_engine, inspect, text
 import asyncpg
@@ -171,64 +171,67 @@ async def fetch_view_data(conn_str: str, view_name: str, limit: int, offset: int
 
 
 
-async def list_all_tables_and_views(conn_str: str) -> tuple[list[str], list[str]]:
-    """
-    Connects to the database and fetches a list of all user-defined tables and views
-    from the 'public' schema using a single, efficient query.
 
-    Args:
-        conn_str: The full database connection string.
+async def list_all_tables_and_views(conn_str: str) -> Tuple[List[Dict[str, Any]], List[str]]:
+    """
+    Connects to the database and fetches all user-defined tables and views
+    from the 'public' schema, including the primary key for each table.
 
     Returns:
-        A tuple containing two lists: (list_of_tables, list_of_views).
-
-    Raises:
-        DatabaseServiceError: If the connection fails or the query cannot be executed.
+        A tuple containing:
+        - A list of dictionaries for tables, e.g., [{'name': 'users', 'primary_key': 'id'}]
+        - A simple list of view names.
     """
     conn = None
     try:
-        # Establish a connection to the database
         conn = await asyncpg.connect(dsn=conn_str)
-        
-        # --- THE FIX: A SINGLE, EFFICIENT QUERY ---
-        # This query fetches both tables and views in one go.
+            
         query = """
-            SELECT table_name, table_type
-            FROM information_schema.tables 
-            WHERE table_schema = 'public' AND table_type IN ('BASE TABLE', 'VIEW')
-            ORDER BY table_type, table_name;
+        SELECT
+            t.table_name,
+            t.table_type,
+            kcu.column_name AS primary_key_column
+        FROM
+            information_schema.tables AS t
+        LEFT JOIN information_schema.table_constraints AS tc
+            ON tc.table_schema = t.table_schema
+            AND tc.table_name = t.table_name
+            AND tc.constraint_type = 'PRIMARY KEY'
+        LEFT JOIN information_schema.key_column_usage AS kcu
+            ON kcu.constraint_name = tc.constraint_name
+            AND kcu.table_schema = tc.table_schema
+        WHERE
+            t.table_schema = 'public'
+            AND t.table_type IN ('BASE TABLE', 'VIEW')
+        ORDER BY
+            t.table_type, t.table_name;
         """
-
-        # Execute the single query
         records = await conn.fetch(query)
 
-        # --- Process the results in Python ---
-        tables = []
-        views = []
+        tables: List[Dict[str, Any]] = []
+        views: List[str] = []
         for record in records:
             if record['table_type'] == 'BASE TABLE':
-                tables.append(record['table_name'])
-            else: # 'VIEW'
+                tables.append({
+                    "name": record['table_name'],
+                    "primary_key": record['primary_key_column']  # This will be None if no PK
+                })
+            else:  # 'VIEW'
                 views.append(record['table_name'])
         
-        logger.info(f"Successfully listed {len(tables)} tables and {len(views)} views.")
-        
+        logger.info(f"Successfully listed {len(tables)} tables (with PKs) and {len(views)} views.")
         return tables, views
 
     except (asyncpg.exceptions.PostgresError, OSError) as e:
-        # Catch specific database or connection errors
         error_message = f"Database query failed while listing objects: {e}"
         logger.error(error_message)
         raise DatabaseServiceError(status_code=503, message=error_message)
         
     except Exception as e:
-        # Catch any other unexpected errors
         error_message = f"An unexpected error occurred while listing database objects: {e}"
         logger.error(error_message, exc_info=True)
         raise DatabaseServiceError(status_code=500, message=error_message)
-
     finally:
-        # Ensure the connection is always closed, even if errors occur
         if conn and not conn.is_closed():
             await conn.close()
 
@@ -369,6 +372,51 @@ async def get_table_lineage_details(conn_str: str, table_name: str) -> tuple[lis
     except (asyncpg.exceptions.PostgresError, OSError) as e:
         logger.error(f"Database query failed while getting table lineage for '{table_name}': {e}")
         raise DatabaseServiceError(status_code=503, message=f"Database error getting lineage for table '{table_name}'.")
+    finally:
+        if conn and not conn.is_closed():
+            await conn.close()
+
+async def get_primary_keys_for_tables(conn_str: str, table_names: List[str]) -> Dict[str, str]:
+    """
+    Efficiently fetches the primary key for a given list of table names.
+
+    Args:
+        conn_str: The database connection string.
+        table_names: A list of table names to look up.
+
+    Returns:
+        A dictionary mapping table_name -> primary_key_column.
+    """
+    if not table_names:
+        return {}
+    
+    conn = None
+    try:
+        conn = await asyncpg.connect(dsn=conn_str)
+        # This query is optimized to find PKs for a specific list of tables
+        query = """
+        SELECT
+            t.table_name,
+            kcu.column_name AS primary_key_column
+        FROM
+            information_schema.tables AS t
+        JOIN information_schema.table_constraints AS tc
+            ON tc.table_schema = t.table_schema
+            AND tc.table_name = t.table_name
+            AND tc.constraint_type = 'PRIMARY KEY'
+        JOIN information_schema.key_column_usage AS kcu
+            ON kcu.constraint_name = tc.constraint_name
+            AND kcu.table_schema = tc.table_schema
+        WHERE
+            t.table_name = ANY($1::text[]);
+        """
+        records = await conn.fetch(query, table_names)
+        # Return a dictionary for fast lookups
+        return {record['table_name']: record['primary_key_column'] for record in records}
+    except (asyncpg.exceptions.PostgresError, OSError) as e:
+        logger.error(f"Database query failed while getting primary keys: {e}")
+        # Return empty dict on failure so the lineage graph doesn't crash
+        return {}
     finally:
         if conn and not conn.is_closed():
             await conn.close()

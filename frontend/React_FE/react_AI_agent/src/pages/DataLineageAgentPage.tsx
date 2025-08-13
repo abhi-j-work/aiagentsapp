@@ -1,24 +1,24 @@
 import React, { useState } from 'react';
 import {
-    LoaderCircle, AlertTriangle, Table, Eye, Workflow, Search, Network
+    LoaderCircle, AlertTriangle, Table, Eye, Workflow, Search, Network, KeyRound
 } from 'lucide-react';
 import { postListDatabaseObjects, postGetDataLineage } from '../services/api';
-import type { LineageResponse, DatabaseObjectsResponse } from '../services/api';
-import LineageDisplay from '../components/LineageDisplay'; // Ensure path is correct
+import type { LineageResponse, DatabaseObjectsResponse, TableInfo } from '../services/api';
+import LineageDisplay from '../components/LineageDisplay';
 
-// --- THE FIX IS HERE: This sub-component is now correctly defined ---
+// This sub-component is correctly defined outside the main component for performance.
 const ObjectSelector = ({
     objects,
     title,
-    objectType, // Added prop to know if we are rendering 'table' or 'view'
+    objectType,
     onSelect,
     selectedObject,
     icon: Icon
 }: {
-    objects: string[],
+    objects: TableInfo[] | string[],
     title: string,
-    objectType: 'table' | 'view', // This prop is crucial
-    onSelect: (name: string, type: 'table' | 'view') => void, // onSelect now expects the type
+    objectType: 'table' | 'view',
+    onSelect: (name: string, type: 'table' | 'view') => void,
     selectedObject: string | null,
     icon: React.ElementType
 }) => (
@@ -27,16 +27,26 @@ const ObjectSelector = ({
             <Icon className="w-4 h-4 text-indigo-400" /> {title}
         </h3>
         <div className="space-y-1.5">
-            {objects.map(name => (
-                <button
-                    key={name}
-                    // This now correctly calls onSelect with BOTH the name and the type
-                    onClick={() => onSelect(name, objectType)}
-                    className={`w-full text-left text-sm px-3 py-1.5 rounded-md transition-colors flex items-center gap-2 ${selectedObject === name ? 'bg-indigo-600 text-white font-semibold' : 'bg-slate-800/60 text-slate-300 hover:bg-slate-700'}`}
-                >
-                    {name}
-                </button>
-            ))}
+            {objects.map(obj => {
+                const name = typeof obj === 'string' ? obj : obj.name;
+                const pk = typeof obj !== 'string' ? obj.primary_key : null;
+
+                return (
+                    <button
+                        key={name}
+                        onClick={() => onSelect(name, objectType)}
+                        className={`w-full text-left text-sm px-3 py-1.5 rounded-md transition-colors flex items-center justify-between gap-2 ${selectedObject === name ? 'bg-indigo-600 text-white font-semibold' : 'bg-slate-800/60 text-slate-300 hover:bg-slate-700'}`}
+                    >
+                        <span className="truncate" title={name}>{name}</span>
+                        {pk && (
+                            <span className="flex-shrink-0 flex items-center gap-1 text-amber-400" title={`Primary Key: ${pk}`}>
+                                <KeyRound className="w-3.5 h-3.5" />
+                                <span className="text-xs font-mono">{pk}</span>
+                            </span>
+                        )}
+                    </button>
+                )
+            })}
         </div>
     </div>
 );
@@ -92,7 +102,6 @@ const DataLineageAgentPage = () => {
 
     return (
         <div className="min-h-screen w-full bg-slate-900 text-white flex p-4 lg:p-6 gap-6">
-            {/* --- SIDEBAR --- */}
             <aside className="w-full max-w-xs flex-shrink-0 flex flex-col gap-6">
                 <div className="flex-shrink-0">
                     <h1 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -122,17 +131,17 @@ const DataLineageAgentPage = () => {
                 {dbObjects && (
                     <div className="flex-grow card-border p-4 rounded-xl bg-slate-800/30 overflow-y-auto space-y-4 animate-fade-in">
                         <ObjectSelector 
-                            objects={dbObjects.tables} 
+                            objects={dbObjects.tables}
                             title="Tables" 
-                            objectType="table" // Pass the type
+                            objectType="table"
                             onSelect={handleSelectObject}
                             selectedObject={selectedObject?.label || null} 
                             icon={Table} 
                         />
                         <ObjectSelector 
-                            objects={dbObjects.views} 
+                            objects={dbObjects.views}
                             title="Views" 
-                            objectType="view" // Pass the type
+                            objectType="view"
                             onSelect={handleSelectObject}
                             selectedObject={selectedObject?.label || null} 
                             icon={Eye} 
@@ -141,7 +150,6 @@ const DataLineageAgentPage = () => {
                 )}
             </aside>
             
-            {/* --- MAIN CONTENT AREA --- */}
             <main className="flex-grow card-border rounded-xl bg-slate-800/30 flex items-center justify-center p-2">
                 {isLineageLoading ? (
                     <div className="flex flex-col items-center gap-4 text-slate-400 animate-fade-in">
@@ -149,7 +157,11 @@ const DataLineageAgentPage = () => {
                         <span>Building Lineage Graph...</span>
                     </div>
                 ) : lineageData && selectedObject ? (
-                    <LineageDisplay data={lineageData} centralNodeId={selectedObject.id} />
+                    // This is now simpler and correct. It no longer passes the unnecessary tablesInfo prop.
+                    <LineageDisplay 
+                        data={lineageData} 
+                        centralNodeId={selectedObject.id} 
+                    />
                 ) : (
                     <div className="text-center text-slate-400">
                         <Workflow className="w-16 h-16 mx-auto text-slate-600 mb-4" />

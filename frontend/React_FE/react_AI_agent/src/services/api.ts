@@ -3,7 +3,7 @@
 // ====================================================================
 
 // For production, use environment variables: const API_BASE_URL = import.meta.env.VITE_API_URL;
-const API_BASE_URL = 'http://localhost:1057';
+const API_BASE_URL = 'http://localhost:1061';
 
 /**
  * A robust, standardized function for making JSON API requests.
@@ -170,10 +170,22 @@ export const downloadWordReport = (data: DownloadGovernanceReportRequest) =>
 // ====================================================================
 
 // --- Types ---
-export interface LineageNode { id: string; type: 'table' | 'view'; label: string }
+export interface LineageNode {
+    primary_key: any; id: string; type: 'table' | 'view'; label: string 
+}
 export interface LineageEdge { source: string; target: string }
 export interface LineageResponse { nodes: LineageNode[]; edges: LineageEdge[] }
-export interface DatabaseObjectsResponse { tables: string[]; views: string[] }
+
+
+export interface TableInfo {
+    name: string;
+    primary_key: string | null;
+}
+
+export interface DatabaseObjectsResponse {
+    tables: TableInfo[];
+    views: string[];
+}
 
 // --- API Functions ---
 /** Fetches the lineage (source tables) for a specific database object. */
@@ -183,12 +195,6 @@ export const postGetDataLineage = (connectionString: string, objectName: string)
     body: JSON.stringify({ connection_string: connectionString, object_name: objectName }),
   });
 
-/** Lists all user-defined tables and views from the public schema. */
-export const postListDatabaseObjects = (connectionString: string) =>
-  request<DatabaseObjectsResponse>('/data/list-database-objects', {
-    method: 'POST',
-    body: JSON.stringify({ connection_string: connectionString }),
-  });
 
 
 // ====================================================================
@@ -284,3 +290,20 @@ export const postRunAllEvaluations = () =>
     request<FullEvaluationReport>('/evaluation/run-all', {
         method: 'POST',
     });
+
+
+export interface TableInfo {
+    name: string;
+    primary_key: string | null;
+}
+
+export interface DatabaseObjectsResponse {
+    tables: TableInfo[];
+    views: string[];
+}
+
+export const postListDatabaseObjects = (connectionString: string) =>
+  request<DatabaseObjectsResponse>('/data/list-database-objects', {
+    method: 'POST',
+    body: JSON.stringify({ connection_string: connectionString }),
+  });

@@ -351,16 +351,27 @@ class DownloadGovernanceReportRequest(BaseModel):
 
 
 
+# =============================================================================
+# DATA LINEAGE (Cleaned and Corrected)
+# =============================================================================
 
 
-#---------------------DATA LINEAGE--------------------------
+class TableModel(BaseModel):
+    name: str
+    primary_key: Optional[str] = None
+
+class ListObjectsResponse(BaseModel):
+    tables: List[TableModel]
+    views: List[str]
+
 class LineageRequest(DBParams): 
     object_name: str
 
 class Node(BaseModel): 
     id: str 
-    type: str # e.g., 'table', 'view' 
+    type: str 
     label: str 
+    primary_key: Optional[str] = None # <-- ADD THIS LINE
 
 class Edge(BaseModel): 
     source: str 
@@ -370,6 +381,3 @@ class LineageResponse(BaseModel):
     nodes: List[Node] 
     edges: List[Edge]
 
-class ListObjectsResponse(BaseModel):
-    tables: List[str]
-    views: List[str]
