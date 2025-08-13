@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { 
-    LoaderCircle, 
-    AlertTriangle, 
-    Send, 
-    FileCode, 
-    Table, 
-    Database, 
-    MessageSquareQuote, 
+import {
+    LoaderCircle,
+    AlertTriangle,
+    Send,
+    FileCode,
+    Table,
+    Database,
+    MessageSquareQuote,
     Edit3,
     CheckCircle,
     ShieldCheck,
@@ -25,7 +25,8 @@ const SqlDisplay = ({ sql }: { sql: string }) => (
     <div className="animate-fade-in">
         <h4 className="font-semibold text-white flex items-center gap-2 mb-3"><FileCode className="w-4 h-4 text-indigo-400" />AI Generated SQL</h4>
         <div className="max-h-64 overflow-y-auto bg-black p-4 rounded-md border border-slate-700">
-            <pre className="text-xs text-slate-300 whitespace-pre-wrap"><code>{sql}</code></pre>
+            {/* Changed: font size from text-xs to text-sm */}
+            <pre className="text-sm text-slate-300 whitespace-pre-wrap"><code>{sql}</code></pre>
         </div>
     </div>
 );
@@ -43,7 +44,8 @@ const DataTable = ({ data, message }: { data?: Record<string, any>[], message?: 
         <div className="animate-fade-in">
             <h4 className="font-semibold text-white flex items-center gap-2 mb-3"><Table className="w-4 h-4 text-indigo-400" />Query Results</h4>
             <div className="max-h-80 overflow-auto rounded-lg border border-slate-700">
-                <table className="w-full text-xs text-left">
+                 {/* Changed: font size from text-xs to text-sm */}
+                <table className="w-full text-sm text-left">
                     <thead className="bg-slate-800 sticky top-0 z-10">
                         <tr>
                             {headers.map(header => <th key={header} className="p-2 font-medium text-slate-300">{header}</th>)}
@@ -77,8 +79,8 @@ const AiJudgeResult: React.FC<AiJudgeResultProps> = ({ evaluation }) => {
     // A small component for the green/red tags
     const JudgeTag: React.FC<{ label: string; passed: boolean }> = ({ label, passed }) => (
         <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm font-medium ${
-            passed 
-                ? 'bg-green-500/10 text-green-300' 
+            passed
+                ? 'bg-green-500/10 text-green-300'
                 : 'bg-red-500/10 text-red-300'
         }`}>
             {passed ? <ShieldCheck className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
@@ -116,11 +118,11 @@ const TalkToDbPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isConnectionSet, setIsConnectionSet] = useState(false);
-    
+
     // Form Input State
     const [connectionString, setConnectionString] = useState('');
     const [prompt, setPrompt] = useState('');
-    
+
     // Result State
     const [result, setResult] = useState<TalkToDbResponse | null>(null);
 
@@ -142,11 +144,11 @@ const TalkToDbPage = () => {
             setError("Please enter a question.");
             return;
         }
-        
+
         setIsLoading(true);
         setError(null);
         setResult(null);
-        
+
         try {
             const response = await postTalkToDbQuery({ connection_string: connectionString, prompt });
             setResult(response);
@@ -156,7 +158,7 @@ const TalkToDbPage = () => {
             setIsLoading(false);
         }
     };
-    
+
     // Handler to show the connection string input again
     const handleEditConnection = () => {
         setIsConnectionSet(false);
@@ -167,7 +169,7 @@ const TalkToDbPage = () => {
         <div className="min-h-[calc(100vh-80px)] w-full flex items-center justify-center p-4">
             <div className="w-full max-w-2xl">
                 <div className="relative card-border overflow-hidden rounded-2xl flex flex-col animate-vertical-float">
-                    
+
                     <div className="p-6 border-b border-indigo-500/20 flex justify-between items-center">
                         <div>
                             <h2 className="text-xl font-semibold text-white flex items-center gap-3">
@@ -179,7 +181,7 @@ const TalkToDbPage = () => {
                             </p>
                         </div>
                         {isConnectionSet && (
-                            <button 
+                            <button
                                 onClick={handleEditConnection}
                                 disabled={isLoading}
                                 className="flex items-center gap-2 text-xs px-3 py-1.5 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition disabled:opacity-50"
@@ -197,16 +199,16 @@ const TalkToDbPage = () => {
                                     <label htmlFor="connStr" className="text-sm font-medium text-slate-300 block mb-2 flex items-center gap-2">
                                         <Database className="w-4 h-4"/> Database Connection String
                                     </label>
-                                    <input 
-                                        id="connStr" 
-                                        type="password" 
-                                        value={connectionString} 
-                                        onChange={(e) => setConnectionString(e.target.value)} 
+                                    <input
+                                        id="connStr"
+                                        type="password"
+                                        value={connectionString}
+                                        onChange={(e) => setConnectionString(e.target.value)}
                                         placeholder="postgresql://user:password@host/database"
-                                        className="w-full px-4 py-2 glass rounded-lg border border-white/20 text-white focus:border-indigo-400 focus:outline-none transition" 
+                                        className="w-full px-4 py-2 glass rounded-lg border border-white/20 text-white focus:border-indigo-400 focus:outline-none transition"
                                     />
                                 </div>
-                                <button 
+                                <button
                                     type="submit"
                                     disabled={!connectionString}
                                     className="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-500 transition disabled:bg-slate-700 disabled:cursor-not-allowed flex items-center justify-center gap-2">
@@ -222,17 +224,17 @@ const TalkToDbPage = () => {
                                     <label htmlFor="prompt" className="text-sm font-medium text-slate-300 block mb-2">
                                         Your Question
                                     </label>
-                                    <textarea 
-                                        id="prompt" 
-                                        value={prompt} 
-                                        onChange={(e) => setPrompt(e.target.value)} 
+                                    <textarea
+                                        id="prompt"
+                                        value={prompt}
+                                        onChange={(e) => setPrompt(e.target.value)}
                                         placeholder="e.g., Show me the total sales for each product category"
                                         rows={3}
-                                        className="w-full px-4 py-2 glass rounded-lg border border-white/20 text-white focus:border-indigo-400 focus:outline-none transition" 
+                                        className="w-full px-4 py-2 glass rounded-lg border border-white/20 text-white focus:border-indigo-400 focus:outline-none transition"
                                         disabled={isLoading}
                                     />
                                 </div>
-                                <button 
+                                <button
                                     type="submit"
                                     disabled={isLoading || !prompt}
                                     className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-500 transition disabled:bg-slate-700 disabled:cursor-not-allowed flex items-center justify-center gap-2">
@@ -258,9 +260,10 @@ const TalkToDbPage = () => {
                         )}
                         {result && (
                             <div className="space-y-6">
+                                {/* Changed: Reordered results to be above the SQL */}
                                 <AiJudgeResult evaluation={result.evaluation} />
-                                <SqlDisplay sql={result.generated_sql} />
                                 <DataTable data={result.data} message={result.message} />
+                                <SqlDisplay sql={result.generated_sql} />
                             </div>
                         )}
                     </div>

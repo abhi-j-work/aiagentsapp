@@ -3,7 +3,7 @@
 // ====================================================================
 
 // For production, use environment variables: const API_BASE_URL = import.meta.env.VITE_API_URL;
-const API_BASE_URL = 'http://localhost:1061';
+const API_BASE_URL = 'http://localhost:1064';
 
 /**
  * A robust, standardized function for making JSON API requests.
@@ -29,7 +29,6 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
             throw new Error(errorData.detail);
         }
         
-        // Handle cases where the response might be empty (e.g., a 204 No Content status)
         const text = await response.text();
         return text ? JSON.parse(text) : ({} as T);
 
@@ -111,56 +110,48 @@ export type ListViewsResponse = { governed_views: string[] };
 export type FetchViewDataResponse = { view_name: string; row_count: number; data: Record<string, any>[] };
 
 // --- API Functions ---
-/** Extracts the schema from a given database. */
 export const postExtractSchema = (connection_string: string) =>
   request<{ schema_data: ExtractedSchema }>('/data-gov/schema', {
     method: 'POST',
     body: JSON.stringify({ connection_string }),
   });
 
-/** Analyzes and explains referential integrity in a business-friendly format. */
 export const postExplainIntegrity = (connection_string: string) =>
   request<ReferentialIntegrityResponse>('/data-gov/explain_referential_integrity', {
     method: 'POST',
     body: JSON.stringify({ connection_string }),
   });
 
-/** Classifies each column in the database schema into sensitivity levels. */
 export const postClassifyData = (schema_data: ExtractedSchema) =>
   request<{ classification_results: ClassificationResult[] }>('/data-gov/classify_data', {
     method: 'POST',
     body: JSON.stringify({ schema_data }),
   });
 
-/** Generates SQL statements to create views that mask sensitive data. */
 export const postGenerateMaskingSQL = (classification_results: ClassificationResult[]) =>
   request<SQLGenerationResponse>('/data-gov/generate_masking_sql', {
     method: 'POST',
     body: JSON.stringify({ classification_results }),
   });
 
-/** Executes the generated SQL masking plan against the database. */
 export const postApplyMaskingPlan = (connection_string: string, sql_statements: string[]) =>
   request<{ message: string }>('/data-gov/apply_masking_plan', {
     method: 'POST',
     body: JSON.stringify({ connection_string, sql_statements }),
   });
 
-/** Lists all governed views in the database. */
 export const postListGovernedViews = (connectionString: string) =>
   request<ListViewsResponse>('/data-gov/list-governed-views', {
     method: 'POST',
     body: JSON.stringify({ connection_string: connectionString }),
   });
 
-/** Fetches paginated data from a specified governed view. */
 export const postFetchViewData = (connectionString: string, viewName: string, role: string, limit = 50) =>
   request<FetchViewDataResponse>('/data-gov/fetch-view-data', {
     method: 'POST',
     body: JSON.stringify({ connection_string: connectionString, view_name: viewName, role: role, limit: limit, offset: 0 }),
   });
 
-/** Downloads the full governance report as a Word document. */
 export const downloadWordReport = (data: DownloadGovernanceReportRequest) =>
     streamDownload('/data-gov/download/governance-report/word', data, 'Data_Governance_Report.docx');
 
@@ -170,31 +161,25 @@ export const downloadWordReport = (data: DownloadGovernanceReportRequest) =>
 // ====================================================================
 
 // --- Types ---
-export interface LineageNode {
-    primary_key: any; id: string; type: 'table' | 'view'; label: string 
-}
+export interface LineageNode { id: string; type: 'table' | 'view'; label: string }
 export interface LineageEdge { source: string; target: string }
 export interface LineageResponse { nodes: LineageNode[]; edges: LineageEdge[] }
 
-
-export interface TableInfo {
-    name: string;
-    primary_key: string | null;
-}
-
-export interface DatabaseObjectsResponse {
-    tables: TableInfo[];
-    views: string[];
-}
+export interface TableInfo { name: string; primary_key: string | null }
+export interface DatabaseObjectsResponse { tables: TableInfo[]; views: string[] }
 
 // --- API Functions ---
-/** Fetches the lineage (source tables) for a specific database object. */
 export const postGetDataLineage = (connectionString: string, objectName: string) =>
   request<LineageResponse>('/data/lineage', {
     method: 'POST',
     body: JSON.stringify({ connection_string: connectionString, object_name: objectName }),
   });
 
+export const postListDatabaseObjects = (connectionString: string) =>
+  request<DatabaseObjectsResponse>('/data/list-database-objects', {
+    method: 'POST',
+    body: JSON.stringify({ connection_string: connectionString }),
+  });
 
 
 // ====================================================================
@@ -213,7 +198,6 @@ export interface TalkToDbResponse {
 }
 
 // --- API Functions ---
-/** Sends a natural language prompt to be converted into a SQL query. */
 export const postTalkToDbQuery = (params: TalkToDbRequest) =>
     request<TalkToDbResponse>('/talk-to-db/query', {
         method: 'POST',
@@ -226,51 +210,103 @@ export const postTalkToDbQuery = (params: TalkToDbRequest) =>
 // ====================================================================
 
 // --- Types ---
-export interface ColumnProfile {
-    column_name: string; data_type: string; total_values: number; null_count: number; null_percentage: number;
-    distinct_count: number; distinct_percentage: number; min_value?: number | null; max_value?: number | null;
-    avg_value?: number | null; std_dev?: number | null; min_length?: number | null; max_length?: number | null;
-    avg_length?: number | null; earliest_date?: string | null; latest_date?: string | null;
+export interface AIColumnProfile {
+    column_name: string;
+    inferred_type: string;
+    assumptions_about_data: string;
+    potential_quality_risks: string;
+    common_patterns_or_values: string;
 }
 export interface GenerateDataProfileResponse {
-    columns: any; table_name: string; column_profiles: ColumnProfile[] 
+    table_name: string;
+    columns: AIColumnProfile[];
 }
-export interface ProposedQualityCheck { check_id: string; rule_name: string; rule_description: string; check_sql: string }
-export interface DQEvaluationResult { score: number; reasoning: string }
+export interface ProposedQualityCheck {
+    check_id: string;
+    rule_name: string;
+    rule_description: string;
+    check_sql: string;
+}
+export interface DQEvaluationResult {
+    score: number;
+    reasoning: string;
+}
 export interface GenerateQualityPlanResponse {
     table_name: string;
     proposed_checks: ProposedQualityCheck[];
-    // These fields were added from a different version of the type definition
-    data_profile?: { total_rows: number; columns: any[] }; // Use more specific types if known
-    semantic_profile?: { column_name: string; inferred_semantic_type: string; description: string; potential_issues_summary: string }[] | null;
     evaluation?: DQEvaluationResult | null;
 }
-export interface ValidationResult { check_id: string; rule_name: string; is_valid: boolean; invalid_count: number; total_rows: number; check_query: string }
-export interface ExecuteQualityChecksResponse { table_name: string; validation_results: ValidationResult[] }
+export interface ValidationResult {
+    check_id: string;
+    rule_name: string;
+    is_valid: boolean;
+    invalid_count: number;
+    total_rows: number;
+    check_query: string;
+}
+export interface ExecuteQualityChecksResponse {
+    table_name: string;
+    validation_results: ValidationResult[];
+}
+export interface RemediationSQL {
+    check_id: string;
+    rule_name: string;
+    remediation_sql: string;
+}
+export interface GenerateRemediationResponse {
+    remediation_plan: RemediationSQL[];
+}
+export interface ApplyRemediationResponse {
+    message: string;
+    executed_statements: number;
+}
+export interface ListFilteredViewsResponse {
+    filtered_views: string[];
+}
 
 // --- API Functions ---
-/** Generates a statistical profile for all columns in a given table. */
 export const postGenerateDataProfile = (connection_string: string, table_name: string) =>
   request<GenerateDataProfileResponse>('/data-quality/generate-profile', {
     method: 'POST',
     body: JSON.stringify({ connection_string, table_name }),
   });
 
-/** Generates a set of data quality checks based on the table's schema and custom rules. */
 export const postGenerateQualityPlan = (connectionString: string, tableName: string, customRules: string) =>
   request<GenerateQualityPlanResponse>('/data-quality/generate-quality-plan', {
     method: 'POST',
     body: JSON.stringify({ connection_string: connectionString, table_name: tableName, custom_rules: customRules }),
   });
 
-/** Executes a list of data quality checks against the database. */
 export const postExecuteQualityChecks = (connection_string: string, table_name: string, checks_to_run: ProposedQualityCheck[]) =>
   request<ExecuteQualityChecksResponse>('/data-quality/execute-quality-checks', {
     method: 'POST',
     body: JSON.stringify({ connection_string, table_name, checks_to_run }),
   });
 
+export const postGenerateRemediationSql = (connection_string: string, report: ExecuteQualityChecksResponse) =>
+  request<GenerateRemediationResponse>('/data-quality/generate-remediation-sql', {
+    method: 'POST',
+    body: JSON.stringify({ 
+        connection_string, 
+        table_name: report.table_name, 
+        validation_results: report.validation_results 
+    }),
+  });
 
+export const postApplyRemediationPlan = (connection_string: string, plan: GenerateRemediationResponse) =>
+  request<ApplyRemediationResponse>('/data-quality/apply-remediation-plan', {
+    method: 'POST',
+    body: JSON.stringify({ 
+        connection_string, 
+        remediation_plan: plan.remediation_plan 
+    }),
+  });
+
+export const postListFilteredViews = (connection_string: string) =>
+  request<ListFilteredViewsResponse>('/data-quality/list-filtered-views', {
+    method: 'POST',
+    body: JSON.stringify({ connection_string }),
+  });
 // ====================================================================
 // 5. EVALUATION AGENT
 // ====================================================================
@@ -285,25 +321,23 @@ export interface FullEvaluationReport {
 }
 
 // --- API Functions ---
-/** Triggers a full evaluation run for all agents and fetches the report. */
 export const postRunAllEvaluations = () =>
     request<FullEvaluationReport>('/evaluation/run-all', {
         method: 'POST',
     });
 
 
-export interface TableInfo {
-    name: string;
-    primary_key: string | null;
+export interface FetchViewDataRequest {
+    connection_string: string;
+    view_name: string;
+    role: string;
+    limit?: number;
+    offset?: number;
 }
 
-export interface DatabaseObjectsResponse {
-    tables: TableInfo[];
-    views: string[];
-}
 
-export const postListDatabaseObjects = (connectionString: string) =>
-  request<DatabaseObjectsResponse>('/data/list-database-objects', {
+export const postFetchFilteredViewData = (params: FetchViewDataRequest) =>
+  request<FetchViewDataResponse>('/data-quality/fetch-filtered-view-data', {
     method: 'POST',
-    body: JSON.stringify({ connection_string: connectionString }),
+    body: JSON.stringify(params),
   });

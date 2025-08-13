@@ -147,13 +147,13 @@ async def list_governed_views(conn_str: str) -> List[str]:
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, _list_governed_views_sync, conn_str)
 
-def _fetch_view_data_sync(conn_str: str, view_name: str, limit: int, offset: int, role: str) -> List[Dict[str, Any]]:
+def _fetch_view_data_sync(conn_str: str, view_name: str, limit: int, offset: int) -> List[Dict[str, Any]]:
     """Synchronously fetches paginated data from a view using a specific role."""
     try:
         engine = create_engine(conn_str)
         with engine.connect() as connection:
-            set_role_stmt = text("SET ROLE :role")
-            connection.execute(set_role_stmt, {"role": role})
+            # set_role_stmt = text("SET ROLE :role")
+            # connection.execute(set_role_stmt, {"role": role})
             
             safe_view_name = f'"{view_name}"'
             query = text(f'SELECT * FROM {safe_view_name} LIMIT :limit OFFSET :offset')
@@ -163,10 +163,10 @@ def _fetch_view_data_sync(conn_str: str, view_name: str, limit: int, offset: int
         logger.error(f"Failed to fetch data from view '{view_name}' as role '{role}': {e}", exc_info=True)
         raise DatabaseServiceError(f"Failed to fetch data from view '{view_name}'. Check if role '{role}' exists and has permissions. Error: {e}", 400)
 
-async def fetch_view_data(conn_str: str, view_name: str, limit: int, offset: int, role: str) -> List[Dict[str, Any]]:
+async def fetch_view_data(conn_str: str, view_name: str, limit: int, offset: int) -> List[Dict[str, Any]]:
     """Asynchronously fetches view data by running the sync query (with SET ROLE) in a thread."""
     loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, _fetch_view_data_sync, conn_str, view_name, limit, offset, role)
+    return await loop.run_in_executor(None, _fetch_view_data_sync, conn_str, view_name, limit, offset)
 
 
 
@@ -420,3 +420,5 @@ async def get_primary_keys_for_tables(conn_str: str, table_names: List[str]) -> 
     finally:
         if conn and not conn.is_closed():
             await conn.close()
+
+

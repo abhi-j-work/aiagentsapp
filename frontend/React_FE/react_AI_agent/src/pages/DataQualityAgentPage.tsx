@@ -2,27 +2,43 @@ import React, { useState, useMemo } from 'react';
 import {
     LoaderCircle, AlertTriangle, PlayCircle, Database, Sparkles, ShieldCheck,
     ChevronLeft, RefreshCw, ClipboardList, BarChart3, Fingerprint, Ban, PenTool,
-    KeyRound, HelpCircle, Target, Eye, EyeOff, FileText, Bot, Gavel, Star, ArrowRight
+    KeyRound, HelpCircle, Target, Eye, EyeOff, FileText, Bot, Gavel, Star, ArrowRight,
+    Wrench, CheckCircle, FileCode, Table
 } from 'lucide-react';
 
+// Import all necessary API functions and types from your services/api.ts file
 import {
     postGenerateDataProfile,
     postGenerateQualityPlan,
     postExecuteQualityChecks,
+    postGenerateRemediationSql,
+    postApplyRemediationPlan,
+    postListFilteredViews,
+    postFetchFilteredViewData,
 } from '../services/api';
 
 import type {
-    GenerateDataProfileResponse,    
+    GenerateDataProfileResponse,
     GenerateQualityPlanResponse,
     ExecuteQualityChecksResponse,
+    GenerateRemediationResponse,
+    ApplyRemediationResponse,
+    ListFilteredViewsResponse,
+    FetchViewDataResponse,
+    FetchViewDataRequest,
     ProposedQualityCheck,
-    DQEvaluationResult, 
+    RemediationSQL,
+    DQEvaluationResult,
 } from '../services/api';
+
+// Assuming ReportDashboard is in the same directory or a sub-directory
 import ReportDashboard from './ReportDashboard';
 
 // --- Prop Types ---
 interface CheckItemProps { check: ProposedQualityCheck; isChecked: boolean; onCheckChange: (id: string, isChecked: boolean) => void; }
 interface DataProfileDisplayProps { profile: GenerateDataProfileResponse | null; }
+interface RemediationPlanDisplayProps { plan: GenerateRemediationResponse | null; }
+interface ViewDataTableProps { data: Record<string, any>[] | null; }
 interface StepIndicatorProps { currentStep: number; }
 
 // --- Style Constants ---
@@ -32,7 +48,7 @@ const cardTitleStyle = "text-xl font-semibold text-white flex items-center gap-3
 const cardSubtitleStyle = "text-sm text-slate-400 mt-1";
 const cardBodyStyle = "p-6";
 const inputBaseStyle = "w-full px-4 py-2 glass rounded-lg border border-slate-700 bg-slate-800/50 text-white focus:border-indigo-400 focus:outline-none transition";
-const primaryButtonStyle = "group btn-primary bg-indigo-600 text-white hover:bg-indigo-500 transition-all flex items-center text-sm font-semibold px-4 py-2 rounded-lg shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed";
+const primaryButtonStyle = "group btn-primary bg-indigo-600 text-white hover:bg-indigo-500 transition-all flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-lg shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed";
 
 // --- Sub-Components ---
 
@@ -61,7 +77,6 @@ const DataProfileDisplay: React.FC<DataProfileDisplayProps> = ({ profile }) => {
     if (!profile || !profile.columns || profile.columns.length === 0) {
         return <p className="text-sm text-slate-400">Profile data will appear here after analysis.</p>;
     }
-    interface AIColumnProfile { column_name: string; inferred_type: string; assumptions_about_data: string; potential_quality_risks: string; common_patterns_or_values: string; }
     return (
         <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-700/80">
             <h5 className="font-semibold text-white flex items-center gap-2 mb-3 border-b border-slate-700 pb-2">
@@ -69,7 +84,7 @@ const DataProfileDisplay: React.FC<DataProfileDisplayProps> = ({ profile }) => {
                 AI Data Profile: <span className="text-indigo-300">{profile.table_name}</span>
             </h5>
             <div className="mt-4 max-h-[60vh] overflow-y-auto space-y-2 pr-2">
-                {profile.columns.map((col: AIColumnProfile) => (
+                {profile.columns.map((col) => (
                     <details key={col.column_name} className="bg-slate-800/50 rounded-md transition-colors hover:bg-slate-800/80">
                          <summary className="p-2 cursor-pointer font-medium text-slate-200 text-sm list-none flex items-center justify-between">
                             {col.column_name}
@@ -87,22 +102,70 @@ const DataProfileDisplay: React.FC<DataProfileDisplayProps> = ({ profile }) => {
     );
 };
 
+const RemediationPlanDisplay: React.FC<RemediationPlanDisplayProps> = ({ plan }) => {
+    if (!plan || !plan.remediation_plan || plan.remediation_plan.length === 0) {
+        return <p className="text-slate-400 text-center p-4">No remediation actions were generated. All checks may have passed.</p>;
+    }
+    return (
+        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+            {plan.remediation_plan.map((item: RemediationSQL) => (
+                <div key={item.check_id} className="bg-slate-800/70 border border-slate-700 rounded-lg p-4">
+                    <p className="font-semibold text-slate-200 mb-2">Fix for: <span className="font-bold text-indigo-300">{item.rule_name}</span></p>
+                    <div className="bg-black p-3 rounded-md">
+                        <pre className="text-sky-300 text-xs whitespace-pre-wrap">
+                            <code>{item.remediation_sql}</code>
+                        </pre>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+const ViewDataTable: React.FC<ViewDataTableProps> = ({ data }) => {
+    if (!data) return null;
+    if (data.length === 0) {
+        return <p className="text-center text-slate-400 p-4 mt-4 bg-slate-800/50 rounded-lg">Query returned no data. The view is working correctly but is empty.</p>;
+    }
+    const headers = Object.keys(data[0]);
+    return (
+        <div className="mt-4 max-h-80 overflow-auto rounded-lg border border-slate-700">
+            <table className="w-full text-xs text-left">
+                <thead className="bg-slate-800 sticky top-0 z-10">
+                    <tr>
+                        {headers.map(header => <th key={header} className="p-2 font-medium text-slate-300">{header}</th>)}
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                    {data.map((row, rowIndex) => (
+                        <tr key={rowIndex} className="bg-slate-900/70 hover:bg-slate-800">
+                            {headers.map(header => <td key={`${rowIndex}-${header}`} className="p-2 text-slate-400 whitespace-nowrap">{String(row[header])}</td>)}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
+
 const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => {
     const steps = [
         { num: 1, name: "Define Scope", icon: <Target/> },
-        { num: 2, name: "Data Profile & Custom Rules Engine", icon: <FileText/> },
-        { num: 3, name: "Review AI Plan", icon: <ClipboardList/> },
-        { num: 4, name: "View Report", icon: <Sparkles/> }
+        { num: 2, name: "Profile & Rules", icon: <FileText/> },
+        { num: 3, name: "Review Plan", icon: <ClipboardList/> },
+        { num: 4, name: "View Report", icon: <Sparkles/> },
+        { num: 5, name: "Remediate", icon: <Wrench/> },
+        { num: 6, name: "Complete", icon: <CheckCircle/> }
     ];
     return (
-        <nav className="flex items-center justify-center space-x-2 md:space-x-4 mb-10" aria-label="Progress">
+        <nav className="flex items-center justify-center space-x-1 md:space-x-2 mb-10" aria-label="Progress">
             {steps.map((step, index) => (
                 <React.Fragment key={step.name}>
                     <div className="flex flex-col items-center text-center">
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${currentStep >= step.num ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
                            {React.cloneElement(step.icon, { className: 'w-6 h-6' })}
                         </div>
-                        <p className={`mt-2 text-xs font-medium w-24 ${currentStep >= step.num ? 'text-indigo-400' : 'text-slate-500'}`}>{step.name}</p>
+                        <p className={`mt-2 text-xs font-medium w-20 ${currentStep >= step.num ? 'text-indigo-400' : 'text-slate-500'}`}>{step.name}</p>
                     </div>
                     {index < steps.length - 1 && <div className={`flex-1 h-0.5 transition-all duration-500 ${currentStep > step.num ? 'bg-indigo-500' : 'bg-slate-700'}`}></div>}
                 </React.Fragment>
@@ -133,20 +196,33 @@ const modelOptions = [ "llama-4-maverick (Default)","llama-3-70b","gpt-4o", "cla
 
 // --- Main Page Component ---
 const DataQualityAgentPage: React.FC = () => {
-    const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+    const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    
+    // State for all steps
     const [connectionString, setConnectionString] = useState<string>('');
     const [tableName, setTableName] = useState<string>('');
     const [dataProfile, setDataProfile] = useState<GenerateDataProfileResponse | null>(null);
     const [planResponse, setPlanResponse] = useState<GenerateQualityPlanResponse | null>(null);
     const [selectedChecks, setSelectedChecks] = useState<Set<string>>(new Set());
     const [validationReport, setValidationReport] = useState<ExecuteQualityChecksResponse | null>(null);
+    const [remediationPlan, setRemediationPlan] = useState<GenerateRemediationResponse | null>(null);
+    const [applyResult, setApplyResult] = useState<ApplyRemediationResponse | null>(null);
+    const [filteredViews, setFilteredViews] = useState<string[]>([]);
+    
+    // State for view preview
+    const [selectedView, setSelectedView] = useState<string>('');
+    const [viewData, setViewData] = useState<Record<string, any>[] | null>(null);
+    const [isFetchingViewData, setIsFetchingViewData] = useState<boolean>(false);
+
+    // UI-specific state
     const [showConnStr, setShowConnStr] = useState<boolean>(false);
     const [customRules, setCustomRules] = useState<string>('');
     const [selectedModel, setSelectedModel] = useState<string>(modelOptions[0]);
 
     const proposedChecks = useMemo(() => planResponse?.proposed_checks || [], [planResponse]);
+    const hasFailedChecks = useMemo(() => validationReport?.validation_results.some(r => !r.is_valid) || false, [validationReport]);
 
     const handleGenerateProfile = async () => {
         if (!tableName) { setError("Table name is required."); return; }
@@ -189,6 +265,54 @@ const DataQualityAgentPage: React.FC = () => {
         } catch (err: any) { setError(err.message || 'Failed to execute checks.'); } 
         finally { setIsLoading(false); }
     };
+
+    const handleGenerateRemediation = async () => {
+        if (!validationReport) { setError("Validation report is not available."); return; }
+        setIsLoading(true); setError(null); setRemediationPlan(null);
+        try {
+            const res = await postGenerateRemediationSql(connectionString, validationReport);
+            setRemediationPlan(res);
+            setStep(5);
+        } catch (err: any) { setError(err.message || 'Failed to generate remediation plan.'); }
+        finally { setIsLoading(false); }
+    };
+
+    const handleApplyRemediation = async () => {
+        if (!remediationPlan) { setError("Remediation plan is not available."); return; }
+        setIsLoading(true); setError(null); setApplyResult(null); setFilteredViews([]);
+        try {
+            const res = await postApplyRemediationPlan(connectionString, remediationPlan);
+            setApplyResult(res);
+            
+            const viewsRes = await postListFilteredViews(connectionString);
+            setFilteredViews(viewsRes.filtered_views);
+            
+            if (viewsRes.filtered_views.length > 0) {
+                setSelectedView(viewsRes.filtered_views[0]);
+            }
+
+            setStep(6);
+        } catch (err: any) { setError(err.message || 'Failed to apply remediation plan.'); }
+        finally { setIsLoading(false); }
+    };
+
+    const handleFetchViewData = async () => {
+        if (!selectedView) { setError("Please select a view to preview."); return; }
+        setIsFetchingViewData(true); setError(null); setViewData(null);
+        try {
+            const res = await postFetchFilteredViewData({
+                connection_string: connectionString,
+                view_name: selectedView,
+                role: 'public',
+                limit: 50
+            });
+            setViewData(res.data);
+        } catch (err: any) {
+            setError(err.message || "Failed to fetch view data.");
+        } finally {
+            setIsFetchingViewData(false);
+        }
+    };
     
     const handleReset = () => {
         setStep(1);
@@ -197,12 +321,17 @@ const DataQualityAgentPage: React.FC = () => {
         setDataProfile(null);
         setValidationReport(null);
         setSelectedChecks(new Set());
+        setRemediationPlan(null);
+        setApplyResult(null);
+        setFilteredViews([]);
+        setSelectedView('');
+        setViewData(null);
     };
 
-    const handleBack = (targetStep: 1 | 2 | 3) => {
+    const handleBack = (targetStep: 1 | 2 | 3 | 4 | 5) => {
         setStep(targetStep);
         setError(null);
-    }
+    };
 
     return (
         <div className="min-h-[calc(100vh-80px)] w-full bg-slate-900 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] flex items-start justify-center p-4 sm:p-6 lg:p-8">
@@ -297,16 +426,91 @@ const DataQualityAgentPage: React.FC = () => {
                         )}
                         
                         {step === 4 && validationReport && (
-                             <div className={`${cardContainerStyle} max-w-5xl mx-auto`}>
+                            <div className={`${cardContainerStyle} max-w-5xl mx-auto`}>
                                 <div className={cardHeaderStyle}><h3 className={cardTitleStyle}><Sparkles className="w-6 h-6 text-indigo-400"/>Step 4: Detailed Report</h3></div>
                                 <div className={cardBodyStyle}>
                                     <ReportDashboard report={validationReport} />
-                                    <div className="pt-6 mt-6 border-t border-slate-700/80 flex justify-center">
-                                      <button onClick={handleReset} className="group btn-secondary flex items-center text-sm font-semibold px-4 py-2 rounded-lg bg-indigo-900/50 text-indigo-300 hover:bg-indigo-900 border border-indigo-700/50"><RefreshCw className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:rotate-180"/> Start New Analysis</button>
+                                    <div className="pt-8 mt-8 border-t border-slate-700/80 flex justify-center items-center gap-6">
+                                        <button onClick={handleReset} className="group btn-secondary flex items-center text-sm font-semibold px-4 py-2 rounded-lg bg-indigo-900/50 text-indigo-300 hover:bg-indigo-900 border border-indigo-700/50"><RefreshCw className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:rotate-180"/> Start Over</button>
+                                        {hasFailedChecks && (
+                                            <button onClick={handleGenerateRemediation} disabled={isLoading} className={primaryButtonStyle}>{isLoading ? <><LoaderCircle className="animate-spin w-5 h-5 mr-2"/> Generating...</> : <>Generate Remediation Plan <ArrowRight className="w-4 h-4 ml-1.5" /></>}</button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         )}
+
+                        {step === 5 && remediationPlan && (
+                            <div className={`${cardContainerStyle} max-w-5xl mx-auto`}>
+                                <div className={cardHeaderStyle}><h3 className={cardTitleStyle}><Wrench className="w-6 h-6 text-indigo-400"/>Step 5: Review Remediation Plan</h3></div>
+                                <div className={cardBodyStyle}>
+                                    <p className="text-sm text-slate-400 mb-4 text-center max-w-2xl mx-auto">The AI has generated the following non-destructive SQL statements. They will create filtered views to hide rows with quality issues, leaving your original data untouched.</p>
+                                    <RemediationPlanDisplay plan={remediationPlan} />
+                                    <div className="flex justify-between items-center pt-6 mt-6 border-t border-slate-700/80">
+                                        <button onClick={() => handleBack(4)} disabled={isLoading} className={`${primaryButtonStyle} bg-slate-700 hover:bg-slate-600`}><ChevronLeft className="w-5 h-5 mr-1.5"/> Back to Report</button>
+                                        <button onClick={handleApplyRemediation} disabled={isLoading} className={primaryButtonStyle}>{isLoading ? <><LoaderCircle className="animate-spin w-5 h-5 mr-2"/> Applying...</> : <>Apply Plan & Create Views <ArrowRight className="w-4 h-4 ml-1.5" /></>}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 6 && (
+                            <div className={`${cardContainerStyle} max-w-4xl mx-auto`}>
+                                <div className={cardHeaderStyle}><h3 className={`${cardTitleStyle} w-full justify-center`}><CheckCircle className="w-6 h-6 text-green-400"/>Step 6: Complete & Verify</h3></div>
+                                <div className={`${cardBodyStyle} text-center`}>
+                                    <CheckCircle className="w-20 h-20 text-green-400 mx-auto animate-pulse"/>
+                                    <p className="text-lg text-white mt-4 font-semibold">{applyResult?.message || "Plan applied successfully!"}</p>
+                                    <p className="text-slate-400 mt-2">The following views have been created. You can now query them to get clean data.</p>
+                                    
+                                    <div className="mt-8 pt-8 border-t border-slate-700/80">
+                                        <h4 className="font-semibold text-white text-lg flex items-center justify-center gap-2">
+                                            <Table className="w-5 h-5 text-indigo-400"/>
+                                            Preview View Data
+                                        </h4>
+                                        <p className="text-sm text-slate-400 mt-1 mb-4">Select a view and fetch a sample of its data.</p>
+                                        <div className="flex justify-center items-center gap-4 max-w-lg mx-auto">
+                                            <select 
+                                                value={selectedView} 
+                                                onChange={(e) => {
+                                                    setSelectedView(e.target.value);
+                                                    setViewData(null);
+                                                }}
+                                                className={`${inputBaseStyle} flex-grow`}
+                                                disabled={filteredViews.length === 0}
+                                            >
+                                                {filteredViews.length > 0 ? (
+                                                    filteredViews.map(v => <option key={v} value={v}>{v}</option>)
+                                                ) : (
+                                                    <option>No views found</option>
+                                                )}
+                                            </select>
+                                            <button 
+                                                onClick={handleFetchViewData}
+                                                disabled={isFetchingViewData || !selectedView}
+                                                className={primaryButtonStyle}
+                                            >
+                                                {isFetchingViewData ? <LoaderCircle className="w-5 h-5 animate-spin" /> : 'Fetch Data'}
+                                            </button>
+                                        </div>
+                                        
+                                        <div className="mt-4 text-left">
+                                            {isFetchingViewData && (
+                                                <div className="text-center p-4 text-slate-400 animate-pulse">
+                                                    <LoaderCircle className="w-6 h-6 mx-auto animate-spin" />
+                                                    <p className="mt-2 text-sm">Fetching data...</p>
+                                                </div>
+                                            )}
+                                            <ViewDataTable data={viewData} />
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-8 mt-8 border-t border-slate-700/80 flex justify-center">
+                                        <button onClick={handleReset} className="group btn-secondary flex items-center text-sm font-semibold px-4 py-2 rounded-lg bg-indigo-900/50 text-indigo-300 hover:bg-indigo-900 border border-indigo-700/50"><RefreshCw className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:rotate-180"/> Start New Analysis</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                     </div>
             </div>
         </div>
