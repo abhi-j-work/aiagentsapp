@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from app.core.config import get_settings # type: ignore
 from app.core.logging_config import setup_logging # type: ignore
 from app.services import llm_service # type: ignore
-from app.api.routers import data_governance, data_quality,talktoDb ,data_lineage # type: ignore
+from app.api.routers import data_governance, data_quality,talktoDb ,data_lineage, training # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
 from app.services import run_evaluation
 
@@ -41,6 +41,9 @@ app.include_router(talktoDb.router)
 app.include_router(data_quality.router) 
 app.include_router(run_evaluation.router)
 app.include_router(data_lineage.router)
+app.include_router(training.router)
+app.include_router(training.mlflow_router)
+app.include_router(training.models_router)
 
 @app.get("/")
 def read_root():

@@ -3,7 +3,7 @@
 // ====================================================================
 
 // For production, use environment variables: const API_BASE_URL = import.meta.env.VITE_API_URL;
-const API_BASE_URL = 'http://localhost:1064';
+const API_BASE_URL = 'http://localhost:8000';
 
 /**
  * A robust, standardized function for making JSON API requests.
@@ -341,3 +341,75 @@ export const postFetchFilteredViewData = (params: FetchViewDataRequest) =>
     method: 'POST',
     body: JSON.stringify(params),
   });
+
+// ====================================================================
+// 6. MODEL TRAINING & REGISTRY
+// ====================================================================
+
+// --- Types ---
+export interface Hyperparams {
+  epochs: number;
+  batch_size: number;
+  learning_rate: number;
+  seed: number;
+}
+
+export interface StartTrainingPayload {
+  job_name: string;
+  base_model: string;
+  train_file: string;
+  val_file: string;
+  use_lora: boolean;
+  hyperparams: Hyperparams;
+  mlflow_experiment: string;
+  validation_checks: string[];
+}
+
+export interface StartTrainingResponse {
+  job_id: string;
+  mlflow_run_id: string;
+}
+
+export interface JobStatus {
+    job_id: string;
+    status: string;
+    progress?: number;
+    mlflow_run_id?: string;
+    task_id?: string;
+    config?: StartTrainingPayload;
+    error?: string;
+    timestamp?: string;
+}
+
+export interface ModelVersion {
+    name: string;
+    version: number;
+    stage: string;
+}
+
+// --- API Functions ---
+export const startTraining = (payload: StartTrainingPayload) =>
+    request<StartTrainingResponse>('/training/start', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+
+export const listJobs = () => request<JobStatus[]>('/training/jobs');
+
+export const getJobStatus = (jobId: string) => request<JobStatus>(`/training/${jobId}`);
+
+export const stopTraining = (jobId: string) =>
+    request<{ message: string }>(`/training/${jobId}/stop`, {
+        method: 'POST',
+    });
+
+export const getJobLogs = (jobId: string, tail: number = 100) =>
+    request<{ logs: string[] }>(`/training/${jobId}/logs?tail=${tail}`);
+
+export const listModels = () => request<ModelVersion[]>('/models/');
+
+export const promoteModel = (modelName: string, version: number, stage: string) =>
+    request<{ message: string }>(`/models/${modelName}/promote`, {
+        method: 'POST',
+        body: JSON.stringify({ version, stage }),
+    });

@@ -24,6 +24,11 @@ import EvaluationPage from './pages/EvaluationPage';
 import LineageDisplay from './pages/DataLineageAgentPage';
 import DataLineageAgentPage from './pages/DataLineageAgentPage';
 import DataLineageIntroPage from './pages/DataLineageIntroPage';
+import TrainPage from './pages/TrainPage';
+import RunsPage from './pages/RunsPage';
+import ModelsPage from './pages/ModelsPage';
+import LogsPage from './pages/LogsPage';
+
 function App() {
   return (
     <Routes>
@@ -51,6 +56,12 @@ function App() {
         <Route path="/about" element={<AIGovernancePitchInfographic/> }/>
         <Route path="/data-lineage" element={<DataLineageAgentPage/>} />
         <Route path="/data-lineage-intro" element={<DataLineageIntroPage />} />
+
+        {/* Model Training Routes */}
+        <Route path="/training/start" element={<TrainPage />} />
+        <Route path="/training/runs" element={<RunsPage />} />
+        <Route path="/training/models" element={<ModelsPage />} />
+        <Route path="/training/logs/:jobId" element={<LogsPage />} />
       </Route>
     </Routes>
   );
