@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { listJobs, stopTraining, JobStatus } from '../services/api';
-import { Button } from '../components/ui/Button';
+import { listJobs, stopTraining, type JobStatus } from '../services/api';
+import Button  from '../components/ui/Button';
 import { Link } from 'react-router-dom';
 
 const RunsPage = () => {
@@ -77,7 +77,7 @@ const RunsPage = () => {
                                     <td className="px-6 py-4 space-x-2">
                                         <Button onClick={() => handleStopJob(job.job_id)} disabled={['SUCCESS', 'FAILED', 'CANCELLED'].includes(job.status)}>Stop</Button>
                                         {/* A link to a dedicated logs page could be implemented here */}
-                                        <Link to={`/training/logs/${job.job_id}`}><Button variant="outline">Logs</Button></Link>
+                                        <Link to={`/training/logs/${job.job_id}`}><Button>Logs</Button></Link>
                                     </td>
                                 </tr>
                             ))}

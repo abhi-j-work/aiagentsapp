@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { listModels, promoteModel, ModelVersion } from '../services/api';
-import { Button } from '../components/ui/Button';
+import { listModels, promoteModel, type ModelVersion } from '../services/api';
+import  Button  from '../components/ui/Button';
 
 const ModelsPage = () => {
     const [models, setModels] = useState<ModelVersion[]>([]);

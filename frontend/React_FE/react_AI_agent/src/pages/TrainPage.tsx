@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { startTraining, StartTrainingPayload } from '../services/api';
-import { Button } from '../components/ui/Button';
+import { startTraining, type StartTrainingPayload } from '../services/api';
+import  Button  from '../components/ui/Button';
 
 const TrainPage = () => {
     const navigate = useNavigate();
