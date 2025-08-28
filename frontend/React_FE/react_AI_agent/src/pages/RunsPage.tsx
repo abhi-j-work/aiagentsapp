@@ -1,27 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { listJobs, stopTraining, type JobStatus } from '../services/api';
-import Button  from '../components/ui/Button';
+import { listJobs, stopTraining, listExperiments, type JobStatus, type MlflowExperiment } from '../services/api';
+import Button from '../components/ui/Button';
 import { Link } from 'react-router-dom';
 
 const RunsPage = () => {
     const [jobs, setJobs] = useState<JobStatus[]>([]);
+    const [experiments, setExperiments] = useState<MlflowExperiment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchJobs = async () => {
+    const fetchJobsAndExperiments = async () => {
+        setIsLoading(true);
         try {
-            const data = await listJobs();
-            setJobs(data);
+            const [jobsData, experimentsData] = await Promise.all([
+                listJobs(),
+                listExperiments()
+            ]);
+            setJobs(jobsData);
+            setExperiments(experimentsData);
         } catch (err: any) {
-            setError(err.message || 'Failed to fetch jobs.');
+            setError(err.message || 'Failed to fetch data.');
         } finally {
             setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchJobs();
-        const interval = setInterval(fetchJobs, 5000); // Poll every 5 seconds
+        fetchJobsAndExperiments();
+        const interval = setInterval(fetchJobsAndExperiments, 5000); // Poll every 5 seconds
         return () => clearInterval(interval);
     }, []);
 
@@ -29,11 +35,16 @@ const RunsPage = () => {
         if (window.confirm('Are you sure you want to stop this job?')) {
             try {
                 await stopTraining(jobId);
-                fetchJobs(); // Refresh the list after stopping
+                fetchJobsAndExperiments(); // Refresh the list after stopping
             } catch (err: any) {
                 alert(`Failed to stop job: ${err.message}`);
             }
         }
+    };
+
+    const getExperimentId = (experimentName: string) => {
+        const experiment = experiments.find(exp => exp.name === experimentName);
+        return experiment ? experiment.id : '0'; // Default to 0 if not found
     };
 
     if (isLoading) return <div className="text-white text-center p-8">Loading training runs...</div>;
@@ -64,23 +75,31 @@ const RunsPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {jobs.map((job) => (
-                                <tr key={job.job_id} className="border-b border-slate-700 hover:bg-slate-800/50">
-                                    <td className="px-6 py-4 font-medium text-white">{job.config?.job_name || job.job_id}</td>
-                                    <td className="px-6 py-4">{job.status}</td>
-                                    <td className="px-6 py-4">
-                                        <a href={`http://localhost:5000/#/experiments/${job.config?.mlflow_experiment}/runs/${job.mlflow_run_id}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                                            {job.mlflow_run_id}
-                                        </a>
-                                    </td>
-                                    <td className="px-6 py-4">{job.timestamp ? new Date(job.timestamp).toLocaleString() : 'N/A'}</td>
-                                    <td className="px-6 py-4 space-x-2">
-                                        <Button onClick={() => handleStopJob(job.job_id)} disabled={['SUCCESS', 'FAILED', 'CANCELLED'].includes(job.status)}>Stop</Button>
-                                        {/* A link to a dedicated logs page could be implemented here */}
-                                        <Link to={`/training/logs/${job.job_id}`}><Button>Logs</Button></Link>
-                                    </td>
-                                </tr>
-                            ))}
+                            {jobs.map((job) => {
+                                const experimentId = job.config?.mlflow_experiment ? getExperimentId(job.config.mlflow_experiment) : '0';
+                                const mlflowUrl = `http://localhost:5000/#/experiments/${experimentId}/runs/${job.mlflow_run_id}`;
+
+                                return (
+                                    <tr key={job.job_id} className="border-b border-slate-700 hover:bg-slate-800/50">
+                                        <td className="px-6 py-4 font-medium text-white">{job.config?.job_name || job.job_id}</td>
+                                        <td className="px-6 py-4">{job.status}</td>
+                                        <td className="px-6 py-4">
+                                            {job.mlflow_run_id && job.mlflow_run_id !== 'run-id-placeholder' ? (
+                                                <a href={mlflowUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                                                    {job.mlflow_run_id}
+                                                </a>
+                                            ) : (
+                                                <span>{job.mlflow_run_id || 'N/A'}</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4">{job.timestamp ? new Date(job.timestamp).toLocaleString() : 'N/A'}</td>
+                                        <td className="px-6 py-4 space-x-2">
+                                            <Button onClick={() => handleStopJob(job.job_id)} disabled={['SUCCESS', 'FAILED', 'CANCELLED'].includes(job.status)}>Stop</Button>
+                                            <Link to={`/training/logs/${job.job_id}`}><Button>Logs</Button></Link>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>

@@ -8,8 +8,10 @@ from pydantic import BaseModel
 from typing import List, Optional
 from collections import deque
 import uuid
+import time
 from app.jobs.tasks import train_job, update_job_status
 from app.core.celery_config import celery_app
+from celery.result import AsyncResult
 import json
 from pathlib import Path
 from app.core.mlflow_utils import promote_model as promote_model_util
@@ -68,23 +70,36 @@ models_router = APIRouter(
 @router.post("/start", response_model=StartTrainingResponse)
 async def start_training(payload: StartTrainingPayload):
     """
-    Starts a new model training job.
+    Starts a new model training job and waits for the MLflow run ID.
     """
     job_id = str(uuid.uuid4())
-
-    # Create an initial job file
     update_job_status(job_id, "PENDING")
 
-    # Convert payload to dict to pass to celery task
     config = payload.model_dump()
-
-    # Start the training job in the background
     task = train_job.delay(job_id=job_id, config=config)
+    update_job_status(job_id, "QUEUED", task_id=task.id)
 
-    # In a real scenario, you might get the run_id from the task or pre-generate it
-    mlflow_run_id = "run-id-placeholder"
+    # Wait for the mlflow_run_id to be set by the celery task
+    start_time = time.time()
+    mlflow_run_id = None
+    while time.time() - start_time < 120:  # 2-minute timeout
+        res = AsyncResult(task.id, app=celery_app)
+        if res.state == 'PROGRESS' and 'mlflow_run_id' in res.info:
+            mlflow_run_id = res.info['mlflow_run_id']
+            break
+        if res.state in ['SUCCESS', 'FAILURE']:
+            # Task finished before run_id was found (maybe an error)
+            break
+        time.sleep(1)
 
-    update_job_status(job_id, "QUEUED", task_id=task.id, mlflow_run_id=mlflow_run_id)
+    if not mlflow_run_id:
+        # If timeout or task failed early, revoke the task and raise error
+        task.revoke(terminate=True)
+        update_job_status(job_id, "FAILED", error="Failed to get mlflow_run_id from task.")
+        raise HTTPException(status_code=500, detail="Failed to initialize MLflow run.")
+
+    # Update job status with the real run_id
+    update_job_status(job_id, "QUEUED", mlflow_run_id=mlflow_run_id)
 
     return StartTrainingResponse(job_id=job_id, mlflow_run_id=mlflow_run_id)
 
@@ -166,14 +181,34 @@ async def get_job_logs(job_id: str, tail: Optional[int] = 100):
 
     return {"job_id": job_id, "logs": [line.strip() for line in lines]}
 
-@mlflow_router.get("/runs")
-async def list_mlflow_runs(experiment: str):
+@mlflow_router.get("/experiments")
+async def list_mlflow_experiments():
     """
-    Lists all runs for a given MLflow experiment.
+    Lists all MLflow experiments.
+    """
+    client = MlflowClient()
+    experiments = client.search_experiments()
+    return [{"id": exp.experiment_id, "name": exp.name} for exp in experiments]
 
-    This is a stub endpoint. The actual implementation will query the MLflow server.
+@mlflow_router.get("/runs")
+async def list_mlflow_runs(experiment_id: str):
     """
-    return {"experiment": experiment, "runs": []}
+    Lists all runs for a given MLflow experiment ID.
+    """
+    client = MlflowClient()
+    try:
+        runs = client.search_runs(experiment_ids=[experiment_id])
+        return [{
+            "run_id": run.info.run_id,
+            "status": run.info.status,
+            "start_time": run.info.start_time,
+            "end_time": run.info.end_time,
+            "metrics": run.data.metrics,
+            "params": run.data.params,
+            "tags": run.data.tags,
+        } for run in runs]
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Experiment '{experiment_id}' not found or error fetching runs: {e}")
 
 @models_router.get("/")
 async def list_models():

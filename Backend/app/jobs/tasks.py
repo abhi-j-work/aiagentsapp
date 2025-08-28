@@ -55,6 +55,10 @@ def train_job(self, job_id: str, config: dict):
         with mlflow.start_run(experiment_id=experiment_id, run_name=config["job_name"]) as run:
             run_id = run.info.run_id
             print(f"[{job_id}] MLflow run started with ID: {run_id}")
+
+            # Update Celery task state with the mlflow_run_id
+            self.update_state(state='PROGRESS', meta={'mlflow_run_id': run_id})
+
             update_job_status(job_id, "RUNNING", mlflow_run_id=run_id)
 
             # Add run_id to config for the training script

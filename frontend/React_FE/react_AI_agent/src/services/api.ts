@@ -387,6 +387,11 @@ export interface ModelVersion {
     stage: string;
 }
 
+export interface MlflowExperiment {
+    id: string;
+    name: string;
+}
+
 // --- API Functions ---
 export const startTraining = (payload: StartTrainingPayload) =>
     request<StartTrainingResponse>('/training/start', {
@@ -413,3 +418,5 @@ export const promoteModel = (modelName: string, version: number, stage: string) 
         method: 'POST',
         body: JSON.stringify({ version, stage }),
     });
+
+export const listExperiments = () => request<MlflowExperiment[]>('/mlflow/experiments');
