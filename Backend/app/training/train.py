@@ -79,7 +79,7 @@ def train(config: dict):
         per_device_eval_batch_size=config["hyperparams"]["batch_size"],
         learning_rate=config["hyperparams"]["learning_rate"],
         seed=config["hyperparams"]["seed"],
-        evaluation_strategy="epoch",
+        eval_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
         report_to="mlflow", # Integrate with MLflow
