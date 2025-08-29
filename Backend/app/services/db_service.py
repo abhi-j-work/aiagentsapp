@@ -5,7 +5,7 @@ from typing import Dict, Any, List, Optional, Tuple
 from app.services.errors import DatabaseServiceError
 from sqlalchemy import create_engine, inspect, text
 import asyncpg
-
+import functools
 from .errors import DatabaseServiceError
 
 logger = logging.getLogger(__name__)
@@ -147,27 +147,55 @@ async def list_governed_views(conn_str: str) -> List[str]:
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, _list_governed_views_sync, conn_str)
 
-def _fetch_view_data_sync(conn_str: str, view_name: str, limit: int, offset: int) -> List[Dict[str, Any]]:
-    """Synchronously fetches paginated data from a view using a specific role."""
+# (Make sure 'import functools' is at the top of the file)
+
+def _fetch_view_data_sync(
+    conn_str: str,
+    view_name: str,
+    limit: int,
+    offset: int,
+    *,
+    role: Optional[str] = None
+) -> List[Dict[str, Any]]:
+    """Synchronously fetches paginated data from a view, optionally setting a role."""
     try:
         engine = create_engine(conn_str)
         with engine.connect() as connection:
-            # set_role_stmt = text("SET ROLE :role")
-            # connection.execute(set_role_stmt, {"role": role})
-            
+            if role:
+                logger.info(f"Setting role to '{role}' for the connection.")
+                set_role_stmt = text("SET ROLE :role")
+                connection.execute(set_role_stmt, {"role": role})
+
             safe_view_name = f'"{view_name}"'
             query = text(f'SELECT * FROM {safe_view_name} LIMIT :limit OFFSET :offset')
             result = connection.execute(query, {"limit": limit, "offset": offset})
             return [dict(row._mapping) for row in result.fetchall()]
     except Exception as e:
-        logger.error(f"Failed to fetch data from view '{view_name}' as role '{role}': {e}", exc_info=True)
-        raise DatabaseServiceError(f"Failed to fetch data from view '{view_name}'. Check if role '{role}' exists and has permissions. Error: {e}", 400)
+        role_context = f" as role '{role}'" if role else ""
+        error_message = f"Failed to fetch data from view '{view_name}'{role_context}."
+        if role:
+            error_message += f" Check if role '{role}' exists and has permissions."
+        logger.error(f"{error_message}: {e}", exc_info=True)
+        raise DatabaseServiceError(error_message, 400)
 
-async def fetch_view_data(conn_str: str, view_name: str, limit: int, offset: int) -> List[Dict[str, Any]]:
-    """Asynchronously fetches view data by running the sync query (with SET ROLE) in a thread."""
+
+async def fetch_view_data(
+    conn_str: str,
+    view_name: str,
+    limit: int,
+    offset: int,
+    *,
+    role: Optional[str] = None
+) -> List[Dict[str, Any]]:
+    """Asynchronously fetches view data by running the sync query in a thread."""
     loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, _fetch_view_data_sync, conn_str, view_name, limit, offset)
-
+    
+    # Use functools.partial to correctly wrap the function and all its arguments
+    func_to_run = functools.partial(
+        _fetch_view_data_sync, conn_str, view_name, limit, offset, role=role
+    )
+    
+    return await loop.run_in_executor(None, func_to_run)
 
 
 
