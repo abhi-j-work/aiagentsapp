@@ -80,8 +80,7 @@ def train_job(self, job_id: str, config: dict):
                     cmd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
-                    text=True,
-                    cwd="Backend" # Run from backend directory
+                    text=True
                 )
                 for line in process.stdout:
                     print(line, end="")
