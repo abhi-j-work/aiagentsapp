@@ -66,6 +66,15 @@ def train_job(self, job_id: str, config: dict):
 
             # --- Run Training Script as Subprocess ---
             config_path = JOBS_DIR / f"{job_id}_config.json"
+
+            # Resolve data paths relative to the project root.
+            # The worker's CWD is the 'Backend' directory.
+            project_root = Path.cwd().parent
+            if "train_file" in config:
+                config["train_file"] = str(project_root / config["train_file"])
+            if "val_file" in config:
+                config["val_file"] = str(project_root / config["val_file"])
+
             with open(config_path, "w") as f:
                 json.dump(config, f)
 
