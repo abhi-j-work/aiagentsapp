@@ -1,0 +1,111 @@
+import React, { useState, useEffect } from 'react';
+import { listJobs, stopTraining, listExperiments, type JobStatus, type MlflowExperiment } from '../services/api';
+import Button from '../components/ui/Button';
+import { Link } from 'react-router-dom';
+
+const RunsPage = () => {
+    const [jobs, setJobs] = useState<JobStatus[]>([]);
+    const [experiments, setExperiments] = useState<MlflowExperiment[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchJobsAndExperiments = async () => {
+        setIsLoading(true);
+        try {
+            const [jobsData, experimentsData] = await Promise.all([
+                listJobs(),
+                listExperiments()
+            ]);
+            setJobs(jobsData);
+            setExperiments(experimentsData);
+        } catch (err: any) {
+            setError(err.message || 'Failed to fetch data.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchJobsAndExperiments();
+        const interval = setInterval(fetchJobsAndExperiments, 5000); // Poll every 5 seconds
+        return () => clearInterval(interval);
+    }, []);
+
+    const handleStopJob = async (jobId: string) => {
+        if (window.confirm('Are you sure you want to stop this job?')) {
+            try {
+                await stopTraining(jobId);
+                fetchJobsAndExperiments(); // Refresh the list after stopping
+            } catch (err: any) {
+                alert(`Failed to stop job: ${err.message}`);
+            }
+        }
+    };
+
+    const getExperimentId = (experimentName: string) => {
+        const experiment = experiments.find(exp => exp.name === experimentName);
+        return experiment ? experiment.id : '0'; // Default to 0 if not found
+    };
+
+    if (isLoading) return <div className="text-white text-center p-8">Loading training runs...</div>;
+    if (error) return <div className="text-red-500 text-center p-8">{error}</div>;
+
+    return (
+        <div className="min-h-[calc(100vh-80px)] w-full flex flex-col items-center p-4">
+            <div className="w-full max-w-4xl flex justify-between items-center mb-8 animate-fade-in">
+                <div className="text-left">
+                    <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">Training Runs</h1>
+                    <p className="text-lg text-slate-300 mt-3">Monitor the status of your model training jobs.</p>
+                </div>
+                <Link to="/training/start">
+                    <Button>Start New Job</Button>
+                </Link>
+            </div>
+
+            <div className="w-full max-w-4xl glass rounded-2xl p-8 gradient-border">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left text-slate-300">
+                        <thead className="text-xs text-white uppercase bg-slate-700/50">
+                            <tr>
+                                <th scope="col" className="px-6 py-3">Job Name</th>
+                                <th scope="col" className="px-6 py-3">Status</th>
+                                <th scope="col" className="px-6 py-3">MLflow Run</th>
+                                <th scope="col" className="px-6 py-3">Created At</th>
+                                <th scope="col" className="px-6 py-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {jobs.map((job) => {
+                                const experimentId = job.config?.mlflow_experiment ? getExperimentId(job.config.mlflow_experiment) : '0';
+                                const mlflowUrl = `http://localhost:5000/#/experiments/${experimentId}/runs/${job.mlflow_run_id}`;
+
+                                return (
+                                    <tr key={job.job_id} className="border-b border-slate-700 hover:bg-slate-800/50">
+                                        <td className="px-6 py-4 font-medium text-white">{job.config?.job_name || job.job_id}</td>
+                                        <td className="px-6 py-4">{job.status}</td>
+                                        <td className="px-6 py-4">
+                                            {job.mlflow_run_id && job.mlflow_run_id !== 'run-id-placeholder' ? (
+                                                <a href={mlflowUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                                                    {job.mlflow_run_id}
+                                                </a>
+                                            ) : (
+                                                <span>{job.mlflow_run_id || 'N/A'}</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4">{job.timestamp ? new Date(job.timestamp).toLocaleString() : 'N/A'}</td>
+                                        <td className="px-6 py-4 space-x-2">
+                                            <Button onClick={() => handleStopJob(job.job_id)} disabled={['SUCCESS', 'FAILED', 'CANCELLED'].includes(job.status)}>Stop</Button>
+                                            <Link to={`/training/logs/${job.job_id}`}><Button>Logs</Button></Link>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default RunsPage;

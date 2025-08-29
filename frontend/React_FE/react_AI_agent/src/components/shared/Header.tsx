@@ -3,11 +3,14 @@
   import { Infinity as InfinityIcon, Home } from 'lucide-react';
 
   // Define navigation items in an array for clean and manageable code
-  const navItems = [
-    { name: 'Data AI Agent', href: '/data-ai-agent' },
-    { name: 'Pricing', href: '/pricing' },
-    { name: 'Tech Stack', href: '/tech-stack' },
-  ];
+ const navItems = [
+  { name: 'Data AI Agents', href: '/data-ai-agent' },
+  { name: 'Training', href: '/training/runs' },
+  { name: 'Pricing', href: '/pricing' },
+  { name: 'Tech Stack', href: '/tech-stack' },
+  { name: 'Evaluation', href: '/evaluation'},
+  { name: 'About', href: '/about' }, 
+];
 
   const Header: React.FC = () => {
     const location = useLocation();
@@ -21,7 +24,7 @@
             <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-md">
               <InfinityIcon className="text-white h-4 w-4" />
             </div>
-            <span className="text-white font-semibold text-lg font-geist tracking-wide">Data AI Agent Marketplace</span>
+            <span className="text-white font-semibold text-lg font-geist tracking-wide">Data AI Agents Marketplace</span>
           </Link>
 
           {/* Navigation Links */}

@@ -1,0 +1,11 @@
+.log-explorer .search-bar { display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: center; }
+.log-explorer input { flex-grow: 1; /* ... other input styles */ }
+.log-explorer .error-message { color: #e74c3c; background-color: #2c2c2e; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+.log-table-container { max-height: 70vh; overflow-y: auto; }
+.log-table { width: 100%; border-collapse: collapse; }
+.log-table th { background-color: #333; padding: 0.8rem; text-align: left; }
+.log-table td { border-bottom: 1px solid #444; padding: 0.5rem 0.8rem; vertical-align: top; }
+.log-table .log-ts { white-space: nowrap; color: #8e8e93; }
+.log-table .log-line { font-family: 'Consolas', 'Menlo', monospace; word-break: break-all; }
+.log-table .log-level-ERROR { color: #f48771; }
+.log-table .log-level-WARNING { color: #dcdcaa; }

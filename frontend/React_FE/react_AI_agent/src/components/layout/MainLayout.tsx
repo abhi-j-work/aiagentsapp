@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import AnimatedBackground from '../shared/AnimatedBackground';
 import Header from '../shared/Header';
+import Footer from '../shared/Footer';
 
 const MainLayout: React.FC = () => {
   return (
@@ -10,7 +11,9 @@ const MainLayout: React.FC = () => {
       <Header />
       <main className="relative z-10">
         <Outlet />
+        
       </main>
+      <Footer />
     </div>
   );
 };

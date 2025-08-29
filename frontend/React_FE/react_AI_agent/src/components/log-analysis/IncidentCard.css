@@ -1,0 +1,29 @@
+.incident-card {
+  background-color: #2c2c2e;
+  border-left: 5px solid #e74c3c;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.card-header h3 { margin: 0; color: #f48771; font-size: 1.2rem; }
+.timestamp { font-size: 0.8rem; color: #8e8e93; }
+.card-body details { cursor: pointer; }
+.card-body summary { font-weight: bold; color: #0a84ff; outline: none; }
+.details-section { margin-top: 1rem; padding-left: 1rem; border-left: 2px solid #444; }
+.details-section h4 { margin: 0 0 0.5rem 0; color: #d1d1d6; }
+pre {
+  background-color: #1c1c1e;
+  border-radius: 4px;
+  padding: 0.8rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  color: #d1d1d6;
+  font-family: 'Consolas', 'Menlo', monospace;
+}   

@@ -1,17 +1,28 @@
 # In file: app/services/db_service.py
 import logging
-from sqlalchemy import create_engine, inspect
-from typing import Dict, Any
 import asyncio
-from typing import List 
-from sqlalchemy import create_engine, text
+from typing import Dict, Any, List, Optional, Tuple
+from app.services.errors import DatabaseServiceError
+from sqlalchemy import create_engine, inspect, text
 import asyncpg
+
 from .errors import DatabaseServiceError
-from app.services.errors import DatabaseServiceError # type: ignore
 
 logger = logging.getLogger(__name__)
 
+
+# =============================================================================
+# 1. SCHEMA EXTRACTION
+# =============================================================================
+
 def _extract_schema_sync(conn_str: str) -> Dict[str, Any]:
+    """
+    Synchronously inspects the database to extract a detailed schema.
+    This function is robust, using fully qualified names for tables (e.g., 'public.users')
+    and safely handling optional metadata like foreign key names.
+    
+    Uses SQLAlchemy's inspector, designed to be run in a thread.
+    """
     try:
         engine = create_engine(conn_str)
         inspector = inspect(engine)
@@ -19,81 +30,106 @@ def _extract_schema_sync(conn_str: str) -> Dict[str, Any]:
         all_tables_info = {}
         all_fks = []
         
+        # Get all non-system schema names
         schemas = [s for s in inspector.get_schema_names() if not s.startswith('pg_') and s != 'information_schema']
         
+        # If no specific schemas found, inspect the default schema
         if not schemas:
             schemas = [None] 
 
         for schema in schemas:
-            for table_name in inspector.get_table_names(schema=schema):
-                # ### FIX: Changed keys 'name'->'column_name' and 'type'->'data_type' to match models.py
+            table_names = inspector.get_table_names(schema=schema)
+            for table_name in table_names:
+                # CRITICAL: Create a qualified name to use as a unique key
+                qualified_name = f"{schema}.{table_name}" if schema else table_name
+                
+                # Safely extract column info using .get() to prevent KeyErrors
                 columns = [
-                    {'column_name': col['name'], 'data_type': str(col['type'])} 
+                    {'column_name': col.get('name'), 'data_type': str(col.get('type'))} 
                     for col in inspector.get_columns(table_name, schema=schema)
                 ]
-                all_tables_info[table_name] = {"columns": columns}
+                all_tables_info[qualified_name] = {"columns": columns}
                 
                 foreign_keys = inspector.get_foreign_keys(table_name, schema=schema)
                 for fk in foreign_keys:
+                    # THE DEFINITIVE FIX: Use .get() for all optional keys to prevent crashes.
                     all_fks.append({
-                        "name": fk['name'],
-                        "referencing_table": table_name,
-                        "referencing_columns": fk['constrained_columns'],
-                        "referenced_table": fk['referred_table'],
-                        "referenced_columns": fk['referred_columns'],
+                        "name": fk.get('name'), # This key is not always present
+                        "referencing_table": qualified_name,
+                        "referencing_columns": fk.get('constrained_columns'),
+                        "referenced_table": fk.get('referred_table'),
+                        "referenced_columns": fk.get('referred_columns'),
                     })
                     
         return {"tables": all_tables_info, "foreign_keys": all_fks}
         
     except Exception as e:
-        logger.error(f"Failed to extract schema: {e}")
-        raise DatabaseServiceError(f"Failed to extract schema: {e}", 500)
+        logger.error(f"Failed to extract database schema: {e}", exc_info=True)
+        raise DatabaseServiceError(f"Failed to extract database schema: {e}", 500)
 
 async def extract_db_schema(conn_str: str) -> Dict[str, Any]:
+    """Asynchronously extracts the DB schema by running the sync inspector in a thread."""
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, _extract_schema_sync, conn_str)
 
-# ### BEST PRACTICE: Included your apply_sql_statements function for completeness.
+
+# =============================================================================
+# 2. DATA QUALITY QUERY EXECUTION
+#    (Uses high-performance asyncpg)
+# =============================================================================
+
+async def execute_scalar_query(conn_str: str, query: str) -> int:
+    """Executes a SQL query expected to return a single value (a scalar), like a count."""
+    conn = None
+    try:
+        conn = await asyncpg.connect(dsn=conn_str)
+        result = await conn.fetchval(query)
+        return int(result) if result is not None else 0
+    except (asyncpg.PostgresError, OSError) as e:
+        logger.error(f"Scalar query failed: {e}", exc_info=True)
+        raise DatabaseServiceError(message=f"Database query failed: {e}", status_code=500)
+    finally:
+        if conn:
+            await conn.close()
+
+async def execute_query_as_dict(conn_str: str, query: str) -> List[Dict[str, Any]]:
+    """Executes a SQL query and returns the results as a list of dictionaries."""
+    conn = None
+    try:
+        conn = await asyncpg.connect(dsn=conn_str)
+        records = await conn.fetch(query)
+        return [dict(record) for record in records]
+    except (asyncpg.PostgresError, OSError) as e:
+        logger.error(f"Dictionary query failed: {e}", exc_info=True)
+        raise DatabaseServiceError(message=f"Database query failed: {e}", status_code=500)
+    finally:
+        if conn:
+            await conn.close()
+
+
+# =============================================================================
+# 3. OTHER UTILITY FUNCTIONS
+#    (For features like data governance and statement execution)
+# =============================================================================
+
 def _execute_statements_sync(conn_str: str, statements: list[str]):
-    """
-    Synchronously executes statements using SQLAlchemy.
-    This function is designed to be run in a separate thread.
-    """
-    # create_engine is a factory for connections and manages a connection pool.
+    """Synchronously executes a list of DDL/DML statements in a single transaction."""
     engine = create_engine(conn_str)
-    
-    # engine.connect() checks out a connection from the pool.
     with engine.connect() as connection:
-        # connection.begin() starts a transaction block.
         with connection.begin() as transaction:
             try:
                 for stmt in statements:
-                    # Ensure we don't execute empty strings
                     if stmt and stmt.strip():
                         connection.execute(text(stmt))
-                
-                # The transaction is automatically committed here if no exception was raised.
-                # The explicit `transaction.commit()` is not needed with `with connection.begin()`.
             except Exception as e:
-                # The transaction is automatically rolled back here upon exiting the `with`
-                # block due to an exception.
+                transaction.rollback()
+                logger.error(f"Failed during batch SQL execution: {e}", exc_info=True)
                 raise DatabaseServiceError(message=f"Failed to apply SQL: {e}", status_code=400)
 
-# This is your async wrapper function. We'll call this from the API endpoint.
 async def execute_statements(conn_str: str, statements: list[str]):
-    """
-    Asynchronously executes a list of SQL statements by running the
-    synchronous SQLAlchemy logic in a thread pool executor.
-    """
+    """Asynchronously executes a list of SQL statements in a thread."""
     loop = asyncio.get_running_loop()
-    # `run_in_executor` pushes the blocking function to a thread,
-    # freeing the event loop to handle other requests.
-    await loop.run_in_executor(
-        None,  # Use the default thread pool executor
-        _execute_statements_sync,
-        conn_str,
-        statements
-    )
+    await loop.run_in_executor(None, _execute_statements_sync, conn_str, statements)
 
 def _list_governed_views_sync(conn_str: str) -> List[str]:
     """Synchronously inspects the database for views ending in '_governed_view'."""
@@ -101,9 +137,7 @@ def _list_governed_views_sync(conn_str: str) -> List[str]:
         engine = create_engine(conn_str)
         inspector = inspect(engine)
         all_views = inspector.get_view_names()
-        # Filter the list to find only the views created by our governance process
-        governed_views = [v for v in all_views if v.endswith('_governed_view')]
-        return governed_views
+        return [v for v in all_views if v.endswith('_governed_view')]
     except Exception as e:
         logger.error(f"Failed to list governed views: {e}", exc_info=True)
         raise DatabaseServiceError(f"Failed to list views from database: {e}", 500)
@@ -113,81 +147,278 @@ async def list_governed_views(conn_str: str) -> List[str]:
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, _list_governed_views_sync, conn_str)
 
-
-# =============================================================================
-# NEW: Functions for Fetching Data from a View
-# =============================================================================
-
-def _fetch_view_data_sync(conn_str: str, view_name: str, limit: int, offset: int, role: str) -> List[Dict[str, Any]]:
-    """
-    Synchronously fetches paginated data from a specific view,
-    assuming a database role for the duration of the transaction.
-    """
+def _fetch_view_data_sync(conn_str: str, view_name: str, limit: int, offset: int) -> List[Dict[str, Any]]:
+    """Synchronously fetches paginated data from a view using a specific role."""
     try:
         engine = create_engine(conn_str)
         with engine.connect() as connection:
-            # Step 1: Set the role for the current transaction.
-            # This is the crucial part that applies the masking rules.
-            # We use text() and parameter binding to safely handle the role name and prevent SQL injection.
-            set_role_stmt = text("SET ROLE :role")
-            connection.execute(set_role_stmt, {"role": role})
-
-            # Step 2: Execute the main SELECT query.
-            # This query will now run with the permissions of the role set above.
+            # set_role_stmt = text("SET ROLE :role")
+            # connection.execute(set_role_stmt, {"role": role})
+            
             safe_view_name = f'"{view_name}"'
             query = text(f'SELECT * FROM {safe_view_name} LIMIT :limit OFFSET :offset')
             result = connection.execute(query, {"limit": limit, "offset": offset})
-            rows = [dict(row._mapping) for row in result.fetchall()]
-            
-            # Note: The role is automatically reset to the original user when the
-            # connection is closed and returned to the pool at the end of the `with` block.
-            return rows
-            
+            return [dict(row._mapping) for row in result.fetchall()]
     except Exception as e:
         logger.error(f"Failed to fetch data from view '{view_name}' as role '{role}': {e}", exc_info=True)
-        # Provide a more specific and helpful error message to the user.
-        raise DatabaseServiceError(f"Failed to fetch data from view '{view_name}'. Check if role '{role}' exists and has permissions on the view. Error: {e}", 400)
+        raise DatabaseServiceError(f"Failed to fetch data from view '{view_name}'. Check if role '{role}' exists and has permissions. Error: {e}", 400)
 
-async def fetch_view_data(conn_str: str, view_name: str, limit: int, offset: int, role: str) -> List[Dict[str, Any]]:
-    """
-    Asynchronously fetches view data by running the sync query (with SET ROLE) in a thread.
-    The function signature now correctly includes the 'role' parameter.
-    """
+async def fetch_view_data(conn_str: str, view_name: str, limit: int, offset: int) -> List[Dict[str, Any]]:
+    """Asynchronously fetches view data by running the sync query (with SET ROLE) in a thread."""
     loop = asyncio.get_running_loop()
-    # Pass the 'role' argument to the synchronous worker function.
-    return await loop.run_in_executor(
-        None, _fetch_view_data_sync, conn_str, view_name, limit, offset, role
-    )
+    return await loop.run_in_executor(None, _fetch_view_data_sync, conn_str, view_name, limit, offset)
 
-async def execute_scalar_query(conn_str: str, query: str) -> int:
+
+
+
+
+async def list_all_tables_and_views(conn_str: str) -> Tuple[List[Dict[str, Any]], List[str]]:
     """
-    Executes a SQL query that is expected to return a single value (a scalar), like a count.
-
-    Args:
-        conn_str: The database connection string.
-        query: The SQL query to execute (e.g., "SELECT COUNT(*) FROM my_table").
+    Connects to the database and fetches all user-defined tables and views
+    from the 'public' schema, including the primary key for each table.
 
     Returns:
-        The integer result of the query.
-
-    Raises:
-        DatabaseServiceError: If any database-related error occurs.
+        A tuple containing:
+        - A list of dictionaries for tables, e.g., [{'name': 'users', 'primary_key': 'id'}]
+        - A simple list of view names.
     """
     conn = None
     try:
-        # Establish connection to the database
+        conn = await asyncpg.connect(dsn=conn_str)
+            
+        query = """
+        SELECT
+            t.table_name,
+            t.table_type,
+            kcu.column_name AS primary_key_column
+        FROM
+            information_schema.tables AS t
+        LEFT JOIN information_schema.table_constraints AS tc
+            ON tc.table_schema = t.table_schema
+            AND tc.table_name = t.table_name
+            AND tc.constraint_type = 'PRIMARY KEY'
+        LEFT JOIN information_schema.key_column_usage AS kcu
+            ON kcu.constraint_name = tc.constraint_name
+            AND kcu.table_schema = tc.table_schema
+        WHERE
+            t.table_schema = 'public'
+            AND t.table_type IN ('BASE TABLE', 'VIEW')
+        ORDER BY
+            t.table_type, t.table_name;
+        """
+        records = await conn.fetch(query)
+
+        tables: List[Dict[str, Any]] = []
+        views: List[str] = []
+        for record in records:
+            if record['table_type'] == 'BASE TABLE':
+                tables.append({
+                    "name": record['table_name'],
+                    "primary_key": record['primary_key_column']  # This will be None if no PK
+                })
+            else:  # 'VIEW'
+                views.append(record['table_name'])
+        
+        logger.info(f"Successfully listed {len(tables)} tables (with PKs) and {len(views)} views.")
+        return tables, views
+
+    except (asyncpg.exceptions.PostgresError, OSError) as e:
+        error_message = f"Database query failed while listing objects: {e}"
+        logger.error(error_message)
+        raise DatabaseServiceError(status_code=503, message=error_message)
+        
+    except Exception as e:
+        error_message = f"An unexpected error occurred while listing database objects: {e}"
+        logger.error(error_message, exc_info=True)
+        raise DatabaseServiceError(status_code=500, message=error_message)
+    finally:
+        if conn and not conn.is_closed():
+            await conn.close()
+
+
+
+async def get_view_definition(conn_str: str, view_name: str) -> Optional[str]:
+    """
+    Connects to the database and retrieves the SQL definition of a specific view.
+
+    Args:
+        conn_str: The full database connection string.
+        view_name: The name of the view to look up.
+
+    Returns:
+        A string containing the SQL 'CREATE VIEW...' statement if the view is found,
+        otherwise None.
+
+    Raises:
+        DatabaseServiceError: If the connection fails or the query cannot be executed.
+    """
+    conn = None
+    try:
         conn = await asyncpg.connect(dsn=conn_str)
         
-        # fetchval() is the perfect method to get a single value from a query
-        result = await conn.fetchval(query)
-        
-        # Ensure we return an integer. If the query returns None, default to 0.
-        return int(result) if result is not None else 0
+        # This query uses a built-in PostgreSQL function to get the view's source code.
+        # It's safe from SQL injection because we use a parameterized query ($1).
+        # The second argument `true` to pg_get_viewdef pretty-prints the SQL.
+        query = "SELECT pg_get_viewdef($1, true);"
 
-    except (asyncpg.PostgresError, OSError) as e:
-        # Catch specific database or connection errors
-        raise DatabaseServiceError(message=f"Database query failed: {e}", status_code=500)
+        # Use fetchval to get a single value from a single row.
+        # It will return None if no row is found (i.e., the view doesn't exist).
+        view_definition = await conn.fetchval(query, view_name)
+
+        if view_definition:
+            logger.info(f"Successfully retrieved definition for view: {view_name}")
+            # The function returns the SELECT part, so we prepend the CREATE VIEW part
+            # to make it a full, parsable statement for sqllineage.
+            return f"CREATE OR REPLACE VIEW {view_name} AS {view_definition}"
+        else:
+            logger.warning(f"No definition found for view: {view_name}. It may not exist.")
+            return None
+
+    except (asyncpg.exceptions.PostgresError, OSError) as e:
+        error_message = f"Database query failed while getting view definition for '{view_name}': {e}"
+        logger.error(error_message)
+        raise DatabaseServiceError(status_code=503, message=error_message)
+        
+    except Exception as e:
+        error_message = f"An unexpected error occurred while getting view definition for '{view_name}': {e}"
+        logger.error(error_message, exc_info=True)
+        raise DatabaseServiceError(status_code=500, message=error_message)
+
     finally:
-        # CRITICAL: Always ensure the connection is closed to prevent leaks
-        if conn:
+        if conn and not conn.is_closed():
             await conn.close()
+
+
+async def get_object_type(conn_str: str, object_name: str) -> Optional[str]:
+    """
+    Checks the database to determine if an object is a 'BASE TABLE' or a 'VIEW'.
+
+    Returns:
+        The type of the object as a string, or None if not found.
+    """
+    conn = None
+    try:
+        conn = await asyncpg.connect(dsn=conn_str)
+        query = """
+            SELECT table_type FROM information_schema.tables 
+            WHERE table_schema = 'public' AND table_name = $1;
+        """
+        # fetchval is perfect for getting a single value from a single row
+        object_type = await conn.fetchval(query, object_name)
+        return object_type
+    except (asyncpg.exceptions.PostgresError, OSError) as e:
+        logger.error(f"Database query failed while getting object type for '{object_name}': {e}")
+        raise DatabaseServiceError(status_code=503, message=f"Database error checking object type for '{object_name}'.")
+    finally:
+        if conn and not conn.is_closed():
+            await conn.close()
+
+async def get_table_lineage_details(conn_str: str, table_name: str) -> tuple[list[str], list[str]]:
+    """
+    Finds all upstream and downstream dependencies for a given table based on foreign keys
+    using a single, efficient, combined query.
+
+    Returns:
+        A tuple of two lists: (upstream_dependencies, downstream_dependencies).
+    """
+    conn = None
+    try:
+        conn = await asyncpg.connect(dsn=conn_str)
+        
+        # --- THE FIX: A SINGLE, COMBINED SQL QUERY ---
+        # This query uses a UNION ALL to combine the results of the upstream
+        # and downstream lookups into one result set, with a 'direction'
+        # column to distinguish them.
+        query = """
+        -- Upstream dependencies: tables that this table depends on
+        SELECT 
+            'upstream' as direction,
+            ccu.table_name AS related_table
+        FROM information_schema.table_constraints AS tc
+        JOIN information_schema.key_column_usage AS kcu
+            ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+        JOIN information_schema.constraint_column_usage AS ccu
+            ON ccu.constraint_name = tc.constraint_name AND ccu.table_schema = tc.table_schema
+        WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_name = $1
+        
+        UNION ALL
+        
+        -- Downstream dependencies: tables that depend on this table
+        SELECT 
+            'downstream' as direction,
+            tc.table_name AS related_table
+        FROM information_schema.table_constraints AS tc
+        JOIN information_schema.key_column_usage AS kcu
+            ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+        JOIN information_schema.constraint_column_usage AS ccu
+            ON ccu.constraint_name = tc.constraint_name AND ccu.table_schema = tc.table_schema
+        WHERE tc.constraint_type = 'FOREIGN KEY' AND ccu.table_name = $1;
+        """
+
+        # Execute the single, combined query
+        records = await conn.fetch(query, table_name)
+
+        # Process the results in Python
+        upstream_dependencies = []
+        downstream_dependencies = []
+        for record in records:
+            if record['direction'] == 'upstream':
+                upstream_dependencies.append(record['related_table'])
+            else: # 'downstream'
+                downstream_dependencies.append(record['related_table'])
+
+        return upstream_dependencies, downstream_dependencies
+
+    except (asyncpg.exceptions.PostgresError, OSError) as e:
+        logger.error(f"Database query failed while getting table lineage for '{table_name}': {e}")
+        raise DatabaseServiceError(status_code=503, message=f"Database error getting lineage for table '{table_name}'.")
+    finally:
+        if conn and not conn.is_closed():
+            await conn.close()
+
+async def get_primary_keys_for_tables(conn_str: str, table_names: List[str]) -> Dict[str, str]:
+    """
+    Efficiently fetches the primary key for a given list of table names.
+
+    Args:
+        conn_str: The database connection string.
+        table_names: A list of table names to look up.
+
+    Returns:
+        A dictionary mapping table_name -> primary_key_column.
+    """
+    if not table_names:
+        return {}
+    
+    conn = None
+    try:
+        conn = await asyncpg.connect(dsn=conn_str)
+        # This query is optimized to find PKs for a specific list of tables
+        query = """
+        SELECT
+            t.table_name,
+            kcu.column_name AS primary_key_column
+        FROM
+            information_schema.tables AS t
+        JOIN information_schema.table_constraints AS tc
+            ON tc.table_schema = t.table_schema
+            AND tc.table_name = t.table_name
+            AND tc.constraint_type = 'PRIMARY KEY'
+        JOIN information_schema.key_column_usage AS kcu
+            ON kcu.constraint_name = tc.constraint_name
+            AND kcu.table_schema = tc.table_schema
+        WHERE
+            t.table_name = ANY($1::text[]);
+        """
+        records = await conn.fetch(query, table_names)
+        # Return a dictionary for fast lookups
+        return {record['table_name']: record['primary_key_column'] for record in records}
+    except (asyncpg.exceptions.PostgresError, OSError) as e:
+        logger.error(f"Database query failed while getting primary keys: {e}")
+        # Return empty dict on failure so the lineage graph doesn't crash
+        return {}
+    finally:
+        if conn and not conn.is_closed():
+            await conn.close()
+
+

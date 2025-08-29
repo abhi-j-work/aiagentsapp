@@ -1,8 +1,9 @@
-from pydantic import BaseModel, Field
+# File: Model.py
+
+from pydantic import BaseModel, Field, PostgresDsn
 from typing import List, Dict, Any, Optional
 from enum import Enum
-from pydantic import BaseModel, Field,PostgresDsn
-from typing import List
+
 # =============================================================================
 # Enums and Core Data Structures
 # =============================================================================
@@ -13,9 +14,6 @@ class DataClassification(str, Enum):
     INTERNAL_CONFIDENTIAL = "Internal/Confidential"
     PII = "PII"
     SENSITIVE = "Sensitive"
-
-# --- New models for strongly-typing the extracted schema ---
-# These models provide better type safety and code completion than using Dict[str, Any].
 
 class ExtractedColumn(BaseModel):
     """Represents a single column extracted from the database."""
@@ -56,7 +54,6 @@ class SimpleMessageResponse(BaseModel):
     """A generic response for simple status messages."""
     message: str
 
-
 # --- Schema and Classification ---
 
 class SchemaResponse(BaseModel):
@@ -81,9 +78,22 @@ class ClassificationRequest(DBParams):
         None, description="Optional schema to classify. If null, it will be extracted from the DB first."
     )
 
+# --- Evaluation Model (Consolidated) ---
+
+class EvaluationResult(BaseModel):
+    """
+    Represents the structured feedback from the AI Judge.
+    The exact fields used may depend on the type of evaluation.
+    """
+    score: int
+    reasoning: str
+    is_safe: Optional[bool] = Field(None, description="True if the query is deemed safe and read-only.")
+    is_relevant: Optional[bool] = Field(None, description="True if the query is relevant to the user's prompt.")
+
 class ClassificationResponse(BaseModel):
     """Response model for returning the results of a schema classification."""
     classification_results: List[ClassifiedTable]
+    evaluation: Optional[EvaluationResult] = None
 
 
 # --- SQL Generation, Application, and Masking ---
@@ -95,6 +105,16 @@ class LLMColumnDetail(BaseModel):
 class LLMTableDetail(BaseModel):
     table_name: str
     columns: List[LLMColumnDetail]
+    
+class ColumnPlan(BaseModel):
+    select_expression: str = Field(..., description="The full SQL select expression for a column.")
+
+class TablePlan(BaseModel):
+    table_name: str = Field(..., description="The name of the table.")
+    columns: List[ColumnPlan] = Field(..., description="The list of column expressions for the table.")
+
+class LLMResponseModel(BaseModel):
+    tables: List[TablePlan]
 
 class ApplySQLRequest(DBParams):
     """Request model for applying one or more SQL statements to a database."""
@@ -112,13 +132,41 @@ class MaskingRequest(BaseModel):
     """Request model for generating data masking rules or scripts."""
     classification_results: List[ClassifiedTable]
 
+class ApplyMaskingRequest(BaseModel):
+    connection_string: Optional[str] = Field(
+        None,
+        description="Database connection string. If not provided, the server's configured URL will be used."
+    )
+    sql_statements: List[str] = Field(
+        ...,
+        description="The list of SQL statements (e.g., CREATE VIEW...) to be executed."
+    )
+
+class ApplyPlanResponse(BaseModel):
+    status: str = "success"
+    message: str
+
 
 # --- Referential Integrity and View Analysis ---
 
+class RelationshipExplanation(BaseModel):
+    from_table: str
+    to_table: str
+    business_rule: str
+    impact_of_change: str
+
+class FoundationalTable(BaseModel):
+    table_name: str
+    business_role: str
+    impact_of_change: str
+
 class ReferentialIntegrityResponse(BaseModel):
-    """Response model for an analysis of foreign key relationships."""
-    explanation: str
-    foreign_keys_found: List[ExtractedForeignKey] # Re-using the core model
+    """
+    Response model for an analysis of foreign key relationships.
+    Note: This is the business-focused version used by the API endpoint.
+    """
+    relationship_explanations: List[RelationshipExplanation]
+    foundational_tables: List[FoundationalTable]
 
 class ViewDefinition(BaseModel):
     """Defines a database view for analysis."""
@@ -142,48 +190,25 @@ class ViewImpactAnalysisResponse(BaseModel):
     message: str
     analysis_results: List[AnalysisResult]
 
-class ColumnPlan(BaseModel):
-    select_expression: str = Field(..., description="The full SQL select expression for a column.")
+class ListViewsResponse(BaseModel):
+    """Response model for listing the governed views."""
+    governed_views: List[str] = Field(..., description="A list of view names that match the governed view pattern.")
 
-class TablePlan(BaseModel):
+class FetchViewDataRequest(DBParams):
+    """Request model for fetching data from a specific view."""
+    view_name: str = Field(..., description="The name of the governed view to query.")
+    limit: int = Field(default=100, gt=0, le=1000, description="Number of rows to return.")
+    offset: int = Field(default=0, ge=0, description="Number of rows to skip for pagination.")
+    role: str = Field(..., description="The database role to assume for this query (e.g., 'admin', 'analyst').")
 
-    table_name: str = Field(..., description="The name of the table.")
-    columns: List[ColumnPlan] = Field(..., description="The list of column expressions for the table.")
-
-class LLMResponseModel(BaseModel):
-    tables: List[TablePlan]
-
-
-class ApplyMaskingRequest(BaseModel):
-    connection_string: Optional[str] = Field(
-        None,
-        description="Database connection string. If not provided, the server's configured URL will be used."
-    )
-    sql_statements: List[str] = Field(
-        ...,
-        description="The list of SQL statements (e.g., CREATE VIEW...) to be executed."
-    )
-
-# This is the OUTPUT of our new endpoint.
-class ApplyPlanResponse(BaseModel):
-    status: str = "success"
-    message: str
+class FetchViewDataResponse(BaseModel):
+    """Response model for returning data from a view."""
+    view_name: str
+    row_count: int = Field(..., description="The number of rows returned in this response.")
+    data: List[Dict[str, Any]]
 
 
-class RelationshipExplanation(BaseModel):
-    from_table: str
-    to_table: str
-    business_rule: str
-    impact_of_change: str
-
-class FoundationalTable(BaseModel):
-    table_name: str
-    business_role: str
-    impact_of_change: str
-
-class ReferentialIntegrityResponse(BaseModel):
-    relationship_explanations: List[RelationshipExplanation]
-    foundational_tables: List[FoundationalTable]
+# --- Natural Language Query (Talk-to-DB) ---
 
 class NaturalLanguageQueryRequest(BaseModel):
     """
@@ -200,50 +225,40 @@ class NaturalLanguageQueryRequest(BaseModel):
     )
 
 class NaturalLanguageQueryResponse(BaseModel):
-    """Defines the successful response structure from the NLQ endpoint."""
+    """
+    Defines the successful response structure from the NLQ endpoint.
+    Note: Consolidated to include the optional evaluation field.
+    """
     generated_sql: str
-    data: List[Dict[str, Any]] | None = None
-    message: str | None = None
+    data: Optional[List[Dict[str, Any]]] = None
+    message: Optional[str] = None
+    evaluation: Optional[EvaluationResult] = None
 
 
-
-
-class ListViewsResponse(BaseModel):
-    """Response model for listing the governed views."""
-    governed_views: List[str] = Field(..., description="A list of view names that match the governed view pattern.")
-
-class FetchViewDataRequest(DBParams):
-    """Request model for fetching data from a specific view."""
-    view_name: str = Field(..., description="The name of the governed view to query.")
-    limit: int = Field(default=100, gt=0, le=1000, description="Number of rows to return.")
-    offset: int = Field(default=0, ge=0, description="Number of rows to skip for pagination.")
-    role: str = Field(..., description="The database role to assume for this query (e.g., 'admin', 'analyst').") 
-
-class FetchViewDataResponse(BaseModel):
-    """Response model for returning data from a view."""
-    view_name: str
-    row_count: int = Field(..., description="The number of rows returned in this response.")
-    data: List[Dict[str, Any]]
-
+# --- Data Quality ---
 
 class GenerateQualityPlanRequest(DBParams):
     """Request to have the AI generate a plan of data quality checks."""
     table_name: str
 
 class ProposedQualityCheck(BaseModel):
-    """A single data quality check proposed by the AI."""
-    check_id: str = Field(..., description="A unique, machine-friendly ID for the check (e.g., 'email_format_check').")
-    rule_name: str = Field(..., description="A human-readable name for the rule.")
-    rule_description: str = Field(..., description="A clear explanation of what the rule validates.")
-    check_sql: str = Field(..., description="The executable SQL query to count records that VIOLATE this rule.")
+    """
+    A single data quality check proposed by the AI agent.
+    Note: Consolidated to include example values.
+    """
+    check_id: str = Field(..., description="A unique, machine-friendly identifier for the check.", example="check_null_emails")
+    rule_name: str = Field(..., description="A human-readable name for the quality rule.", example="Check for Null Emails")
+    rule_description: str = Field(..., description="A clear explanation of what the rule checks for.", example="Ensures that the email column does not contain any NULL values.")
+    check_sql: str = Field(..., description="The PostgreSQL query to execute the check, which counts violating rows.", example='SELECT COUNT(*) FROM "users" WHERE "email" IS NULL;')
 
 class GenerateQualityPlanResponse(BaseModel):
-    """The response from the plan generation endpoint, containing a list of proposed checks."""
+    """
+    The response from the plan generation endpoint, containing a list of proposed checks.
+    Note: Consolidated to include the optional evaluation field.
+    """
     table_name: str
     proposed_checks: List[ProposedQualityCheck]
-
-
-# --- Endpoint 2: Execute Checks ---
+    evaluation: Optional[EvaluationResult] = None
 
 class CheckToExecute(BaseModel):
     """A single check selected by the user to be executed."""
@@ -252,20 +267,159 @@ class CheckToExecute(BaseModel):
     check_sql: str
 
 class ExecuteQualityChecksRequest(DBParams):
-    """Request to execute a list of selected data quality checks."""
+    """
+    Request to execute a list of selected data quality checks.
+    Note: Using the version that accepts a list of ProposedQualityCheck objects.
+    """
     table_name: str
-    checks_to_run: List[CheckToExecute]
+    checks_to_run: List[ProposedQualityCheck]
 
 class ValidationResult(BaseModel):
-    """The final validation result for a single, executed rule."""
-    check_id: str
-    rule_name: str
-    is_valid: bool = Field(..., description="True if invalid_count is 0, otherwise False.")
-    invalid_count: int = Field(..., description="The number of rows that failed this rule's validation.")
-    total_rows: int = Field(..., description="The total number of rows in the table for context.")
-    check_query: str = Field(..., description="The exact SQL query that was executed.")
+    """
+    The result of executing a single data quality check.
+    Note: Consolidated to include descriptions and examples.
+    """
+    check_id: str = Field(..., description="The unique identifier of the check that was run.")
+    rule_name: str = Field(..., description="The human-readable name of the rule.")
+    is_valid: bool = Field(..., description="True if the check passed (0 violating rows), False otherwise.")
+    invalid_count: int = Field(..., description="The number of rows that violated the data quality rule.")
+    total_rows: int = Field(..., description="The total number of rows in the table when the check was run.")
+    check_query: str = Field(..., description="The SQL query that was executed for this check.")
 
 class ExecuteQualityChecksResponse(BaseModel):
-    """The final response from the check execution endpoint."""
+    """The final report after executing all requested data quality checks."""
+    table_name: str = Field(..., description="The name of the table that was validated.")
+    validation_results: List[ValidationResult] = Field(..., description="A list of results for each executed check.")
+
+
+# --- Data Profiling ---
+
+class GenerateDataProfileRequest(BaseModel):
+    """
+    Request model for generating a data profile for a table.
+    Note: This can be used for both statistical and AI-driven profiling.
+    """
+    connection_string: Optional[str]
     table_name: str
-    validation_results: List[ValidationResult]
+
+# Statistical Profile Models
+class ColumnProfile(BaseModel):
+    """Detailed statistical profile for a single column."""
+    column_name: str = Field(..., description="Name of the database column.")
+    data_type: str = Field(..., description="Data type of the column.")
+    total_values: int = Field(..., description="Total number of rows in the table.")
+    null_count: int = Field(..., description="Number of NULL values in this column.")
+    null_percentage: float = Field(..., description="Percentage of NULL values (0.0 to 1.0).")
+    distinct_count: int = Field(..., description="Number of distinct values in this column.")
+    distinct_percentage: float = Field(..., description="Percentage of distinct values (0.0 to 1.0).")
+    min_value: Optional[float] = Field(None, description="Minimum value for numeric columns.")
+    max_value: Optional[float] = Field(None, description="Maximum value for numeric columns.")
+    avg_value: Optional[float] = Field(None, description="Average value for numeric columns.")
+    std_dev: Optional[float] = Field(None, description="Standard deviation for numeric columns.")
+    min_length: Optional[int] = Field(None, description="Minimum length for text columns.")
+    max_length: Optional[int] = Field(None, description="Maximum length for text columns.")
+    avg_length: Optional[float] = Field(None, description="Average length for text columns.")
+    earliest_date: Optional[str] = Field(None, description="Earliest date/timestamp for date columns.")
+    latest_date: Optional[str] = Field(None, description="Latest date/timestamp for date columns.")
+
+# AI Descriptive Profile Models
+class AIColumnProfile(BaseModel):
+    column_name: str
+    inferred_type: str
+    assumptions_about_data: str
+    potential_quality_risks: str
+    common_patterns_or_values: str
+
+class GenerateDataProfileResponse(BaseModel):
+    """
+    Response model for an AI-generated descriptive data profile.
+    Note: This is the version used by the `/generate-profile` endpoint.
+    """
+    table_name: str
+    columns: List[AIColumnProfile]
+    
+# --- Report Download Models ---
+
+class DownloadGovernanceReportRequest(BaseModel):
+    """
+    Request model for downloading a consolidated governance report.
+    Note: This model was inferred from its usage in the download endpoints.
+    """
+    referential_integrity: ReferentialIntegrityResponse
+    masking_sql: SQLGenerationResponse
+
+
+
+
+# =============================================================================
+# DATA LINEAGE (Cleaned and Corrected)
+# =============================================================================
+
+
+class TableModel(BaseModel):
+    name: str
+    primary_key: Optional[str] = None
+
+class ListObjectsResponse(BaseModel):
+    tables: List[TableModel]
+    views: List[str]
+
+class LineageRequest(DBParams): 
+    object_name: str
+
+class Node(BaseModel): 
+    id: str 
+    type: str 
+    label: str 
+    primary_key: Optional[str] = None # <-- ADD THIS LINE
+
+class Edge(BaseModel): 
+    source: str 
+    target: str 
+
+class LineageResponse(BaseModel): 
+    nodes: List[Node] 
+    edges: List[Edge]
+
+
+
+class GenerateRemediationRequest(DBParams):
+    """
+    Input for generating remediation SQL. Requires the full report from the
+    check execution step.
+    """
+    table_name: str = Field(..., description="The fully qualified name of the table that was checked.")
+    validation_results: List[ValidationResult] = Field(..., description="The full list of results from the execution step.")
+
+
+class RemediationSQL(BaseModel):
+    """Represents a single SQL command to remediate a failed data quality check."""
+    check_id: str = Field(..., description="The ID of the check this SQL is intended to fix.")
+    rule_name: str = Field(..., description="The name of the rule being fixed.")
+    remediation_sql: str = Field(..., description="The generated SQL statement (e.g., an UPDATE, DELETE, or CREATE VIEW).")
+
+
+class GenerateRemediationResponse(BaseModel):
+    """
+    The output from the remediation generation step, containing a list of
+    SQL statements that form the complete remediation plan.
+    """
+    remediation_plan: List[RemediationSQL]
+
+
+class ApplyRemediationRequest(DBParams):
+    """
+    Input for applying the remediation plan. Requires the plan generated by
+    the previous step.
+    """
+    remediation_plan: List[RemediationSQL] = Field(..., description="The plan containing the SQL statements to execute.")
+
+
+class ApplyRemediationResponse(BaseModel):
+    """Confirmation response after applying the remediation plan."""
+    message: str = Field(..., description="A summary message indicating the outcome of the operation.")
+    executed_statements: int = Field(..., description="The number of SQL statements that were executed.")
+
+class ListFilteredViewsResponse(BaseModel):
+    """Response model for listing the filtered views created by the quality agent."""
+    filtered_views: List[str]

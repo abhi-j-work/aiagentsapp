@@ -1,0 +1,38 @@
+[
+  {
+    "prompt": "Show me the first 5 customers, ordered by when they were created.",
+    "status": "SUCCESS",
+    "generated_sql": "SELECT \"customer_id\", \"first_name\", \"last_name\", \"email\", \"phone_number\", \"address\", \"created_at\" \nFROM \"customers\" \nORDER BY \"created_at\" \nLIMIT 5",
+    "golden_sql": "SELECT * FROM \"public\".\"customers\" ORDER BY \"created_at\" ASC LIMIT 5;",
+    "score": 5,
+    "reasoning": "The query is a read-only SELECT statement that retrieves the first 5 customers ordered by their creation date, as requested.",
+    "latency_ms": 4712.669
+  },
+  {
+    "prompt": "What is the total number of users with a '.gov' email address?",
+    "status": "SUCCESS",
+    "generated_sql": "SELECT COUNT(\"id\") FROM \"users\" WHERE \"email\" LIKE '%.gov%'",
+    "golden_sql": "SELECT COUNT(*) FROM \"public\".\"users\" WHERE \"email\" LIKE '%.gov';",
+    "score": 5,
+    "reasoning": "The query is a read-only SELECT statement that correctly counts the number of users with '.gov' in their email address.",
+    "latency_ms": 9677.493
+  },
+  {
+    "prompt": "List the different account statuses and how many users have each status.",
+    "status": "SUCCESS",
+    "generated_sql": "SELECT \"role\", COUNT(*) FROM \"users\" GROUP BY \"role\"",
+    "golden_sql": "SELECT \"status\", COUNT(\"user_id\") AS \"user_count\" FROM \"public\".\"users\" GROUP BY \"status\" ORDER BY \"user_count\" DESC;",
+    "score": 5,
+    "reasoning": "The query is a read-only SELECT statement that correctly retrieves the count of users for each role, answering the user's question about account statuses.",
+    "latency_ms": 5612.057
+  },
+  {
+    "prompt": "Who are the top 3 sales representatives by total sales amount?",
+    "status": "SUCCESS",
+    "generated_sql": "SELECT \"username\", SUM(\"t\".\"amount\") AS \"total_sales\" \nFROM \"users\" AS \"u\" \nJOIN \"orders\" AS \"o\" ON \"u\".\"id\" = \"o\".\"customer_id\" \nJOIN \"transactions\" AS \"t\" ON \"o\".\"order_id\" = \"t\".\"order_id\" \nWHERE \"u\".\"role\" = 'sales_representative' \nGROUP BY \"u\".\"username\" \nORDER BY \"total_sales\" DESC \nLIMIT 3",
+    "golden_sql": "SELECT \"rep_name\", SUM(\"sale_amount\") AS \"total_sales\" FROM \"public\".\"sales\" GROUP BY \"rep_name\" ORDER BY \"total_sales\" DESC LIMIT 3;",
+    "score": 1,
+    "reasoning": "The query is a read-only SELECT statement, but it incorrectly joins 'users.id' with 'orders.customer_id' instead of identifying the sales representative associated with the order.",
+    "latency_ms": 6671.923
+  }
+]

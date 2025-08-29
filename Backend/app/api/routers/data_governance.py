@@ -1,12 +1,16 @@
+import io
 import logging
 import json
+from turtle import pd
 from typing import Optional
+import docx
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import StreamingResponse
 from pydantic import ValidationError
 
 from app.core.config import Settings, get_settings # type: ignore
 from app.api import models # type: ignore
-from app.services import db_service, llm_service # type: ignore
+from app.services import db_service, evaluation_service, llm_service, notification # type: ignore
 from app.services.errors import DatabaseServiceError, LLMServiceError # type: ignore
 
 logger = logging.getLogger(__name__)    
@@ -149,6 +153,21 @@ async def classify_data(
             system_prompt, user_prompt, response_format={"type": "json_object"}
         )
         
+        classification_report = models.ClassificationResponse.model_validate_json(response_json_str)
+        
+        # logger.info("Evaluating generated classification with LLM Judge...")
+        # evaluation_result = await evaluation_service.judge_data_classification(
+        #     schema_str=json.dumps(schema_to_classify.model_dump(mode='json'), indent=2),
+        #     classification_results=classification_report.model_dump(mode='json')["classification_results"]
+        # )
+        # classification_report.evaluation = evaluation_result
+        
+        try:
+            await notification.send_data_classification_alert(classification_report)
+        except Exception as e:
+            logger.error(f"Failed to send data classification notification: {e}")
+        
+        # return classification_report
         logger.info(f"Raw classification response from AI: {response_json_str}")
         return models.ClassificationResponse.model_validate_json(response_json_str)
     except (ValidationError, json.JSONDecodeError) as e:
@@ -163,7 +182,7 @@ async def generate_masking_sql(
     settings: Settings = Depends(get_settings),
     llm_service_instance: llm_service.LLMService = Depends(llm_service.get_llm_service)
 ):
-    try:
+    try:    
         system_prompt = """
         You are a meticulous, senior PostgreSQL database administrator. Your only task is to generate a JSON data masking plan that produces 100% syntactically correct and executable PostgreSQL SQL.
         **Golden Rules - You MUST follow these without exception:**
@@ -178,6 +197,9 @@ async def generate_masking_sql(
             - For `timestamp`, `timestamptz`, `date`: Use `'1970-01-01 00:00:00'::timestamp`.
             - For `boolean`: Use `FALSE::boolean`.
             - For `uuid`: Use `'00000000-0000-0000-0000-000000000000'::uuid`.
+            - The condition for seeing unmasked data is `current_user = 'admin'`.
+            - The final `CASE` statement structure is: `CASE WHEN current_user = 'admin' THEN "column_name" ELSE [MASKING_LOGIC_WITH_CAST] END AS "column_name"`.
+            - Provide default date only for timestamp columns and not for other data types.
         4.  **Referential Integrity is Sacred:** Columns classified as 'PK' (Primary Key) or 'FK' (Foreign Key) MUST NEVER be masked. Their `select_expression` must be only the double-quoted column name.
         **Input Context:**
         You will receive a JSON array describing tables. For each column, you are given its `column_name`, `data_type`, and `classification`. Use this information to apply the Golden Rules correctly.
@@ -196,8 +218,8 @@ async def generate_masking_sql(
             `"select_expression": "\"id\""`
         *   **For a non-sensitive `created_at` column (data_type: timestamp):**
             `"select_expression": "\"created_at\""`
+        5. Output Response:-  - **Input:** A JSON object with a list of tables. The `table_name` key in the input JSON **should only contain the base name of the table** (e.g., "customers", NOT "public.customers"). 
         """
-
         user_prompt_data = [table.model_dump() for table in params.classification_results]
         user_prompt = f"Generate the JSON masking plan for this classification:\n{json.dumps(user_prompt_data, indent=2)}"
         
@@ -326,3 +348,57 @@ async def fetch_governed_view_data(
     except Exception as e:
         logger.error(f"Unexpected error fetching view data: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
+    
+@router.post("/download/governance-report/excel", response_class=StreamingResponse)
+async def download_governance_report_excel(params: models.DownloadGovernanceReportRequest):
+    try:
+        relationships_df = pd.DataFrame([item.model_dump() for item in params.referential_integrity.relationship_explanations])
+        foundational_df = pd.DataFrame([item.model_dump() for item in params.referential_integrity.foundational_tables])
+        sql_df = pd.DataFrame(params.masking_sql.sql_statements, columns=["SQL Masking Statement"])
+
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+            relationships_df.to_excel(writer, sheet_name='Referential Integrity', index=False)
+            foundational_df.to_excel(writer, sheet_name='Foundational Tables', index=False)
+            sql_df.to_excel(writer, sheet_name='Masking SQL Plan', index=False)
+        
+        buffer.seek(0)
+        headers = {'Content-Disposition': 'attachment; filename=Data_Governance_Report.xlsx'}
+        return StreamingResponse(buffer, media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers=headers)
+    except Exception as e:
+        logger.error(f"Failed to generate Excel report: {e}")
+        raise HTTPException(status_code=500, detail="Could not generate Excel file.")
+
+
+@router.post("/download/governance-report/word", response_class=StreamingResponse)
+async def download_governance_report_word(params: models.DownloadGovernanceReportRequest):
+    try:
+        document = docx.Document()
+        document.add_heading('Data Governance Report', level=0)
+        
+        document.add_heading('Data Relationships (Referential Integrity)', level=1)
+        for item in params.referential_integrity.relationship_explanations:
+            document.add_paragraph(f"Rule: Every entry in `{item.from_table}` must correspond to an entry in `{item.to_table}`.", style='Intense Quote')
+            document.add_paragraph(f"Business Context: {item.business_rule}")
+            document.add_paragraph(f"Impact of Change: {item.impact_of_change}\n")
+        
+        document.add_heading('Foundational Data Tables', level=1)
+        for item in params.referential_integrity.foundational_tables:
+            p = document.add_paragraph()
+            p.add_run('Table: ').bold = True
+            p.add_run(item.table_name).bold = True
+            document.add_paragraph(f"Business Role: {item.business_role}")
+            document.add_paragraph(f"Impact of Change: {item.impact_of_change}\n")
+
+        document.add_heading('Data Masking SQL Plan', level=1)
+        full_sql_script = ";\n\n".join(params.masking_sql.sql_statements) + ";"
+        document.add_paragraph(full_sql_script)
+        
+        buffer = io.BytesIO()
+        document.save(buffer)
+        buffer.seek(0)
+        headers = {'Content-Disposition': 'attachment; filename=Data_Governance_Report.docx'}
+        return StreamingResponse(buffer, media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document', headers=headers)
+    except Exception as e:
+        logger.error(f"Failed to generate Word report: {e}")
+        raise HTTPException(status_code=500, detail="Could not generate Word file.")

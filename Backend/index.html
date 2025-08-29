@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infographic: The AI Data Governance Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .kpi-value {
+            font-weight: 900;
+            color: #ff7c43;
+        }
+        .flow-line {
+            height: 4px;
+            background-color: #ff7c43;
+            flex-grow: 1;
+            background-image: linear-gradient(to right, #ff7c43 50%, transparent 50%);
+            background-size: 16px 4px;
+        }
+        .flow-arrow-h {
+            width: 0;
+            height: 0;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            border-left: 10px solid #ff7c43;
+        }
+         .flow-arrow-v {
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid #ff7c43;
+        }
+        .gemini-btn {
+            background-color: #665191;
+            color: white;
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s;
+        }
+        .gemini-btn:hover {
+            background-color: #a05195;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #665191;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+ 
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+ 
+        <header class="text-center py-12">
+            <h1 class="text-4xl md:text-6xl font-black text-[#003f5c]">Automate Data Governance with AI</h1>
+            <p class="mt-4 text-lg md:text-xl text-[#2f4b7c] max-w-3xl mx-auto">An intelligent agent that transforms complex, manual data management into a secure, efficient, and automated workflow.</p>
+        </header>
+ 
+        <section id="challenge" class="my-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold text-[#665191]">Manual Classification Risk</h3>
+                    <p class="kpi-value text-5xl mt-2">85%</p>
+                    <p class="mt-2 text-gray-600">of data breaches are caused by human error, making manual PII handling a significant liability.</p>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold text-[#a05195]">Compliance Overhead</h3>
+                    <p class="kpi-value text-5xl mt-2">40+</p>
+                    <p class="mt-2 text-gray-600">hours per week spent by data teams on manual compliance checks and reporting.</p>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold text-[#d45087]">Delayed Insights</h3>
+                    <p class="kpi-value text-5xl mt-2">7-10</p>
+                    <p class="mt-2 text-gray-600">days for a non-technical user to get a simple data query fulfilled through traditional ticketing systems.</p>
+                </div>
+            </div>
+        </section>
+ 
+        <section id="architecture" class="my-20">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#003f5c] mb-12">Solution Architecture: An AI-Powered Ecosystem</h2>
+            <div class="card p-6 md:p-10">
+                <div class="flex flex-col md:flex-row justify-between items-center space-y-8 md:space-y-0 md:space-x-4 text-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-[#cde4ff] text-[#003f5c] p-4 rounded-full w-32 h-32 flex items-center justify-center text-4xl shadow-lg">👤</div>
+                        <p class="mt-2 font-bold">User / Data Steward</p>
+                    </div>
+                    <div class="flex items-center flex-grow md:flex-grow-0 md:flex-col w-full md:w-auto"><div class="flow-arrow-v hidden md:block rotate-90"></div></div>
+                    <div class="bg-white p-6 rounded-xl shadow-inner border border-gray-200 w-full md:w-auto">
+                        <div class="text-xl font-bold text-[#2f4b7c]">Presentation Layer</div>
+                        <div class="bg-[#e6ffc2] text-green-800 p-3 rounded-lg mt-2 shadow-sm">🌐 UI Web App</div>
+                        <p class="text-sm mt-2 text-gray-500">User Interface for all agent interactions.</p>
+                    </div>
+                     <div class="flex items-center flex-grow md:flex-grow-0 md:flex-col w-full md:w-auto"><div class="flow-arrow-v hidden md:block rotate-90"></div></div>
+                    <div class="bg-white p-6 rounded-xl shadow-inner border border-gray-200 w-full md:w-auto">
+                         <div class="text-xl font-bold text-[#2f4b7c]">Logic & AI Services</div>
+                        <div class="flex space-x-2 mt-2 justify-center">
+                           <div class="bg-[#ffe6cc] text-orange-800 p-3 rounded-lg shadow-sm">🐍 Core Logic</div>
+                           <div class="bg-[#ffcccc] text-red-800 p-3 rounded-lg shadow-sm">🧠 LLM</div>
+                        </div>
+                        <p class="text-sm mt-2 text-gray-500">Handles automation, classification, and generation.</p>
+                    </div>
+                    <div class="flex items-center flex-grow md:flex-grow-0 md:flex-col w-full md:w-auto"><div class="flow-arrow-v hidden md:block rotate-90"></div></div>
+                    <div class="flex-shrink-0">
+                        <div class="bg-[#d1c4e9] text-[#673ab7] p-4 rounded-full w-32 h-32 flex items-center justify-center text-4xl shadow-lg">🐘</div>
+                        <p class="mt-2 font-bold">Database</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+ 
+        <section id="workflow" class="my-20">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#003f5c] mb-12">The Automated Governance Workflow</h2>
+            <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center text-center space-y-8 md:space-y-0">
+                <div class="absolute top-12 left-0 w-full h-1 bg-[#ff7c43] -z-10 hidden md:block" style="background-image: linear-gradient(to right, #ff7c43 50%, transparent 50%); background-size: 20px 4px;"></div>
+                <div class="flex flex-col items-center z-10 w-full md:w-1/5">
+                    <div class="bg-[#ffa600] text-white rounded-full w-24 h-24 flex items-center justify-center text-4xl font-black shadow-lg border-4 border-white">1</div>
+                    <h3 class="font-bold mt-4 text-lg text-[#003f5c]">Extract & Enrich</h3>
+                    <p class="text-sm text-gray-600 mt-1">Automatically connects to the database and pulls the schema for analysis.</p>
+                </div>
+                <div class="flex flex-col items-center z-10 w-full md:w-1/5">
+                    <div class="bg-[#f95d6a] text-white rounded-full w-24 h-24 flex items-center justify-center text-4xl font-black shadow-lg border-4 border-white">2</div>
+                    <h3 class="font-bold mt-4 text-lg text-[#003f5c]">Classify Columns</h3>
+                    <p class="text-sm text-gray-600 mt-1">The LLM analyzes the schema and intelligently classifies columns as PII or sensitive.</p>
+                </div>
+                <div class="flex flex-col items-center z-10 w-full md:w-1/5">
+                    <div class="bg-[#d45087] text-white rounded-full w-24 h-24 flex items-center justify-center text-4xl font-black shadow-lg border-4 border-white">3</div>
+                    <h3 class="font-bold mt-4 text-lg text-[#003f5c]">Generate SQL</h3>
+                    <p class="text-sm text-gray-600 mt-1">Generates data masking SQL views based on the AI classifications.</p>
+                </div>
+                <div class="flex flex-col items-center z-10 w-full md:w-1/5">
+                    <div class="bg-[#a05195] text-white rounded-full w-24 h-24 flex items-center justify-center text-4xl font-black shadow-lg border-4 border-white">4</div>
+                    <h3 class="font-bold mt-4 text-lg text-[#003f5c]">Review & Refine</h3>
+                    <p class="text-sm text-gray-600 mt-1">An AI peer-review checks the generated SQL for syntax and logic errors before application.</p>
+                </div>
+                <div class="flex flex-col items-center z-10 w-full md:w-1/5">
+                    <div class="bg-[#665191] text-white rounded-full w-24 h-24 flex items-center justify-center text-4xl font-black shadow-lg border-4 border-white">5</div>
+                    <h3 class="font-bold mt-4 text-lg text-[#003f5c]">Apply Views</h3>
+                    <p class="text-sm text-gray-600 mt-1">Safely applies the reviewed views to the database, ensuring data is masked at the source.</p>
+                </div>
+            </div>
+        </section>
+ 
+        <section id="capabilities" class="my-20">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#003f5c] mb-12">Core Capabilities Deep Dive</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card p-6 flex flex-col">
+                    <h3 class="text-xl font-bold text-[#003f5c] mb-4">AI-Powered PII Classification</h3>
+                    <p class="text-gray-600 mb-4">The agent uses an LLM to scan schemas and intelligently tag columns, distinguishing between sensitive PII, foreign keys, and general data with high accuracy.</p>
+                    <div class="chart-container flex-grow h-64 md:h-80"><canvas id="classificationChart"></canvas></div>
+                </div>
+                <div class="card p-6 flex flex-col">
+                    <h3 class="text-xl font-bold text-[#003f5c] mb-4">Automated Data Quality Checks</h3>
+                     <p class="text-gray-600 mb-4">Instead of relying on rigid rules, the agent leverages an LLM to find semantically invalid data, such as improperly formatted phone numbers, emails, or dates.</p>
+                    <div class="chart-container flex-grow h-64 md:h-80"><canvas id="qualityChart"></canvas></div>
+                </div>
+                <div class="md:col-span-2 card p-6">
+                    <h3 class="text-xl font-bold text-center text-[#003f5c] mb-4">Natural Language to SQL (NL-to-SQL)</h3>
+                    <p class="text-gray-600 text-center mb-6 max-w-2xl mx-auto">Empower non-technical users to query data directly using plain English. The agent translates their questions into executable SQL, runs it, and returns the results instantly.</p>
+                    <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-8">
+                        <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg w-full md:w-2/5">
+                            <p class="font-semibold text-blue-800">👤 User Asks:</p>
+                            <p class="mt-2 text-blue-700 italic">"Show me the total sales for the last quarter, grouped by product category."</p>
+                        </div>
+                        <div class="text-3xl font-bold text-[#ff7c43]">→</div>
+                        <div class="bg-gray-800 text-white p-4 rounded-lg font-mono text-sm w-full md:w-2/5 overflow-x-auto">
+                            <span class="text-purple-400">SELECT</span><br>
+                            <span class="text-green-400">  product_category,</span><br>
+                            <span class="text-green-400">  SUM(sales_amount)</span><br>
+                            <span class="text-purple-400">FROM</span> sales<br>
+                            <span class="text-purple-400">WHERE</span> sale_date >= '...'<br>
+                            <span class="text-purple-400">GROUP BY</span> 1;
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+ 
+        <section id="benefits" class="my-20 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#003f5c] mb-12">Tangible Outcomes & Business Impact</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div class="card p-6">
+                    <h3 class="text-xl font-bold text-[#003f5c] mb-4">Operational Efficiency Gains</h3>
+                    <p class="text-gray-600 mb-4">Reduce time spent on manual governance tasks from weeks to minutes.</p>
+                    <div class="chart-container h-64 md:h-80"><canvas id="efficiencyChart"></canvas></div>
+                </div>
+                 <div class="card p-6 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-[#003f5c] mb-4">Enhanced Data Security Posture</h3>
+                        <p class="text-gray-600 mb-4">Automated masking and quality checks minimize risk and ensure compliance.</p>
+                        <div class="chart-container h-64 md:h-72"><canvas id="securityChart"></canvas></div>
+                    </div>
+                    <div class="mt-6">
+                         <button id="suggestStepsBtn" class="gemini-btn">✨ Suggest Next Steps</button>
+                         <div id="stepsLoader" class="hidden mx-auto spinner"></div>
+                         <div id="stepsResult" class="text-left mt-4"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+       
+        <section id="gemini-explainer" class="my-20">
+             <h2 class="text-3xl md:text-4xl font-bold text-center text-[#003f5c] mb-12">Bringing It All Together</h2>
+             <div class="card p-8 text-center max-w-4xl mx-auto">
+                 <h3 class="text-2xl font-bold text-[#003f5c] mb-4">AI-Generated Data Policy Explainer</h3>
+                 <p class="text-gray-600 mb-6">What do all these automated actions mean for your organization? Click below to have Gemini generate a plain-English summary of your new, AI-enhanced data governance policy.</p>
+                 <button id="explainPolicyBtn" class="gemini-btn">✨ Generate Plain-English Policy Explanation</button>
+                 <div id="policyLoader" class="hidden mx-auto mt-6 spinner"></div>
+                 <div id="policyResult" class="hidden text-left mt-6 bg-gray-50 p-6 rounded-lg border"></div>
+             </div>
+        </section>
+ 
+    </div>
+ 
+    <script>
+        const explainPolicyBtn = document.getElementById('explainPolicyBtn');
+        const policyLoader = document.getElementById('policyLoader');
+        const policyResult = document.getElementById('policyResult');
+        const suggestStepsBtn = document.getElementById('suggestStepsBtn');
+        const stepsLoader = document.getElementById('stepsLoader');
+        const stepsResult = document.getElementById('stepsResult');
+       
+        explainPolicyBtn.addEventListener('click', generatePolicyExplanation);
+        suggestStepsBtn.addEventListener('click', suggestNextSteps);
+ 
+        async function generatePolicyExplanation() {
+            policyLoader.classList.remove('hidden');
+            explainPolicyBtn.classList.add('hidden');
+            policyResult.classList.add('hidden');
+           
+            const context = `
+                Based on an infographic for a Data Governance AI Agent, which shows the following:
+                - The agent automates PII classification, reducing human error.
+                - It generates SQL views to mask sensitive data automatically.
+                - It performs AI-driven data quality checks to find invalid records.
+                - It enables Natural Language to SQL queries for faster data access.
+                - Key benefits shown are massive reductions in manual labor hours and enhanced data security.
+            `;
+            const prompt = `You are a data governance expert. Based on the following context, write a concise, plain-English summary (3-4 paragraphs) of what this new, AI-enhanced data governance policy means for a company. Explain the shift from manual to automated enforcement and what employees can expect. The tone should be authoritative but clear and encouraging. Context: ${context}`;
+           
+            let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+            const payload = { contents: chatHistory };
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+ 
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+               
+                if (result.candidates && result.candidates[0]?.content?.parts[0]?.text) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    policyResult.innerHTML = text.replace(/\n/g, '<br><br>');
+                    policyResult.classList.remove('hidden');
+                } else {
+                    policyResult.innerHTML = "Sorry, an error occurred while generating the explanation.";
+                    policyResult.classList.remove('hidden');
+                }
+            } catch (error) {
+                policyResult.innerHTML = "Error connecting to the AI service. Please try again later.";
+                policyResult.classList.remove('hidden');
+            } finally {
+                policyLoader.classList.add('hidden');
+            }
+        }
+       
+        async function suggestNextSteps() {
+            stepsLoader.classList.remove('hidden');
+            suggestStepsBtn.classList.add('hidden');
+            stepsResult.innerHTML = '';
+           
+            const context = `
+                An organization has implemented a new AI Data Governance Agent. A chart shows that this has significantly enhanced their data security posture, moving from a high-risk manual state to 85% automated coverage.
+            `;
+            const prompt = `Based on the context that an organization has successfully automated 85% of its data security coverage with an AI agent, provide three distinct and actionable next steps to further improve their data governance. Context: ${context}`;
+ 
+            const payload = {
+              contents: [{ role: "user", parts: [{ text: prompt }] }],
+              generationConfig: {
+                  responseMimeType: "application/json",
+                  responseSchema: {
+                      type: "OBJECT",
+                      properties: {
+                          "next_steps": {
+                              "type": "ARRAY",
+                              "items": {
+                                  "type": "OBJECT",
+                                  "properties": {
+                                      "step_title": { "type": "STRING" },
+                                      "step_description": { "type": "STRING" }
+                                  },
+                                  "required": ["step_title", "step_description"]
+                              }
+                          }
+                      },
+                      required: ["next_steps"]
+                  }
+              }
+          };
+ 
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+ 
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+               
+                if (result.candidates && result.candidates[0]?.content?.parts[0]?.text) {
+                    const jsonText = result.candidates[0].content.parts[0].text;
+                    const parsedJson = JSON.parse(jsonText);
+                   
+                    if(parsedJson.next_steps && parsedJson.next_steps.length > 0) {
+                        let html = '<ul class="space-y-4">';
+                        parsedJson.next_steps.forEach(step => {
+                            html += `<li class="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                                <h4 class="font-bold text-[#665191]">${step.step_title}</h4>
+                                <p class="text-gray-700 mt-1">${step.step_description}</p>
+                            </li>`;
+                        });
+                        html += '</ul>';
+                        stepsResult.innerHTML = html;
+                    } else {
+                         stepsResult.innerHTML = "<p>Could not generate structured next steps.</p>";
+                    }
+                } else {
+                     stepsResult.innerHTML = "<p>Sorry, an error occurred while generating suggestions.</p>";
+                }
+            } catch (error) {
+                 stepsResult.innerHTML = "<p>Error connecting to the AI service. Please try again later.</p>";
+            } finally {
+                stepsLoader.classList.add('hidden');
+            }
+        }
+ 
+        function wrapText(str, maxWidth) {
+            if (str.length <= maxWidth) return str;
+            const words = str.split(' ');
+            let lines = [];
+            let currentLine = words[0];
+            for (let i = 1; i < words.length; i++) {
+                if ((currentLine + " " + words[i]).length > maxWidth) {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                } else {
+                    currentLine += " " + words[i];
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
+ 
+        const tooltipTitleCallback = (tooltipItems) => {
+            const item = tooltipItems[0];
+            let label = item.chart.data.labels[item.dataIndex];
+            if (Array.isArray(label)) return label.join(' ');
+            return label;
+        };
+ 
+        const chartColors = {
+            primary: '#ff7c43', secondary: '#f95d6a', tertiary: '#d45087',
+            accent1: '#a05195', accent2: '#665191', neutral: '#003f5c',
+            lightGray: 'rgba(0, 0, 0, 0.1)'
+        };
+ 
+        const defaultChartOptions = {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#2f4b7c', font: { size: 14 }}},
+                tooltip: { callbacks: { title: tooltipTitleCallback }, backgroundColor: 'rgba(0, 63, 92, 0.9)', titleFont: { size: 16 }, bodyFont: { size: 14 }, padding: 12, cornerRadius: 8 }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { color: '#2f4b7c', font: { size: 12 } }, grid: { color: chartColors.lightGray } },
+                x: { ticks: { color: '#2f4b7c', font: { size: 12 } }, grid: { display: false } }
+            }
+        };
+        const defaultDoughnutOptions = {
+             responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#2f4b7c', font: { size: 14 }}},
+                tooltip: { callbacks: { title: tooltipTitleCallback }, backgroundColor: 'rgba(0, 63, 92, 0.9)', titleFont: { size: 16 }, bodyFont: { size: 14 }, padding: 12, cornerRadius: 8 }
+            },
+            cutout: '60%'
+        };
+       
+        new Chart(document.getElementById('classificationChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Non-Sensitive', 'Personally Identifiable (PII)', wrapText('Other Sensitive Data', 16), 'Foreign Keys'],
+                datasets: [{ label: 'Column Classification', data: [250, 45, 15, 80], backgroundColor: [chartColors.neutral, chartColors.secondary, chartColors.tertiary, chartColors.primary], borderColor: '#ffffff', borderWidth: 4 }]
+            },
+            options: defaultDoughnutOptions
+        });
+       
+        new Chart(document.getElementById('qualityChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Email Fields', 'Phone Numbers', 'Date of Birth'],
+                datasets: [
+                    { label: 'Valid Records', data: [9850, 9700, 9950], backgroundColor: chartColors.accent2, borderRadius: 4 },
+                    { label: 'Invalid Records Found by AI', data: [150, 300, 50], backgroundColor: chartColors.secondary, borderRadius: 4 }
+                ]
+            },
+            options: { ...defaultChartOptions, scales: { x: { stacked: true }, y: { stacked: true } } }
+        });
+ 
+        new Chart(document.getElementById('efficiencyChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: [wrapText('Manual Governance Process', 16), wrapText('AI Agent Automated Process', 16)],
+                datasets: [{ label: 'Time to Implement Policy (Hours)', data: [80, 2], backgroundColor: [chartColors.secondary, chartColors.accent2], barThickness: 50, }]
+            },
+            options: { ...defaultChartOptions, indexAxis: 'y', plugins: { legend: { display: false } } }
+        });
+ 
+        new Chart(document.getElementById('securityChart').getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: [wrapText('Human Error Risk (Manual)', 16), wrapText('Automated Coverage (AI)', 16)],
+                datasets: [{ data: [15, 85], backgroundColor: ['#ff7c43', '#003f5c'], borderColor: '#ffffff', borderWidth: 4 }]
+            },
+            options: { ...defaultDoughnutOptions, cutout: '0%' }
+        });
+    </script>
+</body>
+</html>
