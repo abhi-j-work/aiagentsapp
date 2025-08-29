@@ -1,27 +1,42 @@
 version: '3.8'
 
 services:
+  # MLflow for experiment tracking
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.9.2
-    user: "0:0"
     ports:
       - "5000:5000"
     volumes:
+      # Using a named volume for permissions stability
       - mlruns_data:/mlruns
-    command: >
-      sh -c "chmod -R 777 /mlruns && \
-             mlflow server \
-             --host 0.0.0.0 \
-             --port 5000 \
-             --backend-store-uri sqlite:///mlruns/mlflow.db \
-             --default-artifact-root /mlruns"
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlruns/mlflow.db --default-artifact-root /mlruns
 
+  # Redis as the Celery message broker
   redis:
     image: redis:7
     ports:
       - "6379:6379"
 
-adminer:
+  # =============================================================
+  # --- MISSING SERVICES RE-ADDED BELOW ---
+  # =============================================================
+
+  # PostgreSQL Database Service
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"
+    volumes:
+      # Using a named volume for persistent database data
+      - postgres_data:/var/lib/postgresql/data
+
+  # Adminer for a simple database UI
+  adminer:
     image: adminer
     restart: always
     ports:

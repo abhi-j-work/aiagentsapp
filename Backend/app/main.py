@@ -24,7 +24,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 origins = [
-    "http://localhost:5173",
+    "http://127.0.0.1:5173",
     "https://refactored-waddle-5gq7qq9xx77397v-5173.app.github.dev"
 ]
 

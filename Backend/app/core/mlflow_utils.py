@@ -30,6 +30,8 @@ def setup_mlflow():
 def create_or_get_experiment(experiment_name: str) -> str:
     """
     Creates an MLflow experiment if it doesn't exist, or returns the existing one.
+    This function includes a safe, robust workaround for a common issue in containerized
+    setups where the default artifact location is not writable by the client container.
 
     Args:
         experiment_name (str): The name of the experiment.
@@ -39,11 +41,31 @@ def create_or_get_experiment(experiment_name: str) -> str:
     """
     setup_mlflow()
     client = MlflowClient()
+    
+    # Use a configurable, writable artifact root. This avoids hardcoding paths
+    # and provides a non-root default that works in the container.
+    # It can be set via the `MLFLOW_ARTIFACT_ROOT` environment variable.
+    artifact_root = os.getenv("MLFLOW_ARTIFACT_ROOT", "/workspaces/aiagentsapp/mlruns_artifacts")
+    correct_artifact_location = f"{artifact_root}/{experiment_name}"
+
     experiment = client.get_experiment_by_name(experiment_name)
+
     if experiment:
+        # The artifact location is immutable after creation.
+        if experiment.artifact_location != correct_artifact_location:
+            print("---")
+            print("WARNING: MLflow Experiment Misconfiguration Detected!")
+            print(f"The existing experiment '{experiment_name}' has an artifact location of '{experiment.artifact_location}'.")
+            print(f"This may not be writable by the current container, leading to a PermissionError.")
+            print(f"The recommended location is '{correct_artifact_location}'.")
+            print("To fix this, please delete the experiment via the MLflow UI or CLI and let this script recreate it.")
+            print("---")
         return experiment.experiment_id
     else:
-        experiment_id = client.create_experiment(experiment_name)
+        print(f"Creating new experiment '{experiment_name}' with artifact location: '{correct_artifact_location}'")
+        experiment_id = client.create_experiment(
+            experiment_name, artifact_location=correct_artifact_location
+        )
         return experiment_id
 
 def register_model(run_id: str, model_name: str):
