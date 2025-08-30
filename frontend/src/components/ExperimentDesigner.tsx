@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Insight, ExperimentResponse } from '../types';
+import type { Insight, ExperimentResponse } from '../types';
 import { designExperiment } from '../services/api';
 import { useGraph } from '../contexts/GraphContext';
 

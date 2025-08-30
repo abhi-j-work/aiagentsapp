@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { GraphResponse, ExperimentRequest, ExperimentResponse } from '../types';
+import type { GraphResponse, ExperimentRequest, ExperimentResponse } from '../types';
 
 const apiClient = axios.create({
   baseURL: 'http://localhost:8000/api',

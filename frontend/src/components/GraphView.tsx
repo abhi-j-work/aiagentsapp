@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Graph from 'react-graph-vis';
-import { GraphData, Node, Edge } from '../types';
+import type { GraphData } from '../types';
 
 interface GraphViewProps {
   graphData: GraphData;

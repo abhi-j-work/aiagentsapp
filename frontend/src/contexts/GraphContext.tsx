@@ -1,5 +1,5 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
-import { GraphData, Insight } from '../types';
+import React, { createContext, useState, useContext, type ReactNode } from 'react';
+import type { GraphData, Insight } from '../types';
 import * as api from '../services/api';
 
 interface GraphState {
