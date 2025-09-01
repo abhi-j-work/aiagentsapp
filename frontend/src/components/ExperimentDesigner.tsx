@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { designExperimentForPath } from '../services/api';
 import { ExperimentData } from '../types';
+import ExperimentBlueprint from './ExperimentBlueprint';
 
 interface ExperimentDesignerProps {
   selectedPath: string[] | null;
@@ -44,11 +45,7 @@ const ExperimentDesigner: React.FC<ExperimentDesignerProps> = ({ selectedPath, c
       {experiment && (
         <div className="experiment-results">
           {experiment.parsed_json && (
-            <div className="result-section">
-              <h4>{experiment.parsed_json.title || 'Experiment Blueprint'}</h4>
-              <p><b>Hypothesis:</b> {experiment.parsed_json.hypothesis}</p>
-              <pre>{JSON.stringify(experiment.parsed_json.experiment, null, 2)}</pre>
-            </div>
+            <ExperimentBlueprint data={experiment.parsed_json} />
           )}
           {experiment.error && <p className="error">Error: {experiment.error}</p>}
         </div>

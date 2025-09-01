@@ -61,7 +61,12 @@ cd frontend
 # 2. Install the required npm packages
 npm install
 
-# 3. Run the Vite development server
+# 3. Create a frontend environment file
+# Create a new file named .env in the `frontend` directory
+# and add your Backend API URL to it if it's different from the default:
+# VITE_API_BASE_URL="http://127.0.0.1:8000"
+
+# 4. Run the Vite development server
 npm run dev
 ```
 The React development server should now be running. It will typically open a new browser tab automatically, or you can access it at `http://localhost:5173`.

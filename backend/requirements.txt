@@ -13,3 +13,7 @@ langchain-groq>=0.3.7
 pypdf
 pymupdf
 pdfplumber
+
+# Caching
+redis
+hiredis

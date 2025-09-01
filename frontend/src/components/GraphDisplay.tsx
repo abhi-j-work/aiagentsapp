@@ -53,7 +53,17 @@ const GraphDisplay: React.FC<GraphDisplayProps> = ({ graphData, highlightedPath,
   useEffect(() => {
     if (!visJsRef.current) return;
     const options: Options = {
-      physics: { enabled: true, solver: "forceAtlas2Based" },
+      physics: {
+        enabled: true,
+        solver: "forceAtlas2Based",
+        forceAtlas2Based: {
+          gravitationalConstant: -100,
+          centralGravity: 0.01,
+          springLength: 200,
+          springConstant: 0.08,
+        },
+        minVelocity: 0.75,
+      },
       nodes: { shape: 'dot' },
       edges: { width: 1, color: { color: 'rgba(232, 238, 246, 0.3)' }, arrows: { to: { enabled: true, scaleFactor: 0.7 } } },
       interaction: { hover: true, tooltipDelay: 200 }

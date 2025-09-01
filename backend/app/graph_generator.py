@@ -9,6 +9,8 @@ from typing import List, Optional, Any, Tuple, Dict, Set
 
 from dotenv import load_dotenv
 
+from .pdf_utils import extract_text_from_pdf
+
 # Load env (GROQ_API_KEY, optional GROQ_MODEL, etc.)
 load_dotenv()
 
@@ -458,12 +460,9 @@ async def extract_graph_data_llm_only(text: str) -> SimpleGraphDocument:
 
 def generate_graph_from_pdf_bytes(file_bytes: bytes) -> SimpleGraphDocument:
     """Asynchronously extracts text from PDF bytes and runs the pipeline."""
-    try:
-        from pypdf import PdfReader
-        reader = PdfReader(io.BytesIO(file_bytes))
-        text = "\n\n".join([p.extract_text() or "" for p in reader.pages])
-    except Exception as e:
-        raise RuntimeError("Could not extract PDF text. Ensure 'pypdf' is installed.") from e
+    text = extract_text_from_pdf(file_bytes)
+    if not text:
+        raise RuntimeError("Could not extract PDF text.")
 
     return asyncio.run(extract_graph_data_llm_only(text))
 

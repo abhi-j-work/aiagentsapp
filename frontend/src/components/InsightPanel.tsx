@@ -24,6 +24,7 @@ const InsightPanel: React.FC<InsightPanelProps> = ({ insight, onPathSelect }) =>
       <div className="path-list">
         {insight.raw_paths.map((path, index) => (
           <div key={index} className="path-item" onClick={() => onPathSelect(path)}>
+            <span className="path-score">{insight.scores[index].toFixed(2)}</span>
             {path.join(' → ')}
             {insight.causal_candidates[index] && <span className="causal-badge">Causal</span>}
           </div>

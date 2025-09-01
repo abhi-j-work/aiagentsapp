@@ -6,11 +6,13 @@ import ControlPanel from './components/ControlPanel';
 import GraphDisplay from './components/GraphDisplay';
 import InsightPanel from './components/InsightPanel';
 import ExperimentDesigner from './components/ExperimentDesigner';
+import SettingsPanel from './components/SettingsPanel';
 
 function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rawText, setRawText] = useState('');
+  const [activeTab, setActiveTab] = useState('workspace');
   
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [insightData, setInsightData] = useState<InsightData | null>(null);
@@ -66,24 +68,41 @@ function App() {
         <p className="agent-sub">Agentic Knowledge Graph Explorer</p>
       </header>
       
+      <div className="tabs">
+        <button onClick={() => setActiveTab('workspace')} className={activeTab === 'workspace' ? 'active' : ''}>
+          Workspace
+        </button>
+        <button onClick={() => setActiveTab('settings')} className={activeTab === 'settings' ? 'active' : ''}>
+          Settings
+        </button>
+      </div>
+
       <main className="main-grid">
         <div className="left-column">
-          <ControlPanel onGenerate={handleGenerate} isLoading={isLoading} />
-          {insightData && (
-            <InsightPanel insight={insightData} onPathSelect={handlePathSelect} />
-          )}
-          {selectedPath && (
-            <ExperimentDesigner selectedPath={selectedPath} contextText={rawText} />
+          {activeTab === 'workspace' ? (
+            <>
+              <ControlPanel onGenerate={handleGenerate} isLoading={isLoading} />
+              {insightData && (
+                <InsightPanel insight={insightData} onPathSelect={handlePathSelect} />
+              )}
+              {selectedPath && (
+                <ExperimentDesigner selectedPath={selectedPath} contextText={rawText} />
+              )}
+            </>
+          ) : (
+            <SettingsPanel />
           )}
         </div>
         
         <div className="right-column">
-          <GraphDisplay
-            graphData={graphData}
-            highlightedPath={highlightedPath}
-            isLoading={isLoading}
-            error={error}
-          />
+          {activeTab === 'workspace' && (
+            <GraphDisplay
+              graphData={graphData}
+              highlightedPath={highlightedPath}
+              isLoading={isLoading}
+              error={error}
+            />
+          )}
         </div>
       </main>
     </div>

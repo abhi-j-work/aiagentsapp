@@ -28,10 +28,28 @@ export interface InsightData {
   causal_candidates: boolean[];
 }
 
+export interface ParsedExperiment {
+  title: string;
+  hypothesis: string;
+  experiment: {
+    summary: string;
+    controls: string[];
+    materials: string[];
+    steps: string[];
+    measurements: string[];
+    sample_size: number;
+    success_criteria: string;
+    safety_notes?: string;
+  };
+  expected_outcome: string;
+  cost_estimate: string;
+  time_estimate: string;
+}
+
 export interface ExperimentData {
   prompt: string;
   llm_response: string | null;
-  parsed_json: any | null;
+  parsed_json: ParsedExperiment | null;
   error: string | null;
   trace_url?: string;
 }
