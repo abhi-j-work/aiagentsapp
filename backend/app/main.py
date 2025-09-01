@@ -1,117 +1,104 @@
 import os
+import io
 import asyncio
+import traceback
 from typing import List, Dict, Any, Optional
 
-from fastapi import FastAPI, UploadFile, File, HTTPException, Body
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-# Assuming graph_generator.py is in the same directory
+# Import the powerful engine you provided
 from .graph_generator import (
     extract_graph_data_llm_only,
     generate_graph_from_pdf_bytes,
     extract_exceptional_insight,
     generate_experiment_for_path,
-    SimpleGraphDocument,
-    SimpleNode,
-    SimpleRelationship
+    SimpleGraphDocument
 )
 
-# Pydantic Models for API validation and documentation
+# --- Pydantic Models for API Validation and Documentation ---
 class GenerateTextRequest(BaseModel):
-    text: str = Field(..., min_length=10, description="The raw text to process.")
-
-class InsightRequest(BaseModel):
-    nodes: List[SimpleNode]
-    relationships: List[SimpleRelationship]
-    context_text: Optional[str] = Field(None, description="Optional context text for better insight generation.")
+    text: str = Field(..., min_length=10)
 
 class ExperimentRequest(BaseModel):
-    path_nodes: List[str] = Field(..., description="An ordered list of node IDs representing the path.")
-    context_text: Optional[str] = Field(None, description="The full text context for the document.")
+    path_nodes: List[str]
+    context_text: Optional[str] = None
+
+# A unified response model for both generation endpoints
+class GenerationResponse(BaseModel):
+    graph: SimpleGraphDocument
+    insight: Dict[str, Any]
 
 # --- FastAPI App Initialization ---
 app = FastAPI(
     title="Entegris Research Agent API",
-    description="API for extracting knowledge graphs from scientific documents.",
-    version="1.0.0"
+    description="API for the Knowledge Graph extraction engine.",
+    version="1.1.0"
 )
 
 # --- CORS Middleware ---
-# Allows the React frontend (running on a different port) to communicate with this API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"], # Adjust if your frontend runs elsewhere
+    allow_origins=["http://localhost:3000", "http://localhost:5173","https://refactored-waddle-5gq7qq9xx77397v-5173.app.github.dev"], # Add your React dev server URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # --- API Endpoints ---
-
 @app.get("/", tags=["Status"])
 async def root():
-    """Health check endpoint."""
-    return {"status": "ok", "message": "Welcome to the Research Agent API"}
+    return {"status": "ok", "message": "Research Agent API is running"}
 
-@app.post("/api/generate/text", response_model=SimpleGraphDocument, tags=["Knowledge Graph"])
+@app.post("/api/generate/text", response_model=GenerationResponse, tags=["Knowledge Graph"])
 async def generate_from_text(request: GenerateTextRequest):
     """
-    Generates a knowledge graph from a string of text.
+    Generates a graph from raw text and extracts an initial insight.
     """
     try:
-        graph_document = await extract_graph_data_llm_only(request.text)
-        return graph_document
+        graph_doc = await extract_graph_data_llm_only(request.text)
+        insight = await extract_exceptional_insight(graph_doc, context_text=request.text)
+        return {"graph": graph_doc, "insight": insight}
     except Exception as e:
-        # Log the exception details for debugging
-        print(f"Error in /api/generate/text: {e}")
+        print(f"Error in /api/generate/text: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/generate/file", response_model=SimpleGraphDocument, tags=["Knowledge Graph"])
+@app.post("/api/generate/file", response_model=GenerationResponse, tags=["Knowledge Graph"])
 async def generate_from_file(file: UploadFile = File(...)):
     """
-    Generates a knowledge graph from an uploaded PDF file.
+    Generates a graph from an uploaded PDF or TXT file.
     """
-    if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="Invalid file type. Please upload a PDF.")
-
     try:
         file_bytes = await file.read()
-        # This function is synchronous in the refactored code, but we can run it in a thread
-        # to avoid blocking the event loop for a long time.
-        graph_document = await asyncio.to_thread(generate_graph_from_pdf_bytes, file_bytes)
-        return graph_document
-    except Exception as e:
-        print(f"Error in /api/generate/file: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        filename = file.filename or ""
+        text_content = ""
+        graph_document = None
 
-@app.post("/api/insights", response_model=Dict[str, Any], tags=["Analysis"])
-async def get_insights(request: InsightRequest):
-    """
-    Extracts exceptional insights and multi-hop paths from a given graph structure.
-    """
-    try:
-        graph_doc = SimpleGraphDocument(nodes=request.nodes, relationships=request.relationships)
-        insights = await extract_exceptional_insight(graph_doc, context_text=request.context_text)
-        return insights
+        if filename.lower().endswith(".pdf"):
+            from pypdf import PdfReader
+            text_content = "\n\n".join([p.extract_text() or "" for p in PdfReader(io.BytesIO(file_bytes)).pages])
+            # The core PDF function is sync, so we run it in a thread
+            graph_document = await asyncio.to_thread(generate_graph_from_pdf_bytes, file_bytes)
+        elif filename.lower().endswith(".txt"):
+            text_content = file_bytes.decode("utf-8", errors="ignore")
+            graph_document = await extract_graph_data_llm_only(text_content)
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported file type. Please upload a PDF or TXT file.")
+        
+        insight = await extract_exceptional_insight(graph_document, context_text=text_content)
+        return {"graph": graph_document, "insight": insight}
     except Exception as e:
-        print(f"Error in /api/insights: {e}")
+        print(f"Error in /api/generate/file: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/experiment", response_model=Dict[str, Any], tags=["Analysis"])
 async def get_experiment(request: ExperimentRequest):
     """
-    Generates a suggested experiment for a given path in the knowledge graph.
+    Generates a suggested experiment for a given path.
     """
     try:
-        experiment_data = await generate_experiment_for_path(request.path_nodes, request.context_text)
-        return experiment_data
+        return await generate_experiment_for_path(request.path_nodes, request.context_text)
     except Exception as e:
-        print(f"Error in /api/experiment: {e}")
+        print(f"Error in /api/experiment: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
-
-# To run this app:
-# 1. Make sure you are in the `backend` directory.
-# 2. Run the command: uvicorn app.main:app --reload
-# The API will be available at http://127.0.0.1:8000
-# The interactive documentation (Swagger UI) will be at http://127.0.0.1:8000/docs

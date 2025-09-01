@@ -430,7 +430,7 @@ async def extract_graph_data_llm_only(text: str) -> SimpleGraphDocument:
     from langchain_experimental.graph_transformers import LLMGraphTransformer
     from langchain_groq import ChatGroq
 
-    model_name = os.getenv("GROQ_MODEL", "meta-llama/llama-4-maverick-17b-128e-instruct")
+    model_name = os.getenv("GROQ_MODEL", "llama3-70b-8192")
     llm = ChatGroq(model_name=model_name, temperature=0)
     graph_transformer = LLMGraphTransformer(llm=llm)
 

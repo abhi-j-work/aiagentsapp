@@ -1,117 +1,92 @@
 import { useState } from 'react';
-import { GraphData, InsightData, SimpleNode, SimpleRelationship } from './services/api';
-import InputPanel from './components/InputPanel';
+import './styles/App.css';
+import { generateGraphFromFile, generateGraphFromText } from './services/api';
+import { GraphData, HighlightPath, InsightData } from './types';
+import ControlPanel from './components/ControlPanel';
 import GraphDisplay from './components/GraphDisplay';
 import InsightPanel from './components/InsightPanel';
-import SettingsPanel from './components/SettingsPanel';
-
-type Tab = 'workspace' | 'settings' | 'about';
+import ExperimentDesigner from './components/ExperimentDesigner';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('workspace');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [rawText, setRawText] = useState('');
+  
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [insightData, setInsightData] = useState<InsightData | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [rawText, setRawText] = useState<string>('');
+  
+  const [selectedPath, setSelectedPath] = useState<string[] | null>(null);
+  const [highlightedPath, setHighlightedPath] = useState<HighlightPath | null>(null);
 
-  // State for highlighting nodes/paths in the graph
-  const [highlightedPath, setHighlightedPath] = useState<{ nodes: string[], pairs: string[][] } | null>(null);
-
-  const resetState = () => {
+  const handleGenerate = async (source: { text: string } | { file: File }) => {
+    setIsLoading(true);
+    setError(null);
     setGraphData(null);
     setInsightData(null);
-    setError(null);
-    setRawText('');
+    setSelectedPath(null);
     setHighlightedPath(null);
-  }
 
-  const handleGraphGenerated = (data: GraphData, text: string) => {
-    setGraphData(data);
-    setRawText(text);
-    setError(null);
+    try {
+      let result;
+      if ('text' in source) {
+        setRawText(source.text);
+        result = await generateGraphFromText(source.text);
+      } else {
+        result = await generateGraphFromFile(source.file);
+        // We won't have the text client-side for PDFs, the backend handles it.
+        setRawText("Text extracted from uploaded file on the backend.");
+      }
+      
+      setGraphData(result.graph);
+      setInsightData(result.insight);
+      
+      if (result.insight?.found && result.insight.raw_paths.length > 0) {
+        handlePathSelect(result.insight.raw_paths[0]);
+      }
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handlePathSelect = (path: string[]) => {
+      setSelectedPath(path);
+      const pairs: [string, string][] = [];
+      for (let i = 0; i < path.length - 1; i++) {
+          pairs.push([path[i], path[i+1]]);
+      }
+      setHighlightedPath({ nodes: path, pairs });
   };
 
-  const Header = () => (
-    <header>
-      <div className="agent-title">Entegris Research Agent</div>
-      <div className="agent-sub">A React-based interface for extracting knowledge graphs from scientific documents.</div>
-      <div className="rule"></div>
-    </header>
-  );
-
-  const Tabs = () => (
-    <div className="tabs">
-      <div className={`tab ${activeTab === 'workspace' ? 'active' : ''}`} onClick={() => setActiveTab('workspace')}>
-        🧪 Workspace
-      </div>
-      <div className={`tab ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
-        ⚙️ Settings
-      </div>
-      <div className={`tab ${activeTab === 'about' ? 'active' : ''}`} onClick={() => setActiveTab('about')}>
-        📎 About
-      </div>
-    </div>
-  );
-
   return (
-    <>
-      <Header />
-      <Tabs />
-
-      {activeTab === 'workspace' && (
-        <div className="main-layout">
-          <div className="left-panel">
-            <InputPanel
-              onGenerationStart={() => {
-                setIsLoading(true);
-                resetState();
-              }}
-              onGenerationSuccess={handleGraphGenerated}
-              onGenerationError={(err) => {
-                setError(err);
-                resetState();
-              }}
-              onGenerationEnd={() => setIsLoading(false)}
-              graphData={graphData}
-              rawText={rawText}
-              setInsightData={setInsightData}
-              setHighlightedPath={setHighlightedPath}
-            />
-            {insightData && graphData && (
-              <InsightPanel
-                insightData={insightData}
-                graphData={graphData}
-                rawText={rawText}
-                setHighlightedPath={setHighlightedPath}
-              />
-            )}
-          </div>
-          <div className="right-panel">
-            <GraphDisplay
-              graphData={graphData}
-              highlightedPath={highlightedPath}
-              isLoading={isLoading}
-              error={error}
-            />
-          </div>
+    <div className="App">
+      <header className="app-header">
+        <h1 className="agent-title">Entegris Research Agent</h1>
+        <p className="agent-sub">Agentic Knowledge Graph Explorer</p>
+      </header>
+      
+      <main className="main-grid">
+        <div className="left-column">
+          <ControlPanel onGenerate={handleGenerate} isLoading={isLoading} />
+          {insightData && (
+            <InsightPanel insight={insightData} onPathSelect={handlePathSelect} />
+          )}
+          {selectedPath && (
+            <ExperimentDesigner selectedPath={selectedPath} contextText={rawText} />
+          )}
         </div>
-      )}
-
-      {activeTab === 'settings' && <SettingsPanel />}
-
-      {activeTab === 'about' && (
-        <div className="glass">
-          <div className="section-title">What is Entegris Research Agent?</div>
-          <p>
-            This application converts scientific text into a navigable knowledge graph using an LLM-only pipeline.
-            Upload a PDF or TXT, or paste text directly. The agent extracts entities and relationships, then renders
-            an interactive graph.
-          </p>
-          <p>This version was converted from a Streamlit application to a React/Python web application.</p>
+        
+        <div className="right-column">
+          <GraphDisplay
+            graphData={graphData}
+            highlightedPath={highlightedPath}
+            isLoading={isLoading}
+            error={error}
+          />
         </div>
-      )}
-    </>
+      </main>
+    </div>
   );
 }
 
