@@ -19,6 +19,15 @@ export async function generateGraphFromText(text: string): Promise<GenerationRes
   return handleResponse(response);
 }
 
+export async function updateSettings(settings: { groq_model: string; chunk_size: number; overlap: number }): Promise<{ message: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/settings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  });
+  return handleResponse(response);
+}
+
 export async function generateGraphFromFile(file: File): Promise<GenerationResponse> {
   const formData = new FormData();
   formData.append('file', file);

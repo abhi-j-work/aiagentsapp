@@ -95,14 +95,12 @@ function App() {
         </div>
         
         <div className="right-column">
-          {activeTab === 'workspace' && (
-            <GraphDisplay
-              graphData={graphData}
-              highlightedPath={highlightedPath}
-              isLoading={isLoading}
-              error={error}
-            />
-          )}
+          <GraphDisplay
+            graphData={graphData}
+            highlightedPath={highlightedPath}
+            isLoading={isLoading}
+            error={error}
+          />
         </div>
       </main>
     </div>

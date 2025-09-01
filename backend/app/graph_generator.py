@@ -10,6 +10,7 @@ from typing import List, Optional, Any, Tuple, Dict, Set
 from dotenv import load_dotenv
 
 from .pdf_utils import extract_text_from_pdf
+from .settings import runtime_settings
 
 # Load env (GROQ_API_KEY, optional GROQ_MODEL, etc.)
 load_dotenv()
@@ -432,14 +433,14 @@ async def extract_graph_data_llm_only(text: str) -> SimpleGraphDocument:
     from langchain_experimental.graph_transformers import LLMGraphTransformer
     from langchain_groq import ChatGroq
 
-    model_name = os.getenv("GROQ_MODEL", "llama3-70b-8192")
+    model_name = runtime_settings.get("groq_model", "llama3-70b-8192")
     llm = ChatGroq(model_name=model_name, temperature=0)
     graph_transformer = LLMGraphTransformer(llm=llm)
 
     chunks = _chunk_text(
         text,
-        chunk_size=int(os.getenv("KG_CHUNK_SIZE", "4000")),
-        overlap=int(os.getenv("KG_CHUNK_OVERLAP", "200"))
+        chunk_size=runtime_settings.get("chunk_size", 4000),
+        overlap=runtime_settings.get("overlap", 200)
     )
 
     tasks = [_aconvert_chunk(graph_transformer, ch) for ch in chunks]
@@ -456,15 +457,6 @@ async def extract_graph_data_llm_only(text: str) -> SimpleGraphDocument:
     merged = _merge_graphs(recovered_docs)
     styled = _style_graph(merged)
     return styled
-
-
-def generate_graph_from_pdf_bytes(file_bytes: bytes) -> SimpleGraphDocument:
-    """Asynchronously extracts text from PDF bytes and runs the pipeline."""
-    text = extract_text_from_pdf(file_bytes)
-    if not text:
-        raise RuntimeError("Could not extract PDF text.")
-
-    return asyncio.run(extract_graph_data_llm_only(text))
 
 
 # ------------------------------

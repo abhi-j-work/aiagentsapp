@@ -20,8 +20,14 @@ from .graph_generator import (
 )
 from .pdf_utils import extract_text_from_pdf
 from .redis_client import redis_client
+from .settings import runtime_settings
 
 # --- Pydantic Models for API Validation and Documentation ---
+class Settings(BaseModel):
+    groq_model: str
+    chunk_size: int
+    overlap: int
+
 class GenerateTextRequest(BaseModel):
     text: str = Field(..., min_length=10)
 
@@ -72,6 +78,16 @@ app.add_middleware(
 @app.get("/", tags=["Status"])
 async def root():
     return {"status": "ok", "message": "Research Agent API is running"}
+
+@app.post("/api/settings", tags=["Settings"])
+async def update_settings(settings: Settings):
+    """
+    Updates the runtime settings for the application.
+    """
+    runtime_settings["groq_model"] = settings.groq_model
+    runtime_settings["chunk_size"] = settings.chunk_size
+    runtime_settings["overlap"] = settings.overlap
+    return {"message": "Settings updated successfully."}
 
 @app.post("/api/generate/text", response_model=GenerationResponse, tags=["Knowledge Graph"])
 async def generate_from_text(request: GenerateTextRequest):
