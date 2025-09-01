@@ -1,0 +1,15 @@
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+
+# Core dependencies from original file
+langchain>=0.1.0
+langchain-experimental>=0.0.45
+langchain-openai>=0.1.0
+python-dotenv>=1.0.0
+langchain-groq>=0.3.7
+
+# PDF processing
+pypdf
+pymupdf
+pdfplumber
