@@ -4,11 +4,11 @@ import { useState } from 'react';
 import './App.css';
 import ChatPage from './pages/ChatPage';
 import GraphPage from './pages/GraphPage';
-import UploadForm from './components/UploadForm';
+import SidePanel from './components/SidePanel'; // <-- 1. IMPORT the new SidePanel
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Source, GraphDataPayload } from './models';
 
-// Shared types
+// Shared types (remain the same)
 export interface Message {
   role: "user" | "assistant";
   content: string;
@@ -17,6 +17,11 @@ export interface Message {
 
 export type ViewMode = 'chat' | 'graph';
 
+// This is a placeholder for your model's GraphData type definition
+export interface GraphData {
+  nodes: { id: string; type: string }[];
+  relationships: { source: string; target: string; type: string }[];
+}
 
 function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('chat');
@@ -45,16 +50,20 @@ function App() {
       </AnimatePresence>
 
       <div className="app-grid">
+        {/* --- THIS IS THE CORRECTED SECTION --- */}
         <div className="left-panel">
-          <header className="brand-header">
-            <h1 className="brand-title">Entegris AI</h1>
-            <p className="brand-subtitle">Research Assistant</p>
-          </header>
-          <UploadForm
+          {/* 
+            The old <header> and <UploadForm> are removed.
+            They are replaced by the single, self-contained SidePanel component.
+            We pass the necessary state setters down as props.
+          */}
+          <SidePanel
             setViewMode={setViewMode}
             setGraphPayload={setGraphPayload}
           />
         </div>
+        {/* --- END OF CORRECTION --- */}
+
         <div className="right-panel">
           <ChatPage
             setGraphPayload={setGraphPayload}
@@ -66,4 +75,4 @@ function App() {
   );
 }
 
-export default App;
+export default App; 

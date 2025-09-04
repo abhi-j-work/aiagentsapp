@@ -3,26 +3,36 @@
 import json
 from models import KnowledgeGraphResponse
 
-def create_graph_html(graph_data: KnowledgeGraphResponse, insight: dict) -> str:
+def create_graph_html(
+    graph_data: KnowledgeGraphResponse, 
+    insight: dict,
+    pulse_enabled: bool,
+    pulse_amplitude: float,
+    pulse_speed: float
+) -> str:
     """
-    Generates the final, corrected, and feature-rich HTML knowledge graph.
-    This version fixes the JavaScript race condition and ensures all features load correctly.
+    Generates the final, visually stunning HTML knowledge graph with
+    a sharp "blinking" pulse effect.
     """
     nodes_list = []
     for node in graph_data.nodes:
         node_dict = node.dict()
         node_dict['label'] = node.id
         node_dict['group'] = node.type
-        node_dict['font'] = {"color": "white"}
-        node_dict['shape'] = "dot"
-        node_dict['title'] = node.type
+        node_dict['title'] = f"Type: {node.type}"
         nodes_list.append(node_dict)
 
-    edges_list = [{"from": rel.source, "to": rel.target, "label": rel.type, "arrows": "to"} for rel in graph_data.relationships]
+    edges_list = [
+        {"from": rel.source, "to": rel.target, "label": rel.type} 
+        for rel in graph_data.relationships
+    ]
 
-    nodes_json = json.dumps(nodes_list)
-    edges_json = json.dumps(edges_list)
+    nodes_json = json.dumps(nodes_list, indent=4)
+    edges_json = json.dumps(edges_list, indent=4)
     highlight_nodes_json = json.dumps(insight.get("nodes", []))
+    pulse_enabled_json = json.dumps(pulse_enabled)
+    pulse_amplitude_json = json.dumps(pulse_amplitude)
+    pulse_speed_json = json.dumps(pulse_speed)
 
     return f"""
     <!DOCTYPE html>
@@ -31,113 +41,133 @@ def create_graph_html(graph_data: KnowledgeGraphResponse, insight: dict) -> str:
         <meta charset="utf-8">
         <title>AI Knowledge Graph</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.0.0-rc.4/css/tom-select.bootstrap5.min.css" />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.0.0-rc.4/js/tom-select.complete.js"></script>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js"></script>
         <style>
-            html, body {{ margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; font-family: sans-serif; }}
+            html, body {{
+                margin: 0; padding: 0; overflow: hidden;
+                width: 100%; height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            }}
             #mynetwork {{
                 width: 100%; height: 100vh;
-                background-color: #21262D;
+                background-color: #0D1117;
                 position: absolute; top: 0; left: 0; z-index: 1;
             }}
-            /* Additional styles for legend, filter, etc. */
-            #kg_legend {{
-                position: fixed; right: 20px; top: 80px; z-index: 999;
-                background: rgba(22, 27, 34, 0.9); color: #E6EDF3;
-                padding: 10px 12px; border-radius: 8px; font-size: 13px;
-                border: 1px solid #30363D;
-            }}
-            #kg_legend .sw {{ display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:8px; vertical-align:middle; }}
         </style>
     </head>
     <body>
         <div id="mynetwork"></div>
 
         <script type="text/javascript">
-            // --- Global Variables ---
-            var nodes, edges, network, nodeColors = {{}};
-            var highlightActive = false;
+            var nodes, edges, network;
 
-            /**
-             * Main function to initialize the graph.
-             */
             function drawGraph() {{
                 nodes = new vis.DataSet({nodes_json});
                 edges = new vis.DataSet({edges_json});
                 
                 var container = document.getElementById('mynetwork');
                 var data = {{ nodes: nodes, edges: edges }};
+                
                 var options = {{
-                    physics: {{
-                        barnesHut: {{
-                            gravitationalConstant: -50000,
-                            centralGravity: 0.1,
-                            springLength: 200,
-                            avoidOverlap: 0.8
-                        }},
-                        solver: 'barnesHut'
+                    nodes: {{
+                        shape: 'dot',
+                        borderWidth: 2,
+                        font: {{ color: '#e0e0e0', size: 14, strokeWidth: 0 }}
                     }},
-                    interaction: {{ hover: true }}
+                    edges: {{
+                        width: 1.5,
+                        color: {{ color: 'rgba(100, 100, 100, 0.6)' }},
+                        arrows: {{ to: {{ enabled: true, scaleFactor: 0.8, type: 'arrow' }} }},
+                        smooth: {{ type: 'dynamic', roundness: 0.5 }}
+                    }},
+                    physics: {{
+                        forceAtlas2Based: {{
+                            gravitationalConstant: -40,
+                            centralGravity: 0.005,
+                            springLength: 250,
+                            springConstant: 0.1,
+                            avoidOverlap: 0.9
+                        }},
+                        solver: 'forceAtlas2Based',
+                        stabilization: {{ iterations: 300 }}
+                    }},
+                    interaction: {{
+                        hover: true,
+                        tooltipDelay: 200,
+                        dragNodes: true
+                    }}
                 }};
                 
-                // 1. Create the network object
                 network = new vis.Network(container, data, options);
-                
-                // 2. NOW that network exists, set up advanced features
                 setupAdvancedFeatures();
-
-                // 3. Attach the click event listener for neighborhood highlighting
-                network.on("click", neighbourhoodHighlight);
             }}
 
-            /**
-             * This function contains all the advanced styling, highlighting, and animation logic.
-             * It is only called AFTER the main network object has been created.
-             */
             function setupAdvancedFeatures() {{
                 const HIGHLIGHT_NODES = {highlight_nodes_json};
-                const PULSE_ENABLED = true;
-                const PULSE_AMPLITUDE = 8.0;
-                const PULSE_STEP = 0.09;
+                const PULSE_ENABLED = {pulse_enabled_json};
+                const PULSE_AMPLITUDE = {pulse_amplitude_json};
+                const PULSE_STEP = {pulse_speed_json};
 
                 function applyGlobalStyles() {{
+                    // ... (This function is correct and remains the same)
                     const deg = {{}};
                     edges.get().forEach(e => {{ deg[e.from] = (deg[e.from] || 0) + 1; deg[e.to] = (deg[e.to] || 0) + 1; }});
                     let maxDeg = Math.max(...Object.values(deg).map(Number), 1);
-                    
                     const updates = nodes.get().map(n => {{
                         const d = deg[n.id] || 0;
-                        const size = Math.round(15 + (d / maxDeg) * 30);
-                        let paletteColor = '#95A5A6'; // Default
+                        const size = Math.round(10 + (d / maxDeg) * 20);
+                        let paletteColor = '#888888';
                         const g = String(n.group).toLowerCase();
-                        if(g.includes('process')) paletteColor = '#9B59B6';
-                        else if(g.includes('material')) paletteColor = '#E74C3C';
-                        else if(g.includes('company')) paletteColor = '#2ECC71';
-                        else if(g.includes('device')) paletteColor = '#E67E22';
-                        else if(g.includes('technology')) paletteColor = '#3498DB';
-                        return {{ id: n.id, size: size, color: {{ background: paletteColor, border: paletteColor }}, font: {{ size: Math.max(12, Math.round(size * 0.6)) }} }};
+                        if(g.includes('process')) paletteColor = '#F9A825';
+                        else if(g.includes('material')) paletteColor = '#E91E63';
+                        else if(g.includes('device')) paletteColor = '#FF5722';
+                        else if(g.includes('technology')) paletteColor = '#03A9F4';
+                        else if(g.includes('chemical')) paletteColor = '#9C27B0';
+                        return {{ 
+                            id: n.id, size: size, color: {{ background: paletteColor, border: paletteColor }},
+                            shadow: {{ enabled: true, color: paletteColor, size: 25, x: 0, y: 0 }}
+                        }};
                     }});
                     nodes.update(updates);
                 }}
 
                 function applyHighlight() {{
+                    // ... (Highlight styles are correct and remain the same)
                     if (HIGHLIGHT_NODES.length === 0) return;
+                    const highlightColor = '#00FFC4';
                     nodes.update(HIGHLIGHT_NODES.map(id => ({{
                         id: id,
-                        color: {{ background: '#00ffcc', border: '#00ffcc' }},
-                        shadow: {{ enabled: true, color: '#00ffcc', size: 40 }}
+                        color: {{ background: highlightColor, border: highlightColor }},
+                        shadow: {{ enabled: true, color: highlightColor, size: 60 }},
+                        font: {{ size: 18 }}
                     }})));
+                    const allEdges = edges.get();
+                    const edgeUpdates = [];
+                    for(let i = 0; i < HIGHLIGHT_NODES.length - 1; i++) {{
+                        const fromNode = HIGHLIGHT_NODES[i];
+                        const toNode = HIGHLIGHT_NODES[i+1];
+                        const foundEdges = allEdges.filter(e => (e.from === fromNode && e.to === toNode) || (e.from === toNode && e.to === fromNode));
+                        foundEdges.forEach(edge => {{
+                            edgeUpdates.push({{
+                                id: edge.id, color: {{ color: highlightColor }}, width: 2.5,
+                                shadow: {{ enabled: true, color: highlightColor, size: 30 }}
+                            }});
+                        }});
+                    }}
+                    edges.update(edgeUpdates);
                     
                     if (!PULSE_ENABLED) return;
+                    
                     const baseSizes = {{}};
                     HIGHLIGHT_NODES.forEach(id => baseSizes[id] = nodes.get(id)?.size || 20);
+                    
                     let phase = 0;
                     function raf() {{
                         phase += PULSE_STEP;
                         const updates = HIGHLIGHT_NODES.map(id => ({{
-                            id: id, size: baseSizes[id] + PULSE_AMPLITUDE * Math.abs(Math.sin(phase))
+                            // --- NEW BLINKING EFFECT ---
+                            // By raising the sin wave to a high power (e.g., 8), we turn the
+                            // smooth wave into a sharp peak, creating a "blink" or "flash".
+                            id: id, size: baseSizes[id] + PULSE_AMPLITUDE * Math.pow(Math.abs(Math.sin(phase)), 8)
                         }}));
                         nodes.update(updates);
 						window.requestAnimationFrame(raf);
@@ -145,60 +175,14 @@ def create_graph_html(graph_data: KnowledgeGraphResponse, insight: dict) -> str:
                     raf();
                 }}
                 
-                function injectLegend() {{
-                    const div = document.createElement('div');
-                    div.id = 'kg_legend';
-                    div.innerHTML = `<div style="font-weight:700;margin-bottom:6px">Graph Legend</div>
-                        <div><span class="sw" style="background:#00ffcc"></span> Insight Path</div>
-                        <div><span class="sw" style="background:#2ECC71"></span> Company</div>
-                        <div><span class="sw" style="background:#3498DB"></span> Technology</div>
-                        <div><span class="sw" style="background:#9B59B6"></span> Process</div>
-                        <div><span class="sw" style="background:#E74C3C"></span> Material</div>`;
-                    document.body.appendChild(div);
-                }}
-
-                // This is the function that runs once the graph physics have settled.
                 function onReady() {{
                     applyGlobalStyles();
                     applyHighlight();
-                    injectLegend();
-                    // Store the final calculated colors for use in neighborhood highlighting
-                    nodes.get().forEach(node => nodeColors[node.id] = node.color);
                 }}
                 
-                // This is the correct way to attach the listener.
                 network.once('stabilizationIterationsDone', onReady);
             }}
-            
-            function neighbourhoodHighlight(params) {{
-                if (params.nodes.length > 0) {{
-                    highlightActive = true;
-                    var selectedNode = params.nodes[0];
-                    var connectedNodes = network.getConnectedNodes(selectedNode);
-                    connectedNodes.push(selectedNode);
 
-                    var allNodeData = nodes.get();
-                    var updates = allNodeData.map(node => {{
-                        if (!connectedNodes.includes(node.id)) {{
-                            node.color = "rgba(150,150,150,0.2)"; // Fade out non-neighbors
-                        }} else {{
-                            node.color = nodeColors[node.id]; // Restore original color for neighbors
-                        }}
-                        return node;
-                    }});
-                    nodes.update(updates);
-                }} else if (highlightActive) {{
-                    highlightActive = false;
-                    var allNodeData = nodes.get();
-                    var updates = allNodeData.map(node => {{
-                        node.color = nodeColors[node.id]; // Restore all original colors
-                        return node;
-                    }});
-                    nodes.update(updates);
-                }}
-            }}
-
-            // --- Start Everything ---
             drawGraph();
         </script>
     </body>
