@@ -57,7 +57,7 @@ async def generate_graph_from_text_custom(text: str) -> KnowledgeGraphResponse:
     if not os.getenv("GROQ_API_KEY"):
         raise ValueError("GROQ_API_KEY environment variable not set.")
 
-    model_name = os.getenv("GROQ_MODEL", "llama3-70b-8192")
+    model_name = os.getenv("GROQ_MODEL", "meta-llama/llama-4-maverick-17b-128e-instruct")
     llm = ChatGroq(model_name=model_name, temperature=0.0)
     prompt = GRAPH_EXTRACTION_PROMPT.format(text=text)
 

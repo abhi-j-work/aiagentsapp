@@ -55,7 +55,7 @@ async def answer_entegris_question(query: str) -> dict:
     ANSWER:
     """
     prompt = ChatPromptTemplate.from_template(prompt_template)
-    model = ChatGroq(model=os.getenv("GROQ_MODEL", "llama3-8b-8192"), temperature=0)
+    model = ChatGroq(model=os.getenv("GROQ_MODEL", "meta-llama/llama-4-maverick-17b-128e-instruct"), temperature=0)
     output_parser = StrOutputParser()
 
     # --- 3. Create and run the RAG chain ---
