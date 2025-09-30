@@ -1,9 +1,18 @@
 // ====================================================================
 // API CLIENT SETUP
 // ====================================================================
-
+// ====================================================================
+// API CLIENT SETUP
+// ====================================================================
+// import type { SpaCyJob, StartTrainingParams } from "../types/training";
+import type {
+  SpaCyJob,
+  StartTransformerParams,
+  StartCnnParams,
+  StartTrainingResponse
+} from '../types/training';
 // For production, use environment variables: const API_BASE_URL = import.meta.env.VITE_API_URL;
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'http://localhost:8011';
 
 /**
  * A robust, standardized function for making JSON API requests.
@@ -420,3 +429,32 @@ export const promoteModel = (modelName: string, version: number, stage: string) 
     });
 
 export const listExperiments = () => request<MlflowExperiment[]>('/mlflow/experiments');
+
+// ====================================================================
+// 7. SPACY MODEL TRAINING (IMPROVED SECTION)
+// ====================================================================
+
+// --- Types ---
+// Explicit types for spaCy training, matching your backend Pydantic models.
+export const getSpacyJobs = () =>
+  request<SpaCyJob[]>('/spacy-training/jobs');
+
+/**
+ * Starts a new spaCy TRANSFORMER training job.
+ * @param params - The configuration for the transformer job.
+ */
+export const startTransformerTraining = (params: StartTransformerParams) =>
+  request<StartTrainingResponse>('/spacy-training/start-transformer', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+
+/**
+ * ✅ NEW: Starts a new spaCy CNN training job.
+ * @param params - The configuration for the CNN job.
+ */
+export const startCnnTraining = (params: StartCnnParams) =>
+  request<StartTrainingResponse>('/spacy-training/start-cnn', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });

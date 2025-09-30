@@ -28,6 +28,7 @@ import TrainPage from './pages/TrainPage';
 import RunsPage from './pages/RunsPage';
 import ModelsPage from './pages/ModelsPage';
 import LogsPage from './pages/LogsPage';
+import TrainingPage from './pages/TrainingPage';
 
 function App() {
   return (
@@ -58,10 +59,11 @@ function App() {
         <Route path="/data-lineage-intro" element={<DataLineageIntroPage />} />
 
         {/* Model Training Routes */}
-        <Route path="/training/start" element={<TrainPage />} />
+        {/* <Route path="/training/start" element={<TrainPage />} />
         <Route path="/training/runs" element={<RunsPage />} />
         <Route path="/training/models" element={<ModelsPage />} />
-        <Route path="/training/logs/:jobId" element={<LogsPage />} />
+        <Route path="/training/logs/:jobId" element={<LogsPage />} /> */}
+        <Route path="/training" element={<TrainingPage />} />
       </Route>
     </Routes>
   );

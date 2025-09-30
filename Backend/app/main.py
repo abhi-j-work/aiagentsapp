@@ -1,6 +1,7 @@
 # In file: app/main.py
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from app.api.routers import spacy_training
 from app.core.config import get_settings # type: ignore
 from app.core.logging_config import setup_logging # type: ignore
 from app.services import llm_service # type: ignore
@@ -25,7 +26,7 @@ app = FastAPI(
 )
 origins = [
     "http://127.0.0.1:5173",
-    "https://refactored-waddle-5gq7qq9xx77397v-5173.app.github.dev"
+    "http://localhost:5173"
 ]
 
 app.add_middleware(
@@ -45,6 +46,7 @@ app.include_router(data_lineage.router)
 app.include_router(training.router)
 app.include_router(training.mlflow_router)
 app.include_router(training.models_router)
+app.include_router(spacy_training.router)
 
 @app.get("/")
 def read_root():

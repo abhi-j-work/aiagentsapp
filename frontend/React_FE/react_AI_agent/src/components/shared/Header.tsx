@@ -5,7 +5,7 @@
   // Define navigation items in an array for clean and manageable code
  const navItems = [
   { name: 'Data AI Agents', href: '/data-ai-agent' },
-  { name: 'Training', href: '/training/runs' },
+  { name: 'Training', href: '/training' },
   { name: 'Pricing', href: '/pricing' },
   { name: 'Tech Stack', href: '/tech-stack' },
   { name: 'Evaluation', href: '/evaluation'},

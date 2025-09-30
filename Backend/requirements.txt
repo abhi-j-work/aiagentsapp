@@ -28,3 +28,10 @@ peft
 sqlfluff
 python-dotenv
 pytest
+
+
+mlflow
+spacy
+spacy[transformers]
+
+langfuse
