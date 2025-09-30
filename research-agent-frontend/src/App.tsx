@@ -4,7 +4,8 @@ import { useState } from 'react';
 import './App.css';
 import ChatPage from './pages/ChatPage';
 import GraphPage from './pages/GraphPage';
-import SidePanel from './components/SidePanel'; // <-- 1. IMPORT the new SidePanel
+import SidePanel from './components/SidePanel';
+import { GraphQueryPage } from './pages/GraphQueryPage'; // <-- NEW import
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Source, GraphDataPayload } from './models';
 
@@ -15,7 +16,7 @@ export interface Message {
   sources?: Source[];
 }
 
-export type ViewMode = 'chat' | 'graph';
+export type ViewMode = 'chat' | 'graph' | 'graphQuery'; // <-- added new viewMode
 
 // This is a placeholder for your model's GraphData type definition
 export interface GraphData {
@@ -40,6 +41,7 @@ function App() {
       transition={{ duration: 0.5 }}
     >
       <AnimatePresence>
+        {/* Existing GraphPage */}
         {viewMode === 'graph' && graphPayload && (
           <GraphPage 
             setViewMode={handleBackToChat} 
@@ -47,23 +49,23 @@ function App() {
             downloadUrl={graphPayload.download_url}
           />
         )}
+
+        {/* NEW: GraphQueryPage */}
+        {viewMode === 'graphQuery' && (
+          <GraphQueryPage />
+        )}
       </AnimatePresence>
 
       <div className="app-grid">
-        {/* --- THIS IS THE CORRECTED SECTION --- */}
+        {/* Left Panel */}
         <div className="left-panel">
-          {/* 
-            The old <header> and <UploadForm> are removed.
-            They are replaced by the single, self-contained SidePanel component.
-            We pass the necessary state setters down as props.
-          */}
           <SidePanel
-            setViewMode={setViewMode}
-            setGraphPayload={setGraphPayload}
+            setViewMode={setViewMode}      // allows switching to graphQuery or graph
+            setGraphPayload={setGraphPayload} // sets payload for GraphPage
           />
         </div>
-        {/* --- END OF CORRECTION --- */}
 
+        {/* Right Panel */}
         <div className="right-panel">
           <ChatPage
             setGraphPayload={setGraphPayload}
@@ -75,4 +77,5 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
+

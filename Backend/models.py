@@ -48,7 +48,7 @@ class ChatResponse(BaseModel):
 
 class TextRequestBody(BaseModel):
     """Request body for generating a graph from a block of text."""
-    text: str = Field(..., min_length=50, description="Text content to build the graph from.")
+    text: str = Field(..., min_length=20, description="Text content to build the graph from.")
 
 
 

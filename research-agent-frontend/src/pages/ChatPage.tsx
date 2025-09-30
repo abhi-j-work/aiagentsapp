@@ -11,7 +11,7 @@ import type { GraphDataPayload } from '../models';
 const API_URL = "http://localhost:8000";
 
 // The full welcome message that we will "type" out.
-const WELCOME_MESSAGE = "Hello! I am an AI research assistant for Entegris. Ask me anything, or upload a document to begin.";
+const WELCOME_MESSAGE = "Hello! I am an AI assistant for Entegris. Ask me anything, or upload a document to begin.";
 
 interface ChatPageProps {
   setViewMode: (mode: ViewMode) => void;

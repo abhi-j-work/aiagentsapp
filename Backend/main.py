@@ -6,6 +6,9 @@ import json
 from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, HTTPException, Response, Query
 from fastapi.middleware.cors import CORSMiddleware
+# add to top imports in Backend/main.py (near other custom imports)
+from chat_agent import text_to_cypher_and_run
+
 
 # --- Import All Custom Modules (Cleaned and Organized) ---
 
@@ -95,6 +98,47 @@ async def _generate_graph_and_insight(text_content: str, document_id: str) -> di
     cache_set(f"doc_text:{document_id}", text_content, expire_seconds=86400) # Cache for 24 hours
 
     return {"graph_data": graph_data, "insight": insight}
+
+
+# Add this helper function somewhere near the other helpers (minimal, local only)
+def run_query_if_neo4j(cypher: str):
+    """
+    Minimal runner: if NEO4J_URI/NEO4J_USER/NEO4J_PASSWORD are set and neo4j driver is available,
+    execute the query and return list-of-dicts. Otherwise return None (caller will still get cypher).
+    """
+    uri = os.getenv("NEO4J_URI")
+    user = os.getenv("NEO4J_USER")
+    password = os.getenv("NEO4J_PASSWORD")
+    if not (uri and user and password):
+        # No Neo4j creds -> don't attempt to execute (safe)
+        return None
+
+    try:
+        # import here to avoid hard dependency unless this path is used
+        from neo4j import GraphDatabase
+    except Exception as e:
+        # neo4j package not installed or import error -> do not break main app
+        print(f"neo4j driver not available: {e}")
+        return None
+
+    driver = None
+    try:
+        driver = GraphDatabase.driver(uri, auth=(user, password))
+        with driver.session() as session:
+            def _tx_run(tx):
+                res = tx.run(cypher)
+                return [r.data() for r in res]
+            results = session.read_transaction(_tx_run)
+        return results
+    except Exception as e:
+        print(f"Error executing cypher on Neo4j: {e}")
+        return {"error": str(e)}
+    finally:
+        if driver:
+            try:
+                driver.close()
+            except Exception:
+                pass
 
 # --- API Endpoints ---
 
@@ -212,3 +256,22 @@ async def chat_with_agent(body: ChatRequestBody):
     except Exception as e:
         print(f"ERROR in /api/chat: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred in the chat agent: {str(e)}")
+    
+
+@app.post("/api/graph/text-to-cypher", tags=["Knowledge Graph"])
+async def text_to_cypher_endpoint(body: TextRequestBody, useLLM: bool = Query(False, alias="useLLM")):
+    """
+    Convert natural language (body.text) to a Cypher query and optionally execute it.
+    - By default this uses the conservative rule-based generator (no destructive ops).
+    - Set ?useLLM=true to attempt LLM generation (requires GROQ_API_KEY); LLM output is constrained
+      by the generator prompt to MATCH/RETURN style queries, but always validate before using in production.
+    Response JSON: { cypher: str, results: list|None, note: str }
+    """
+    try:
+        # pass the local runner so the chat_agent helper will use it (or fall back)
+        out = await text_to_cypher_and_run(body.text, run_query_fn=run_query_if_neo4j, use_llm=useLLM)
+        # out is a dict with keys: cypher, results, note
+        return out
+    except Exception as e:
+        print(f"ERROR in /api/graph/text-to-cypher: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
