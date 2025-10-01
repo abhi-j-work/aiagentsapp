@@ -15,14 +15,17 @@ import { toast } from "sonner";
 
 // --- Type Imports ---
 // These types should be defined in App.tsx and imported here
-import type { ViewMode, GraphDataPayload } from "../App";
+import type { GraphDataPayload } from "../App";
+
+// A more specific type for the setViewMode prop for clarity
+type ViewModeSetter = (mode: 'graph' | 'graph-chat') => void;
 
 const API_URL = "http://localhost:8001";
 
 // --- Component Props ---
 interface SidePanelProps {
   // This prop allows the SidePanel to tell App.tsx to change the view
-  setViewMode: (mode: 'graph' | 'graph-chat') => void;
+  setViewMode: ViewModeSetter;
   // This prop allows the SidePanel to pass the generated graph data to App.tsx
   setGraphPayload: (payload: GraphDataPayload | null) => void;
 }
@@ -167,7 +170,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ setViewMode, setGraphPayload }) =
                   <><ArrowRight size={16} /><span>Generate Knowledge Graph</span></>
                 )}
               </motion.button>
-            </motion.div>
+            </motion.div> 
           )}
         </AnimatePresence>
 

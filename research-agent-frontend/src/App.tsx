@@ -1,52 +1,112 @@
-// src/App.tsx
 import React, { useState } from 'react';
-// ... other imports
-import GraphChatModal from './components/GraphChatModal'; // <-- NEW: Import the modal
-import { AnimatePresence, motion } from 'framer-motion';
-import ChatWindow from './components/ChatWindow';
+import axios from 'axios';
+import './App.css';
+
+// --- Component Imports ---
+import SidePanel from './components/SidePanel';
 import ChatPage from './pages/ChatPage';
-// ... other imports
+import ChatWindow from './components/ChatWindow';
+import GraphPage from './pages/GraphPage';
+import GraphChatModal from './components/GraphChatModal';
 
-export type ViewMode = 'chat-landing' | 'chat-active' | 'graph'; // No longer need 'graph-query'
+// --- Utility and Type Imports ---
+import { motion, AnimatePresence } from 'framer-motion';
+import type { Source, GraphDataPayload, Message, ViewMode } from './models'; // Assuming all types are in models.ts
 
+// --- API Configuration ---
+const API_URL = "http://localhost:8001";
+
+// --- THE MAIN APP COMPONENT ---
 function App() {
-  // ... (existing state for messages, graphPayload, etc.)
-  const [isGraphChatOpen, setIsGraphChatOpen] = useState(false); // <-- NEW: State for the modal
+  // --- State Management ---
+  const [viewMode, setViewMode] = useState<ViewMode>('chat-landing');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [graphPayload, setGraphPayload] = useState<GraphDataPayload | null>(null);
+  const [isGraphChatOpen, setIsGraphChatOpen] = useState(false);
 
-  // ... (existing handlers like handleSendMessage, startConversation, etc.)
+  // --- Core Functions ---
 
-  // Updated handler to accept 'graph-chat' as a mode
+  const handleSendMessage = async (query: string) => {
+    if (!query.trim()) return;
+    const userMessage: Message = { role: "user", content: query };
+    setMessages(prev => [...prev, userMessage]);
+
+    try {
+      const response = await axios.post(`${API_URL}/api/chat`, { query });
+      const assistantMessage: Message = {
+        role: "assistant",
+        content: response.data.answer,
+        sources: response.data.sources,
+      };
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.detail || "An error occurred fetching the response.";
+      const errorMessage: Message = { role: 'error', content: `⚠️ ${errorMsg}` };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+  };
+
+  const startConversation = (initialQuery: string) => {
+    setViewMode('chat-active');
+    setMessages([]);
+    setTimeout(() => handleSendMessage(initialQuery), 50);
+  };
+  
   const handleSetViewMode = (mode: 'chat' | 'graph' | 'graph-chat') => {
     if (mode === 'chat') {
       setViewMode('chat-active');
     } else if (mode === 'graph-chat') {
-      setIsGraphChatOpen(true); // <-- Open the modal
+      setIsGraphChatOpen(true);
     } else {
-      setViewMode(mode);
+      setViewMode(mode as ViewMode); // Cast to ViewMode type
     }
   };
 
+  const handleBackToChat = () => {
+    setGraphPayload(null);
+    setViewMode('chat-active');
+  };
+
+  // --- JSX Rendering ---
   return (
     <div className="app-container">
-      {/* ... (SidePanel rendering logic remains the same) ... */}
+      {/* *** FIX: SidePanel is now rendered PERMANENTLY and UNCONDITIONALLY *** */}
+      {/* It is no longer inside AnimatePresence or a conditional block. */}
+      <div className="left-panel-container">
+        <SidePanel
+          setViewMode={handleSetViewMode}
+          setGraphPayload={setGraphPayload}
+        />
+      </div>
+
+      {/* The Main Content area still dynamically switches between components */}
       <div className="right-panel">
         <AnimatePresence mode="wait">
           <motion.div
-            key={viewMode}
-            // ... animation props
+            key={viewMode} // This key ensures the animation runs when the view changes
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
             className="right-panel-content"
           >
             {viewMode === 'chat-landing' && <ChatPage onStartConversation={startConversation} />}
-            {/* The ChatWindow is now for general chat */}
             {viewMode === 'chat-active' && <ChatWindow messages={messages} onSendMessage={handleSendMessage} />}
-            {/* GraphQueryPage is now replaced by the modal */}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* ... (GraphPage (overlay) rendering logic remains the same) ... */}
+      {/* Overlays (GraphPage and GraphChatModal) remain the same */}
+      <AnimatePresence>
+        {viewMode === 'graph' && graphPayload && (
+          <GraphPage 
+            setViewMode={handleBackToChat} 
+            htmlContent={graphPayload.html_content}
+            downloadUrl={graphPayload.download_url}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* NEW: Render the GraphChatModal */}
       <GraphChatModal 
         isOpen={isGraphChatOpen} 
         onClose={() => setIsGraphChatOpen(false)} 
