@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Source, GraphDataPayload, Message, ViewMode } from './models'; // Assuming all types are in models.ts
 
 // --- API Configuration ---
-const API_URL = "http://localhost:8001";
+const API_URL = "http://localhost:8002";
 
 // --- THE MAIN APP COMPONENT ---
 function App() {

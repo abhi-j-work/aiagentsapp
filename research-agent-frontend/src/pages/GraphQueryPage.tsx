@@ -29,7 +29,7 @@ export function GraphQueryPage() {
 
     try {
       const res = await fetch(
-        `http://localhost:8001/api/graph/text-to-cypher?useLLM=true`,
+        `http://localhost:8002/api/graph/text-to-cypher?useLLM=true`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

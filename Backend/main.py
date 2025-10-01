@@ -8,12 +8,13 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Response, Query
 from fastapi.middleware.cors import CORSMiddleware
 # add to top imports in Backend/main.py (near other custom imports)
 from chat_agent import text_to_cypher_and_run
-
+from neo4j.graph import Node, Relationship
 
 # --- Import All Custom Modules (Cleaned and Organized) ---
 
 # 1. Pydantic models for data validation
 from models import (
+    Relationship,
     TextRequestBody,
     ChatRequestBody,
     ChatResponse,
@@ -261,17 +262,55 @@ async def chat_with_agent(body: ChatRequestBody):
 @app.post("/api/graph/text-to-cypher", tags=["Knowledge Graph"])
 async def text_to_cypher_endpoint(body: TextRequestBody, useLLM: bool = Query(False, alias="useLLM")):
     """
-    Convert natural language (body.text) to a Cypher query and optionally execute it.
-    - By default this uses the conservative rule-based generator (no destructive ops).
-    - Set ?useLLM=true to attempt LLM generation (requires GROQ_API_KEY); LLM output is constrained
-      by the generator prompt to MATCH/RETURN style queries, but always validate before using in production.
-    Response JSON: { cypher: str, results: list|None, note: str }
+    Convert natural language to a Cypher query and return a graph structure.
     """
     try:
-        # pass the local runner so the chat_agent helper will use it (or fall back)
+        # This part remains the same: it generates and runs the cypher query
         out = await text_to_cypher_and_run(body.text, run_query_fn=run_query_if_neo4j, use_llm=useLLM)
-        # out is a dict with keys: cypher, results, note
-        return out
+        
+        # *** THE MINIMAL FIX IS HERE ***
+        # Instead of returning the raw results, we process them first.
+        graph_data = process_neo4j_records(out.get("results", []))
+        
+        # We now return a standardized format that the frontend expects.
+        return {
+            "cypher": out.get("cypher"),
+            "graph": graph_data, # Contains the clean {nodes: [], edges: []} structure
+            "results": out.get("results") # Keep raw results for the JSON viewer in chat
+        }
+
     except Exception as e:
         print(f"ERROR in /api/graph/text-to-cypher: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+def process_neo4j_records(records):
+    """
+    Processes raw Neo4j records to a D3.js friendly format.
+    It intelligently finds nodes and relationships and formats them correctly.
+    """
+    nodes = {}
+    edges = []
+
+    for record in records:
+        for key, value in record.items():
+            # Check if the item is a Neo4j Node
+            if isinstance(value, Node):
+                node_id = str(value.id)
+                if node_id not in nodes:
+                    nodes[node_id] = {
+                        "id": node_id,
+                        "labels": list(value.labels),
+                        **value  # Unpack all node properties
+                    }
+            # Check if the item is a Neo4j Relationship
+            elif isinstance(value, Relationship):
+                edges.append({
+                    "source": str(value.start_node.id),
+                    "target": str(value.end_node.id),
+                    "type": value.type,
+                    **value  # Unpack all relationship properties
+                })
+
+    return {"nodes": list(nodes.values()), "edges": edges}

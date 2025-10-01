@@ -7,7 +7,7 @@ import { Send, Loader2, Link as LinkIcon, BrainCircuit } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_URL = "http://localhost:8001";
+const API_URL = "http://localhost:8002";
 
 // 1. COMBINED INTERFACE: All props are now in a single, correct interface.
 interface ChatWindowProps {

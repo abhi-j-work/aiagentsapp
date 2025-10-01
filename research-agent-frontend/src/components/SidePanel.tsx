@@ -20,7 +20,7 @@ import type { GraphDataPayload } from "../App";
 // A more specific type for the setViewMode prop for clarity
 type ViewModeSetter = (mode: 'graph' | 'graph-chat') => void;
 
-const API_URL = "http://localhost:8001";
+const API_URL = "http://localhost:8002";
 
 // --- Component Props ---
 interface SidePanelProps {
