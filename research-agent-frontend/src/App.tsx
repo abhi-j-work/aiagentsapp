@@ -1,81 +1,58 @@
 // src/App.tsx
-
-import { useState } from 'react';
-import './App.css';
+import React, { useState } from 'react';
+// ... other imports
+import GraphChatModal from './components/GraphChatModal'; // <-- NEW: Import the modal
+import { AnimatePresence, motion } from 'framer-motion';
+import ChatWindow from './components/ChatWindow';
 import ChatPage from './pages/ChatPage';
-import GraphPage from './pages/GraphPage';
-import SidePanel from './components/SidePanel';
-import { GraphQueryPage } from './pages/GraphQueryPage'; // <-- NEW import
-import { motion, AnimatePresence } from 'framer-motion';
-import type { Source, GraphDataPayload } from './models';
+// ... other imports
 
-// Shared types (remain the same)
-export interface Message {
-  role: "user" | "assistant";
-  content: string;
-  sources?: Source[];
-}
-
-export type ViewMode = 'chat' | 'graph' | 'graphQuery'; // <-- added new viewMode
-
-// This is a placeholder for your model's GraphData type definition
-export interface GraphData {
-  nodes: { id: string; type: string }[];
-  relationships: { source: string; target: string; type: string }[];
-}
+export type ViewMode = 'chat-landing' | 'chat-active' | 'graph'; // No longer need 'graph-query'
 
 function App() {
-  const [viewMode, setViewMode] = useState<ViewMode>('chat');
-  const [graphPayload, setGraphPayload] = useState<GraphDataPayload | null>(null);
+  // ... (existing state for messages, graphPayload, etc.)
+  const [isGraphChatOpen, setIsGraphChatOpen] = useState(false); // <-- NEW: State for the modal
 
-  const handleBackToChat = () => {
-    setGraphPayload(null);
-    setViewMode('chat');
+  // ... (existing handlers like handleSendMessage, startConversation, etc.)
+
+  // Updated handler to accept 'graph-chat' as a mode
+  const handleSetViewMode = (mode: 'chat' | 'graph' | 'graph-chat') => {
+    if (mode === 'chat') {
+      setViewMode('chat-active');
+    } else if (mode === 'graph-chat') {
+      setIsGraphChatOpen(true); // <-- Open the modal
+    } else {
+      setViewMode(mode);
+    }
   };
 
   return (
-    <motion.div 
-      className="app-container"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <AnimatePresence>
-        {/* Existing GraphPage */}
-        {viewMode === 'graph' && graphPayload && (
-          <GraphPage 
-            setViewMode={handleBackToChat} 
-            htmlContent={graphPayload.html_content}
-            downloadUrl={graphPayload.download_url}
-          />
-        )}
-
-        {/* NEW: GraphQueryPage */}
-        {viewMode === 'graphQuery' && (
-          <GraphQueryPage />
-        )}
-      </AnimatePresence>
-
-      <div className="app-grid">
-        {/* Left Panel */}
-        <div className="left-panel">
-          <SidePanel
-            setViewMode={setViewMode}      // allows switching to graphQuery or graph
-            setGraphPayload={setGraphPayload} // sets payload for GraphPage
-          />
-        </div>
-
-        {/* Right Panel */}
-        <div className="right-panel">
-          <ChatPage
-            setGraphPayload={setGraphPayload}
-            setViewMode={setViewMode}
-          />
-        </div>
+    <div className="app-container">
+      {/* ... (SidePanel rendering logic remains the same) ... */}
+      <div className="right-panel">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={viewMode}
+            // ... animation props
+            className="right-panel-content"
+          >
+            {viewMode === 'chat-landing' && <ChatPage onStartConversation={startConversation} />}
+            {/* The ChatWindow is now for general chat */}
+            {viewMode === 'chat-active' && <ChatWindow messages={messages} onSendMessage={handleSendMessage} />}
+            {/* GraphQueryPage is now replaced by the modal */}
+          </motion.div>
+        </AnimatePresence>
       </div>
-    </motion.div>
+
+      {/* ... (GraphPage (overlay) rendering logic remains the same) ... */}
+
+      {/* NEW: Render the GraphChatModal */}
+      <GraphChatModal 
+        isOpen={isGraphChatOpen} 
+        onClose={() => setIsGraphChatOpen(false)} 
+      />
+    </div>
   );
 }
 
 export default App;
-

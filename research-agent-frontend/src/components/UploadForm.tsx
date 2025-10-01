@@ -6,7 +6,7 @@ import { Loader2, UploadCloud } from 'lucide-react';
 import type { ViewMode } from '../App';
 import type { GraphDataPayload } from '../models';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = 'http://localhost:8001';
 
 interface UploadFormProps {
   setViewMode: (mode: ViewMode) => void;
