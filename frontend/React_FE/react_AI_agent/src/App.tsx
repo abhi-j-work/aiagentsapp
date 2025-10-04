@@ -17,18 +17,20 @@ import MetadataSearchPage from './pages/MetaDataSearchPage';
 import DataVisualizationPage from './pages/DataVisualizationPage';
 import IcebergAIAgentPage from './pages/IceBergAiAgent';
 import DataVisualizationV1 from './pages/DataVisualizationV1';
-import AIGovernancePitchInfographic from './pages/AIGovernancePitchInfographic';
 import MetaDataSearchIntroPage from './pages/MetaDataSearchIntroPage';
 import IcebergCatalogIntroPage from './pages/IcebergCatalogIntroPage';
 import EvaluationPage from './pages/EvaluationPage';
-import LineageDisplay from './pages/DataLineageAgentPage';
 import DataLineageAgentPage from './pages/DataLineageAgentPage';
 import DataLineageIntroPage from './pages/DataLineageIntroPage';
-import TrainPage from './pages/TrainPage';
-import RunsPage from './pages/RunsPage';
-import ModelsPage from './pages/ModelsPage';
-import LogsPage from './pages/LogsPage';
 import TrainingPage from './pages/TrainingPage';
+import AutoRunPage from './pages/AutoRunPage';
+import DataQualityAutoRunPage from './pages/DataQualityAutoRunPage';
+import DomainAIAgentInfographic from './pages/DomainAIAgentInfographic';
+import AIGovernanceInfographic from './pages/AIGovernancePitchInfographic';
+import TrainingQAInfographic from './pages/TrainingQAInfographic';
+import InfographicHub from './pages/InfographicHub';
+import ScrollCircleAnimation from './pages/ScrollCircleAnimation';
+import ConcentricRagInfographic from './pages/ConcentricRagInfographic';
 
 function App() {
   return (
@@ -40,6 +42,7 @@ function App() {
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/tech-stack" element={<TechStackPage />} /> 
         <Route path="/ai-agent" element={<AIAgentPage />} />
+        <Route path="/autorun" element={<AutoRunPage />} /> 
         <Route path="/talk-to-db" element={<TalkToDbPage />}/> 
         <Route path="/data-ai-agent" element={<AgentHubPage/>}/> 
         <Route path="/data-quality" element={<DataQualityAgentPage />} />
@@ -54,16 +57,22 @@ function App() {
         <Route path="/metadata-search" element={<MetaDataSearchIntroPage/> }/>
         <Route path="/iceberg-governance" element={<IcebergCatalogIntroPage/> }/>
         <Route path="/evaluation" element={<EvaluationPage/> }/>
-        <Route path="/about" element={<AIGovernancePitchInfographic/> }/>
+        <Route path="/about" element={<InfographicHub/> }/>
         <Route path="/data-lineage" element={<DataLineageAgentPage/>} />
         <Route path="/data-lineage-intro" element={<DataLineageIntroPage />} />
-
+        <Route path="/data-quality-autorun" element={<DataQualityAutoRunPage />} />
+        <Route path="/about1" element={<ConcentricRagInfographic/>} />
         {/* Model Training Routes */}
         {/* <Route path="/training/start" element={<TrainPage />} />
         <Route path="/training/runs" element={<RunsPage />} />
         <Route path="/training/models" element={<ModelsPage />} />
         <Route path="/training/logs/:jobId" element={<LogsPage />} /> */}
         <Route path="/training" element={<TrainingPage />} />
+
+
+        <Route path="/ai-governance-infographic" element={<AIGovernanceInfographic />} />
+        <Route path="/qa-domain-ai-agent-infographic" element={<DomainAIAgentInfographic />} />
+        <Route path="/training-qa-infographic" element={<TrainingQAInfographic />} />
       </Route>
     </Routes>
   );

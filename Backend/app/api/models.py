@@ -423,3 +423,8 @@ class ApplyRemediationResponse(BaseModel):
 class ListFilteredViewsResponse(BaseModel):
     """Response model for listing the filtered views created by the quality agent."""
     filtered_views: List[str]
+
+
+class DeleteResponse(BaseModel):
+    message: str
+    deleted_count: int

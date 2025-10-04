@@ -1,51 +1,55 @@
 import React, { useState, useRef, useEffect, type MouseEvent, type TouchEvent } from 'react';
-import { Leaf, Zap, Recycle, TrendingUp } from 'lucide-react';
+import { Cpu, Network, Database, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
 
-// Card Data - Storing card info in an array makes it easy to map over.
+// Updated Tech Cards
 const cardData = [
   {
     id: 1,
-    category: 'Carbon Analytics',
-    title: 'Smart Carbon Tracking',
-    description: "Real-time monitoring of your organization's carbon footprint with AI-powered insights. Track emissions across all operations and achieve net-zero goals.",
-    features: ['98% accuracy', 'Real-time data'],
-    buttonText: 'Reduce emissions by 40%',
-    icon: <Leaf className="w-5 h-5 text-green-400" />,
-    color: 'green',
-  },
-  {
-    id: 2,
-    category: 'Energy Management',
-    title: 'Intelligent Power Control',
-    description: 'AI-driven energy optimization that automatically adjusts power consumption based on usage patterns, weather, and grid demand.',
-    features: ['24/7 monitoring', 'Auto-optimization'],
-    buttonText: 'Save up to 35% on energy',
-    icon: <Zap className="w-5 h-5 text-blue-400" />,
+    category: 'Core Backend',
+    title: 'Python + FastAPI Engine',
+    description:
+      'Our backend is powered by Python and FastAPI, designed for high-performance async APIs, scalable microservices, and seamless model integration.',
+    features: ['Async APIs', 'High scalability'],
+    buttonText: 'Explore Backend Architecture',
+    icon: <Cpu className="w-5 h-5 text-blue-400" />,
     color: 'blue',
   },
   {
-    id: 3,
-    category: 'Waste Reduction',
-    title: 'Circular Economy Hub',
-    description: 'Transform waste streams into valuable resources. Connect with suppliers, track materials, and create sustainable supply chains.',
-    features: ['Zero waste goal', 'Material tracking'],
-    buttonText: 'Achieve 90% waste diversion',
-    icon: <Recycle className="w-5 h-5 text-purple-400" />,
+    id: 2,
+    category: 'AI + LLM Systems',
+    title: 'LLM Reasoning Framework',
+    description:
+      'Built around large language models with prompt-tuning and self-judging capabilities. Supports reasoning chains, multi-agent workflows, and contextual understanding.',
+    features: ['Prompt tuning', 'LLM-as-a-judge'],
+    buttonText: 'View AI Framework',
+    icon: <Network className="w-5 h-5 text-purple-400" />,
     color: 'purple',
   },
   {
+    id: 3,
+    category: 'Data & MLOps',
+    title: 'MLflow + RAG Pipelines',
+    description:
+      'End-to-end tracking and deployment of models using MLflow. Enhanced with multi-step RAG pipelines for retrieval-augmented generation and intelligent knowledge synthesis.',
+    features: ['Multi-step RAG', 'MLflow tracking'],
+    buttonText: 'See Data Infrastructure',
+    icon: <Database className="w-5 h-5 text-emerald-400" />,
+    color: 'emerald',
+  },
+  {
     id: 4,
-    category: 'ESG Reporting',
-    title: 'Sustainability Dashboard',
-    description: 'Comprehensive ESG reporting tools that automatically generate sustainability reports and ensure regulatory compliance.',
-    features: ['Automated reports', 'Compliance ready'],
-    buttonText: 'Streamline ESG compliance',
-    icon: <TrendingUp className="w-5 h-5 text-amber-400" />,
+    category: 'Security & Infrastructure',
+    title: 'Guardrails + Postgres + Open Source',
+    description:
+      'Security-first design with AI guardrails, Postgres for reliable storage, and open-source foundations that ensure transparency and extensibility.',
+    features: ['AI guardrails', 'Postgres DB'],
+    buttonText: 'Explore Secure Stack',
+    icon: <Shield className="w-5 h-5 text-amber-400" />,
     color: 'amber',
   },
 ];
 
-// Reusable Card Component
+// Card Component
 const TechCard = ({
   data,
   onDragStart,
@@ -77,14 +81,15 @@ const TechCard = ({
             </div>
           ))}
         </div>
-        <button className={`w-full py-3 px-4 bg-${color}-500/10 border border-${color}-500/30 rounded-lg text-${color}-400 hover:bg-${color}-500/20 transition-colors`}>
+        <button
+          className={`w-full py-3 px-4 bg-${color}-500/10 border border-${color}-500/30 rounded-lg text-${color}-400 hover:bg-${color}-500/20 transition-colors`}
+        >
           {buttonText}
         </button>
       </div>
     </article>
   );
 };
-
 
 const TechStackPage = () => {
   const [activeCardId, setActiveCardId] = useState(1);
@@ -95,6 +100,9 @@ const TechStackPage = () => {
   const navigateToCard = (id: number) => {
     setActiveCardId(id);
   };
+
+  const nextCard = () => setActiveCardId(activeCardId === cardData.length ? 1 : activeCardId + 1);
+  const prevCard = () => setActiveCardId(activeCardId === 1 ? cardData.length : activeCardId - 1);
 
   const handleDragStart = (e: MouseEvent | TouchEvent, cardId: number) => {
     if (cardId !== activeCardId) return;
@@ -124,21 +132,21 @@ const TechStackPage = () => {
     };
 
     const dragEnd = () => {
-        if (!isDragging.current) return;
-        isDragging.current = false;
-        
-        const article = containerRef.current?.querySelector(`article:nth-of-type(${cardId})`);
-        if (article?.classList.contains('dragging-right')) {
-            navigateToCard(activeCardId === 1 ? 4 : activeCardId - 1);
-        } else if (article?.classList.contains('dragging-left')) {
-            navigateToCard(activeCardId === 4 ? 1 : activeCardId + 1);
-        }
-        
-        article?.classList.remove('dragging-left', 'dragging-right');
-        document.removeEventListener('mousemove', dragMove as any);
-        document.removeEventListener('touchmove', dragMove as any);
-        document.removeEventListener('mouseup', dragEnd);
-        document.removeEventListener('touchend', dragEnd);
+      if (!isDragging.current) return;
+      isDragging.current = false;
+
+      const article = containerRef.current?.querySelector(`article:nth-of-type(${cardId})`);
+      if (article?.classList.contains('dragging-right')) {
+        prevCard();
+      } else if (article?.classList.contains('dragging-left')) {
+        nextCard();
+      }
+
+      article?.classList.remove('dragging-left', 'dragging-right');
+      document.removeEventListener('mousemove', dragMove as any);
+      document.removeEventListener('touchmove', dragMove as any);
+      document.removeEventListener('mouseup', dragEnd);
+      document.removeEventListener('touchend', dragEnd);
     };
 
     document.addEventListener('mousemove', dragMove as any);
@@ -147,7 +155,6 @@ const TechStackPage = () => {
     document.addEventListener('touchend', dragEnd);
   };
 
-  // Add a listener to prevent default touch behavior for better dragging on mobile
   useEffect(() => {
     const container = containerRef.current;
     if (container) {
@@ -158,29 +165,45 @@ const TechStackPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen antialiased flex flex-col items-center justify-center text-white font-sans bg-gradient-to-br from-slate-900 via-green-900/20 to-slate-800 p-8">
+    <div className="relative min-h-screen antialiased flex flex-col items-center justify-center text-white font-sans bg-gradient-to-br from-slate-900 via-blue-900/20 to-slate-800 p-8 overflow-hidden">
       <div className="text-center mb-24">
-        <div className="flex items-center justify-center gap-2 text-green-400 mb-4">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-          <span className="text-sm font-medium uppercase tracking-wide">EcoFlow Solutions</span>
+        <div className="flex items-center justify-center gap-2 text-blue-400 mb-4">
+          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+          <span className="text-sm font-medium uppercase tracking-wide">AI Systems Framework</span>
         </div>
-        <h1 className="text-4xl font-semibold mb-3">Green Technology Stack</h1>
-        <p className="text-slate-400 max-w-md">Drag cards to explore our sustainable technology solutions</p>
+        <h1 className="text-4xl font-semibold mb-3">Intelligent Tech Stack</h1>
+        <p className="text-slate-400 max-w-md">Drag or use arrows to explore our AI-driven product infrastructure</p>
       </div>
 
+      {/* Card Section */}
       <section ref={containerRef} className={`card-stack card-${activeCardId}-active`}>
         {cardData.map((card) => (
           <TechCard key={card.id} data={card} onDragStart={handleDragStart} />
         ))}
       </section>
 
-      <div className="flex gap-2 mt-8">
+      {/* 3D Glass Arrows */}
+      <button
+        onClick={prevCard}
+        className="absolute left-6 top-1/2 -translate-y-1/2 bg-white/10 border border-white/20 backdrop-blur-lg p-4 rounded-full shadow-lg hover:scale-110 hover:shadow-blue-400/50 transition-all duration-300 group"
+      >
+        <ChevronLeft className="w-6 h-6 text-blue-300 group-hover:text-blue-400 animate-pulse" />
+      </button>
+      <button
+        onClick={nextCard}
+        className="absolute right-6 top-1/2 -translate-y-1/2 bg-white/10 border border-white/20 backdrop-blur-lg p-4 rounded-full shadow-lg hover:scale-110 hover:shadow-blue-400/50 transition-all duration-300 group"
+      >
+        <ChevronRight className="w-6 h-6 text-blue-300 group-hover:text-blue-400 animate-pulse" />
+      </button>
+
+      {/* Dots */}
+      <div className="flex gap-2 mt-12">
         {cardData.map((card) => (
           <button
             key={card.id}
             onClick={() => navigateToCard(card.id)}
             className={`w-3 h-3 rounded-full transition-all ${
-              activeCardId === card.id ? 'bg-green-500 scale-125' : 'bg-slate-600 hover:bg-green-400'
+              activeCardId === card.id ? 'bg-blue-500 scale-125' : 'bg-slate-600 hover:bg-blue-400'
             }`}
           ></button>
         ))}

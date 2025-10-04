@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import {
     LoaderCircle, AlertTriangle, PlayCircle, Database, Sparkles, ShieldCheck,
     ChevronLeft, RefreshCw, ClipboardList, BarChart3, Fingerprint, Ban, PenTool,
     KeyRound, HelpCircle, Target, Eye, EyeOff, FileText, Bot, Gavel, Star, ArrowRight,
-    Wrench, CheckCircle, FileCode, Table
+    Wrench, CheckCircle, FileCode, Table, Zap
 } from 'lucide-react';
 
 // Import all necessary API functions and types from your services/api.ts file
@@ -50,7 +51,7 @@ const cardBodyStyle = "p-6";
 const inputBaseStyle = "w-full px-4 py-2 glass rounded-lg border border-slate-700 bg-slate-800/50 text-white focus:border-indigo-400 focus:outline-none transition";
 const primaryButtonStyle = "group btn-primary bg-indigo-600 text-white hover:bg-indigo-500 transition-all flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-lg shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed";
 
-// --- Sub-Components ---
+// --- Sub-Components (UNCHANGED) ---
 
 const CheckItem: React.FC<CheckItemProps> = ({ check, isChecked, onCheckChange }) => {
     const getIcon = () => {
@@ -372,24 +373,69 @@ const DataQualityAgentPage: React.FC = () => {
                                         </div>
                                     </fieldset>
                                 </div>
-                                <div className="p-6 pt-2 flex justify-end">
-                                    <button onClick={handleGenerateProfile} disabled={isLoading || !tableName} className={primaryButtonStyle}>{isLoading ? <><LoaderCircle className="animate-spin w-5 h-5 mr-2"/> Profiling...</> : <>Profile Table <ArrowRight className="w-4 h-4 ml-1.5 transition-transform duration-300 group-hover:translate-x-1" /></>}</button>
+                                
+                                {/* --- MODIFICATION START: Added the "Run for All Schema" button --- */}
+                                <div className="p-6 border-t border-indigo-500/30 space-y-4">
+                                    <button onClick={handleGenerateProfile} disabled={isLoading || !tableName} className={`${primaryButtonStyle} w-full`}>
+                                        {isLoading ? <><LoaderCircle className="animate-spin w-5 h-5 mr-2"/> Profiling...</> : <>Run Step-by-Step Analysis <ArrowRight className="w-4 h-4 ml-1.5 transition-transform duration-300 group-hover:translate-x-1" /></>}
+                                    </button>
+                                    
+                                    <div className="relative flex items-center !my-2">
+                                        <div className="flex-grow border-t border-slate-700"></div>
+                                        <span className="flex-shrink mx-4 text-slate-400 text-xs uppercase">Or</span>
+                                        <div className="flex-grow border-t border-slate-700"></div>
+                                    </div>
+
+                                    {/* Auto run for a single table - appears when a table name is typed */}
+                                    {tableName && (
+                                        <Link
+                                            to="/data-quality-autorun"
+                                            state={{ 
+                                                connectionString: connectionString, 
+                                                tableName: tableName,
+                                                model: selectedModel 
+                                            }}
+                                            className={`${primaryButtonStyle} w-full !bg-teal-600 hover:!bg-teal-500 hover:!shadow-teal-500/30 animate-fade-in`}
+                                        >
+                                            <Zap className="w-4 h-4 mr-2" />
+                                            Auto Run for Table '{tableName}'
+                                        </Link>
+                                    )}
+
+                                    {/* NEW BUTTON: Run for all schema - always visible */}
+                                    <Link
+                                        to="/data-quality-schema-autorun" // NOTE: You will need to create a new page/component to handle this route.
+                                        state={{ 
+                                            connectionString: connectionString, 
+                                            model: selectedModel 
+                                        }}
+                                        className={`${primaryButtonStyle} w-full !bg-purple-600 hover:!bg-purple-500 hover:!shadow-purple-500/30`}
+                                    >
+                                        <Database className="w-4 h-4 mr-2" />
+                                        Run data quality for All Schema
+                                    </Link>
                                 </div>
+                                {/* --- MODIFICATION END --- */}
+
                             </div>
                         )}
-
+                        
+                        {/* The rest of the steps (2 through 6) remain completely unchanged */}
+                        
                         {step === 2 && (
                             <div className={`${cardContainerStyle} max-w-5xl mx-auto`}>
                                 <div className={cardHeaderStyle}>
                                     <h3 className={cardTitleStyle}><FileText className="w-6 h-6 text-indigo-400"/> Step 2: Profile & Define Rules</h3>
                                 </div>
-                                <div className="flex flex-col lg:flex-row gap-8 p-6">
-                                    <div className="w-full lg:w-[320px] xl:w-[360px] flex-shrink-0"><DataProfileDisplay profile={dataProfile} /></div>
-                                    <div className="flex-grow flex flex-col space-y-6 lg:border-l lg:border-slate-700/80 lg:pl-8">
+                                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 p-6 lg:items-start">
+                                    <div className="lg:col-span-2">
+                                        <DataProfileDisplay profile={dataProfile} />
+                                    </div>
+                                    <div className="lg:col-span-3 flex flex-col space-y-6">
                                         <div>
                                             <label htmlFor="customRules" className="text-base font-medium text-slate-200 block mb-2">Custom Rules Engine</label>
-                                            <p className="text-sm text-slate-400 mb-3">Add any specific rules the AI must follow. The AI will see the profile on the left for context.</p>
-                                            <textarea id="customRules" value={customRules} onChange={(e) => setCustomRules(e.target.value)} placeholder="e.g., Ensure all 'order_id' values are positive integers." className={`${inputBaseStyle} !h-40`} rows={5}/>
+                                            <p className="text-sm text-slate-400 mb-3">Add any specific rules the AI must follow. The AI will use the profile on the left for context.</p>
+                                            <textarea id="customRules" value={customRules} onChange={(e) => setCustomRules(e.target.value)} placeholder="e.g., Ensure all 'order_id' values are positive integers." className={`${inputBaseStyle} min-h-[160px]`} rows={6}/>
                                         </div>
                                         <div className="flex justify-between items-center pt-6 border-t border-slate-700/80">
                                             <button onClick={() => handleBack(1)} disabled={isLoading} className={`${primaryButtonStyle} bg-slate-700 hover:bg-slate-600`}><ChevronLeft className="w-5 h-5 mr-1.5"/> Back</button>

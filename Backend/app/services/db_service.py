@@ -450,3 +450,54 @@ async def get_primary_keys_for_tables(conn_str: str, table_names: List[str]) -> 
             await conn.close()
 
 
+
+async def delete_all_views(conn_str: str) -> int:
+    """
+    Finds and deletes all views in the 'public' schema of the database.
+
+    Args:
+        conn_str: The database connection string.
+
+    Returns:
+        The number of views that were deleted.
+        
+    Raises:
+        DatabaseServiceError: If there is an error during the database operation.
+    """
+    conn = None
+    try:
+        conn = await asyncpg.connect(conn_str)
+        
+        # Step 1: Get a list of all view names from the public schema
+        # We query pg_views which is specific to PostgreSQL.
+        # For other databases, you might query information_schema.views.
+        view_records = await conn.fetch("""
+            SELECT viewname
+            FROM pg_views
+            WHERE schemaname = 'public'
+        """)
+        
+        if not view_records:
+            return 0
+            
+        view_names = [record['viewname'] for record in view_records]
+        
+        # Step 2: Construct and execute the DROP VIEW statements for each view
+        # We use 'CASCADE' to automatically remove objects that depend on the views.
+        # We also use 'IF EXISTS' to prevent errors if a view is somehow deleted
+        # between our select and drop commands.
+        for view_name in view_names:
+            # Properly quoting the identifier to handle special characters or casing
+            await conn.execute(f'DROP VIEW IF EXISTS public."{view_name}" CASCADE;')
+            
+        return len(view_names)
+
+    except asyncpg.PostgresError as e:
+        # Catch specific database errors
+        raise DatabaseServiceError(message=f"Database error: {e}", status_code=500)
+    except Exception as e:
+        # Catch other unexpected errors
+        raise DatabaseServiceError(message=str(e), status_code=500)
+    finally:
+        if conn:
+            await conn.close()

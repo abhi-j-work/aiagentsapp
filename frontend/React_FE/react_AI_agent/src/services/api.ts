@@ -12,7 +12,7 @@ import type {
   StartTrainingResponse
 } from '../types/training';
 // For production, use environment variables: const API_BASE_URL = import.meta.env.VITE_API_URL;
-const API_BASE_URL = 'http://localhost:8011';
+const API_BASE_URL = 'http://localhost:8015';
 
 /**
  * A robust, standardized function for making JSON API requests.
@@ -457,4 +457,16 @@ export const startCnnTraining = (params: StartCnnParams) =>
   request<StartTrainingResponse>('/spacy-training/start-cnn', {
     method: 'POST',
     body: JSON.stringify(params),
+  });
+
+export interface DeleteResponse {
+  message: string;
+  deleted_count: number;
+}
+
+
+export const postDeleteAllViews = (connection_string: string) =>
+  request<DeleteResponse>('/data-gov/views', { // Endpoint matches your backend route
+    method: 'DELETE',
+    body: JSON.stringify({ connection_string }),
   });

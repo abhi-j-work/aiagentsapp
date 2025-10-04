@@ -402,3 +402,30 @@ async def download_governance_report_word(params: models.DownloadGovernanceRepor
     except Exception as e:
         logger.error(f"Failed to generate Word report: {e}")
         raise HTTPException(status_code=500, detail="Could not generate Word file.")
+    
+@router.delete("/views", response_model=models.DeleteResponse)
+async def delete_all_views(params: models.DBParams, settings: Settings = Depends(get_settings)):
+    """
+    Deletes all user-defined views from the public schema of the database.
+    
+    This is a destructive operation and cannot be undone.
+    """
+    try:
+        conn_str = _get_conn_str(params.connection_string, settings)
+        
+        # Delegate the actual deletion logic to the db_service
+        deleted_count = await db_service.delete_all_views(conn_str)
+        
+        if deleted_count == 0:
+            return models.DeleteResponse(message="No views found to delete.", deleted_count=0)
+            
+        return models.DeleteResponse(
+            message=f"Successfully deleted {deleted_count} views.",
+            deleted_count=deleted_count
+        )
+
+    except DatabaseServiceError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except Exception as e:
+        logger.error(f"Unexpected error deleting views: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An unexpected server error occurred.")

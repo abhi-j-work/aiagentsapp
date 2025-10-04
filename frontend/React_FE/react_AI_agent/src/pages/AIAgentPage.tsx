@@ -1,14 +1,16 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
     Database, LoaderCircle, AlertTriangle, PlayCircle, Table, ChevronsRight, Link2,
     ShieldCheck, FileText, CheckCircle, Eye, UserCircle,
-    Gavel, Star // Removed FileSpreadsheet
+    Gavel, Star, Zap, Trash2
 } from 'lucide-react';
 import {
     postExtractSchema, postExplainIntegrity, postClassifyData, postGenerateMaskingSQL, postApplyMaskingPlan,
     postListGovernedViews, postFetchViewData,
-    downloadWordReport, // Removed downloadExcelReport
-    type ExtractedSchema, type ReferentialIntegrityResponse, type ClassificationResult, 
+    downloadWordReport,
+    postDeleteAllViews,
+    type ExtractedSchema, type ReferentialIntegrityResponse, type ClassificationResult,
     type SQLGenerationResponse, type FetchViewDataResponse
 } from '../services/api';
 
@@ -95,7 +97,6 @@ const ViewDataDisplay = ({ viewData }: { viewData: FetchViewDataResponse }) => {
     return (<div className="animate-fade-in mt-4"><h5 className="font-semibold text-white mb-3">Data from: <span className="text-indigo-400">{viewData.view_name}</span></h5><div className="max-h-80 overflow-auto rounded-lg border border-slate-700"><table className="w-full text-sm text-left"><thead className="bg-slate-800 sticky top-0 z-10"><tr>{headers.map(h => <th key={h} className="p-3 font-medium text-slate-200">{h}</th>)}</tr></thead><tbody className="divide-y divide-slate-800">{viewData.data.map((row, i) => (<tr key={i} className="bg-slate-900/70 hover:bg-slate-800">{headers.map(h => <td key={`${i}-${h}`} className="p-3 text-slate-300 whitespace-nowrap">{String(row[h])}</td>)}</tr>))}</tbody></table></div></div>);
 };
 
-// --- UPDATED Download Actions Component ---
 const DownloadActions = ({ integrityData, sqlData }: { integrityData: ReferentialIntegrityResponse; sqlData: SQLGenerationResponse; }) => {
     const handleDownloadWord = () => {
         const reportData = {
@@ -104,15 +105,15 @@ const DownloadActions = ({ integrityData, sqlData }: { integrityData: Referentia
         };
         downloadWordReport(reportData);
     };
-    
+
     return (
         <div className="mt-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700 animate-fade-in">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <span className="text-slate-200 font-semibold">Governance Report Complete</span>
                 <div className="h-6 w-px bg-slate-600 hidden sm:block"></div>
                 <span className="text-slate-300">Download Report As:</span>
-                <button 
-                    onClick={handleDownloadWord} 
+                <button
+                    onClick={handleDownloadWord}
                     className="group bg-blue-600 text-white hover:bg-blue-500 transition-all flex items-center text-sm font-semibold px-4 py-2 rounded-lg shadow-lg"
                 >
                     <FileText className="w-4 h-4 mr-2" /> Word
@@ -121,7 +122,6 @@ const DownloadActions = ({ integrityData, sqlData }: { integrityData: Referentia
         </div>
     );
 };
-// --- END UPDATE ---
 
 // ===================================================
 // MAIN PAGE COMPONENT
@@ -130,8 +130,10 @@ const AIAgentPage = () => {
     // UI State
     const [viewMode, setViewMode] = useState<'initial' | 'results'>('initial');
     const [isLoading, setIsLoading] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [currentStep, setCurrentStep] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [connectionString, setConnectionString] = useState('');
 
     // Data State
@@ -151,7 +153,7 @@ const AIAgentPage = () => {
     // API Handlers
     const handleRunAnalysis = async () => {
         if (!connectionString) { setError("Please provide a database connection string."); return; }
-        setCurrentStep('Analyzing...'); setIsLoading(true); setError(null);
+        setCurrentStep('Analyzing...'); setIsLoading(true); setError(null); setSuccessMessage(null);
         setSchema(null); setIntegrityReport(null); setClassifications(null);
         setClassificationEvaluation(null); setSqlStatements(null); setFinalMessage(null);
         setGovernedViews(null); setViewData(null); setSelectedView(null);
@@ -165,7 +167,7 @@ const AIAgentPage = () => {
                 setDownloadableIntegrityData(integrityResponse);
             } else { throw new Error("Invalid integrity report."); }
             setViewMode('results');
-        } catch (err: any) { setError(err.message || 'Analysis failed.'); setViewMode('initial');} 
+        } catch (err: any) { setError(err.message || 'Analysis failed.'); setViewMode('initial');}
         finally { setIsLoading(false); setCurrentStep(''); }
     };
 
@@ -219,6 +221,27 @@ const AIAgentPage = () => {
         finally { setIsLoading(false); setCurrentStep(''); }
     };
 
+    const handleDeleteViews = async () => {
+        if (!window.confirm("Are you sure you want to delete all governed views? This is a destructive action and cannot be undone.")) {
+            return;
+        }
+        setIsDeleting(true);
+        setError(null);
+        setSuccessMessage(null);
+        try {
+            const res = await postDeleteAllViews(connectionString);
+            setSuccessMessage(res.message);
+            setGovernedViews(null);
+            setViewData(null);
+            setSelectedView(null);
+        } catch (err: any) {
+            setError(err.message || 'Failed to delete views.');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+
     return (
         <div className={`min-h-[calc(100vh-80px)] w-full flex items-center p-8 transition-all duration-700 ease-in-out ${viewMode === 'initial' ? 'justify-center' : 'justify-start'}`}>
             <div className="w-full max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 items-start">
@@ -226,9 +249,40 @@ const AIAgentPage = () => {
                     <div className="card-border rounded-2xl overflow-hidden animate-vertical-float">
                         <div className="p-6 border-b border-indigo-500/20"><h2 className="text-xl font-semibold text-white">Automated Data Governance Agent</h2><p className="text-sm text-slate-400 mt-1">Step 1: Analyze Database</p></div>
                         <div className="p-6 space-y-4">
-                            <div><label htmlFor="connStr" className="text-sm font-medium text-slate-300 block mb-2">Database Connection String</label><input id="connStr" type="password" value={connectionString} onChange={(e) => setConnectionString(e.target.value)} placeholder="postgresql://..." className="w-full px-4 py-2 glass rounded-lg border border-white/20 text-white focus:border-indigo-400 focus:outline-none transition" disabled={isLoading} /></div>
-                            <button onClick={handleRunAnalysis} disabled={isLoading} className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-500 transition disabled:bg-slate-700 flex items-center justify-center gap-2">{isLoading && currentStep === 'Analyzing...' ? (<><LoaderCircle className="w-5 h-5 animate-spin" />Analyzing...</>) : (<><PlayCircle className="w-5 h-5" />Run Analysis</>)}</button>
-                            {error && viewMode === 'initial' && (<div className="flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm animate-fade-in"><AlertTriangle className="w-5 h-5 flex-shrink-0" /><span>{error}</span></div>)}
+                            <div><label htmlFor="connStr" className="text-sm font-medium text-slate-300 block mb-2">Database Connection String</label><input id="connStr" type="password" value={connectionString} onChange={(e) => setConnectionString(e.target.value)} placeholder="postgresql://..." className="w-full px-4 py-2 glass rounded-lg border border-white/20 text-white focus:border-indigo-400 focus:outline-none transition" disabled={isLoading || isDeleting} /></div>
+                            <button onClick={handleRunAnalysis} disabled={isLoading || isDeleting || !connectionString} className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-500 transition disabled:bg-slate-700 disabled:cursor-not-allowed flex items-center justify-center gap-2">{isLoading && currentStep === 'Analyzing...' ? (<><LoaderCircle className="w-5 h-5 animate-spin" />Analyzing...</>) : (<><PlayCircle className="w-5 h-5" />Run Analysis</>)}</button>
+                            
+                            {connectionString && (
+                                <>
+                                    <div className="relative flex items-center my-2">
+                                        <div className="flex-grow border-t border-slate-700"></div>
+                                        <span className="flex-shrink mx-4 text-slate-400 text-xs">OR</span>
+                                        <div className="flex-grow border-t border-slate-700"></div>
+                                    </div>
+                                    <Link
+                                        to="/autorun"
+                                        state={{ connectionString: connectionString }}
+                                        className={`w-full text-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-500 transition flex items-center justify-center gap-2 ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
+                                    >
+                                        <Zap className="w-5 h-5" />
+                                        Auto Run & View Report
+                                    </Link>
+                                    <button
+                                        onClick={handleDeleteViews}
+                                        disabled={isLoading || isDeleting}
+                                        className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-500 transition disabled:bg-slate-700 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {isDeleting ? (
+                                            <><LoaderCircle className="w-5 h-5 animate-spin" />Deleting...</>
+                                        ) : (
+                                            <><Trash2 className="w-5 h-5" />Delete All Views</>
+                                        )}
+                                    </button>
+                                </>
+                            )}
+
+                            {error && viewMode === 'initial' && (<div className="flex items-center gap-3 p-3 mt-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm animate-fade-in"><AlertTriangle className="w-5 h-5 flex-shrink-0" /><span>{error}</span></div>)}
+                            {successMessage && viewMode === 'initial' && (<div className="flex items-center gap-3 p-3 mt-4 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 text-sm animate-fade-in"><CheckCircle className="w-5 h-5 flex-shrink-0" /><span>{successMessage}</span></div>)}
                         </div>
                     </div>
                 </div>
@@ -245,14 +299,14 @@ const AIAgentPage = () => {
                                     {classificationEvaluation && <EvaluationSummary evaluation={classificationEvaluation} />}
                                     {sqlStatements && !finalMessage && <SqlDisplay statements={sqlStatements} />}
                                     {finalMessage && !governedViews && <div className="p-4 bg-green-500/20 rounded-lg text-center text-green-300 animate-fade-in">{finalMessage}</div>}
-                                    {governedViews && (<div className="space-y-4"><div className="relative"><UserCircle className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input type="text" value={viewingRole} onChange={(e) => setViewingRole(e.target.value)} placeholder="e.g., admin, analyst" className="w-full pl-10 pr-4 py-2 glass rounded-lg border border-white/20 text-white focus:border-indigo-400 focus:outline-none transition" disabled={isLoading} /></div><GovernedViewList views={governedViews} onSelectView={handleFetchViewData} isLoading={isLoading} selectedView={selectedView} /></div>)}
+                                    {governedViews && (<div className="space-y-4"><div className="relative"><UserCircle className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input type="text" value={viewingRole} onChange={(e) => setViewingRole(e.target.value)} placeholder="e.g., admin, analyst" className="w-full pl-10 pr-4 py-2 glass rounded-lg border border-white/20 text-white focus:border-indigo-400 focus:outline-none transition" disabled={isLoading || isDeleting} /></div><GovernedViewList views={governedViews} onSelectView={handleFetchViewData} isLoading={isLoading} selectedView={selectedView} /></div>)}
                                     {viewData && <ViewDataDisplay viewData={viewData} />}
                                     {finalMessage && downloadableIntegrityData && downloadableSqlData && (<DownloadActions integrityData={downloadableIntegrityData} sqlData={downloadableSqlData} />)}
                                     <div className="pt-4 text-center space-y-4">
-                                        {schema && !classifications && (<button onClick={handleClassifyData} disabled={isLoading} className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:bg-slate-700 animate-fade-in">{isLoading && currentStep === 'Classifying...' ? <LoaderCircle className="animate-spin" /> : <ShieldCheck />}{isLoading && currentStep === 'Classifying...' ? 'Classifying...' : 'Proceed to Classify Data'}</button>)}
-                                        {classifications && !sqlStatements && !finalMessage && (<button onClick={handleGenerateSql} disabled={isLoading} className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:bg-slate-700 animate-fade-in">{isLoading && currentStep === 'Generating...' ? <LoaderCircle className="animate-spin" /> : <FileText />}{isLoading && currentStep === 'Generating...' ? 'Generating...' : 'Generate SQL Masking Plan'}</button>)}
-                                        {sqlStatements && !finalMessage && (<button onClick={handleApplyPlan} disabled={isLoading} className="w-full px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:bg-slate-700 animate-fade-in">{isLoading && currentStep === 'Applying...' ? <LoaderCircle className="animate-spin" /> : <CheckCircle />}{isLoading && currentStep === 'Applying...' ? 'Applying...' : 'Approve and Apply Plan'}</button>)}
-                                        {finalMessage && (<button onClick={handleListGovernedViews} disabled={isLoading} className="w-full px-6 py-3 bg-teal-600 hover:bg-teal-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:bg-slate-700 animate-fade-in">{isLoading && currentStep === 'Listing Views...' ? <LoaderCircle className="animate-spin" /> : <Eye />}{isLoading ? 'Loading...' : (governedViews ? 'Refresh Governed Views' : 'View Governance Results')}</button>)}
+                                        {schema && !classifications && (<button onClick={handleClassifyData} disabled={isLoading || isDeleting} className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:bg-slate-700 animate-fade-in">{isLoading && currentStep === 'Classifying...' ? <LoaderCircle className="animate-spin" /> : <ShieldCheck />}{isLoading && currentStep === 'Classifying...' ? 'Classifying...' : 'Proceed to Classify Data'}</button>)}
+                                        {classifications && !sqlStatements && !finalMessage && (<button onClick={handleGenerateSql} disabled={isLoading || isDeleting} className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:bg-slate-700 animate-fade-in">{isLoading && currentStep === 'Generating...' ? <LoaderCircle className="animate-spin" /> : <FileText />}{isLoading && currentStep === 'Generating...' ? 'Generating...' : 'Generate SQL Masking Plan'}</button>)}
+                                        {sqlStatements && !finalMessage && (<button onClick={handleApplyPlan} disabled={isLoading || isDeleting} className="w-full px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:bg-slate-700 animate-fade-in">{isLoading && currentStep === 'Applying...' ? <LoaderCircle className="animate-spin" /> : <CheckCircle />}{isLoading && currentStep === 'Applying...' ? 'Applying...' : 'Approve and Apply Plan'}</button>)}
+                                        {finalMessage && (<button onClick={handleListGovernedViews} disabled={isLoading || isDeleting} className="w-full px-6 py-3 bg-teal-600 hover:bg-teal-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:bg-slate-700 animate-fade-in">{isLoading && currentStep === 'Listing Views...' ? <LoaderCircle className="animate-spin" /> : <Eye />}{isLoading ? 'Loading...' : (governedViews ? 'Refresh Governed Views' : 'View Governance Results')}</button>)}
                                     </div>
                                 </div>
                             </div>
