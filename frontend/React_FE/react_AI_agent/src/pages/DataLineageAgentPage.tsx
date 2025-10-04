@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import {
-    LoaderCircle, AlertTriangle, Table, Eye, Workflow, Search, Network, KeyRound
+    LoaderCircle, AlertTriangle, Table, Eye, Workflow, Search, Network, KeyRound, BrainCircuit // <-- NEW ICON
 } from 'lucide-react';
 import { postListDatabaseObjects, postGetDataLineage } from '../services/api';
 import type { LineageResponse, DatabaseObjectsResponse, TableInfo } from '../services/api';
 import LineageDisplay from '../components/LineageDisplay';
 
-// This sub-component is correctly defined outside the main component for performance.
+// This sub-component remains unchanged
 const ObjectSelector = ({
     objects,
     title,
@@ -53,13 +53,12 @@ const ObjectSelector = ({
 
 
 const DataLineageAgentPage = () => {
-    // UI State
+    // State is simplified back to its original form
     const [isConnecting, setIsConnecting] = useState(false);
     const [isLineageLoading, setIsLineageLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [connectionString, setConnectionString] = useState('');
     
-    // Data State
     const [dbObjects, setDbObjects] = useState<DatabaseObjectsResponse | null>(null);
     const [selectedObject, setSelectedObject] = useState<{ label: string; id: string; } | null>(null);
     const [lineageData, setLineageData] = useState<LineageResponse | null>(null);
@@ -100,6 +99,20 @@ const DataLineageAgentPage = () => {
         }
     };
 
+    // ===== NEW: Navigation Handler =====
+    const handleNavigateToKg = () => {
+        if (!connectionString) {
+            setError("Please provide a connection string first.");
+            return;
+        }
+        // This passes the connection string to the new page via a URL query parameter.
+        const encodedConnStr = encodeURIComponent(connectionString);
+        // Assumes you have a route set up for '/knowledge-graph' (see Step 4)
+        window.location.href = `/knowledge-graph?connStr=${encodedConnStr}`;
+    };
+    
+    const isLoading = isConnecting || isLineageLoading;
+
     return (
         <div className="min-h-screen w-full bg-slate-900 text-white flex p-4 lg:p-6 gap-6">
             <aside className="w-full max-w-xs flex-shrink-0 flex flex-col gap-6">
@@ -114,11 +127,18 @@ const DataLineageAgentPage = () => {
                 <div className="card-border p-4 rounded-xl space-y-4 bg-slate-800/30">
                      <div>
                         <label htmlFor="connStr" className="text-sm font-medium text-slate-300 block mb-2">Database Connection</label>
-                        <input id="connStr" type="password" value={connectionString} onChange={(e) => setConnectionString(e.target.value)} placeholder="postgresql://..." className="w-full px-4 py-2 glass rounded-lg border border-white/20 text-white focus:border-indigo-400 focus:outline-none transition" disabled={isConnecting} />
+                        <input id="connStr" type="password" value={connectionString} onChange={(e) => setConnectionString(e.target.value)} placeholder="postgresql://..." className="w-full px-4 py-2 glass rounded-lg border border-white/20 text-white focus:border-indigo-400 focus:outline-none transition" disabled={isLoading} />
                     </div>
-                    <button onClick={handleListObjects} disabled={isConnecting || !connectionString} className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-500 transition disabled:bg-slate-700 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                        {isConnecting ? (<><LoaderCircle className="w-5 h-5 animate-spin" />Connecting...</>) : (<><Search className="w-5 h-5" />List Objects</>)}
-                    </button>
+                    <div className="space-y-2">
+                        <button onClick={handleListObjects} disabled={isLoading || !connectionString} className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-500 transition disabled:bg-slate-700 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                            {isConnecting ? (<><LoaderCircle className="w-5 h-5 animate-spin" />Connecting...</>) : (<><Search className="w-5 h-5" />List Objects</>)}
+                        </button>
+                        
+                        {/* ===== NEW: The button that links to the new page ===== */}
+                        <button onClick={handleNavigateToKg} disabled={!connectionString} className="w-full px-4 py-2 bg-slate-600 text-white rounded-lg font-semibold hover:bg-slate-500 transition disabled:bg-slate-700 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                           <BrainCircuit className="w-5 h-5" /> Semantic Knowledge Graph Brain
+                        </button>
+                    </div>
                 </div>
                 
                 {error && (
@@ -131,20 +151,12 @@ const DataLineageAgentPage = () => {
                 {dbObjects && (
                     <div className="flex-grow card-border p-4 rounded-xl bg-slate-800/30 overflow-y-auto space-y-4 animate-fade-in">
                         <ObjectSelector 
-                            objects={dbObjects.tables}
-                            title="Tables" 
-                            objectType="table"
-                            onSelect={handleSelectObject}
-                            selectedObject={selectedObject?.label || null} 
-                            icon={Table} 
+                            objects={dbObjects.tables} title="Tables" objectType="table"
+                            onSelect={handleSelectObject} selectedObject={selectedObject?.label || null} icon={Table} 
                         />
                         <ObjectSelector 
-                            objects={dbObjects.views}
-                            title="Views" 
-                            objectType="view"
-                            onSelect={handleSelectObject}
-                            selectedObject={selectedObject?.label || null} 
-                            icon={Eye} 
+                            objects={dbObjects.views} title="Views" objectType="view"
+                            onSelect={handleSelectObject} selectedObject={selectedObject?.label || null} icon={Eye} 
                         />
                     </div>
                 )}
@@ -157,7 +169,6 @@ const DataLineageAgentPage = () => {
                         <span>Building Lineage Graph...</span>
                     </div>
                 ) : lineageData && selectedObject ? (
-                    // This is now simpler and correct. It no longer passes the unnecessary tablesInfo prop.
                     <LineageDisplay 
                         data={lineageData} 
                         centralNodeId={selectedObject.id} 
@@ -166,7 +177,7 @@ const DataLineageAgentPage = () => {
                     <div className="text-center text-slate-400">
                         <Workflow className="w-16 h-16 mx-auto text-slate-600 mb-4" />
                         <h2 className="text-xl font-semibold text-slate-300">Welcome to the Lineage Agent</h2>
-                        <p className="mt-2 max-w-md">Connect to your database and select a table or view from the sidebar to visualize its data flow.</p>
+                        <p className="mt-2 max-w-md">Connect to your database and select an object to visualize its data flow, or launch the Knowledge Graph Brain.</p>
                     </div>
                 )}
             </main>

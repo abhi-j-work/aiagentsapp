@@ -31,6 +31,7 @@ import TrainingQAInfographic from './pages/TrainingQAInfographic';
 import InfographicHub from './pages/InfographicHub';
 import ScrollCircleAnimation from './pages/ScrollCircleAnimation';
 import ConcentricRagInfographic from './pages/ConcentricRagInfographic';
+import KnowledgeGraphPage from './pages/KnowledgeGraphPage';
 
 function App() {
   return (
@@ -62,6 +63,8 @@ function App() {
         <Route path="/data-lineage-intro" element={<DataLineageIntroPage />} />
         <Route path="/data-quality-autorun" element={<DataQualityAutoRunPage />} />
         <Route path="/about1" element={<ConcentricRagInfographic/>} />
+
+        <Route path="/knowledge-graph" element={<KnowledgeGraphPage />} />
         {/* Model Training Routes */}
         {/* <Route path="/training/start" element={<TrainPage />} />
         <Route path="/training/runs" element={<RunsPage />} />

@@ -1,7 +1,7 @@
 // AIConcentricInfographic.tsx
 import React, { useRef } from "react";
 import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
-import "./ConcentricInfographic.css";
+import "./ConcentricRagInfographic.css";
 
 const LABELS = [
   "Only an LLM call?",

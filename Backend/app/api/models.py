@@ -428,3 +428,44 @@ class ListFilteredViewsResponse(BaseModel):
 class DeleteResponse(BaseModel):
     message: str
     deleted_count: int
+
+
+
+############################################################################
+#   New Models for the Lineage Advance schema details and knowledge graph#
+############################################################################
+class ColumnEntity(BaseModel):
+    """Represents a Column node in a Knowledge Graph."""
+    columnName: str = Field(..., description="The name of the column.")
+    dataType: str = Field(..., description="The data type of the column (e.g., VARCHAR, INTEGER).")
+    isNullable: bool = Field(..., description="Indicates if the column can store NULL values.")
+    defaultValue: Optional[str] = Field(None, description="The default value of the column, if any.")
+    isAutoIncrementing: bool = Field(False, description="Indicates if the column auto-increments.")
+    comment: Optional[str] = Field(None, description="Comment or description associated with the column.")
+
+class ConstraintEntity(BaseModel):
+    """Represents a constraint, like a Primary Key or Unique Key."""
+    constraintName: Optional[str] = Field(None, description="The name of the constraint.")
+    constrainedColumns: List[str] = Field(..., description="List of columns included in this constraint.")
+
+class RelationshipEntity(BaseModel):
+    """Represents a Foreign Key relationship (an edge in the Knowledge Graph)."""
+    constraintName: Optional[str] = Field(None, description="The name of the foreign key constraint.")
+    sourceTable: str = Field(..., description="The fully qualified name of the table containing the foreign key.")
+    sourceColumns: List[str] = Field(..., description="The column(s) in the source table.")
+    targetTable: str = Field(..., description="The fully qualified name of the table being referenced.")
+    targetColumns: List[str] = Field(..., description="The column(s) in the target table being referenced.")
+
+class TableEntity(BaseModel):
+    """Represents a Table node in a Knowledge Graph, containing its attributes and relationships."""
+    fullyQualifiedName: str = Field(..., description="The unique, fully qualified name of the table (e.g., 'public.users').")
+    schemaName: str = Field(..., description="The schema the table belongs to.")
+    tableName: str = Field(..., description="The simple name of the table.")
+    columns: List[ColumnEntity] = Field(..., description="A list of all column entities in this table.")
+    primaryKey: Optional[ConstraintEntity] = Field(None, description="The primary key of the table.")
+    foreignKeyRelationships: List[RelationshipEntity] = Field([], description="A list of outgoing foreign key relationships.")
+    comment: Optional[str] = Field(None, description="Comment or description associated with the table.")
+
+class DataEstateSchemaResponse(BaseModel):
+    """The root response model for the entire data estate schema."""
+    tables: Dict[str, TableEntity] = Field(..., description="A dictionary of all tables in the database, keyed by their fully qualified name.")

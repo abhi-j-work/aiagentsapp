@@ -12,7 +12,7 @@ import type {
   StartTrainingResponse
 } from '../types/training';
 // For production, use environment variables: const API_BASE_URL = import.meta.env.VITE_API_URL;
-const API_BASE_URL = 'http://localhost:8015';
+const API_BASE_URL = 'http://localhost:8017';
 
 /**
  * A robust, standardized function for making JSON API requests.
@@ -470,3 +470,103 @@ export const postDeleteAllViews = (connection_string: string) =>
     method: 'DELETE',
     body: JSON.stringify({ connection_string }),
   });
+
+  // ====================================================================
+// ✅ NEW: 8. DATA ESTATE & KNOWLEDGE GRAPH
+// ====================================================================
+
+// --- Types ---
+// These types match the JSON response from your /data-estate-schema endpoint
+export interface ColumnEntity {
+    columnName: string;
+    dataType: string;
+    isNullable: boolean;
+    defaultValue: string | null;
+    isAutoIncrementing: boolean;
+    comment: string | null;
+}
+
+export interface ConstraintEntity {
+    constraintName: string | null;
+    constrainedColumns: string[];
+}
+
+export interface RelationshipEntity {
+    constraintName: string | null;
+    sourceTable: string;
+    sourceColumns: string[];
+    targetTable: string;
+    targetColumns: string[];
+}
+
+export interface TableEntity {
+    fullyQualifiedName: string;
+    schemaName: string;
+    tableName: string;
+    columns: ColumnEntity[];
+    primaryKey: ConstraintEntity | null;
+    foreignKeyRelationships: RelationshipEntity[];
+    comment: string | null;
+}
+
+export interface DataEstateSchemaResponse {
+    tables: { [fullyQualifiedName: string]: TableEntity };
+}
+
+// --- API Functions ---
+
+/**
+ * STEP 1: Fetches the detailed schema of the entire database as a JSON object.
+ * @param connectionString The database connection string.
+ */
+export const postGetDataEstateSchema = (connectionString: string) =>
+  request<DataEstateSchemaResponse>('/data-estate/data-estate-schema', {
+    method: 'POST',
+    body: JSON.stringify({ connection_string: connectionString }),
+  });
+
+/**
+ * STEP 2: Generates the final, interactive HTML knowledge graph visualization.
+ * This should be called after getting the schema.
+ * @param connectionString The database connection string.
+ */
+
+
+
+async function requestHtml(endpoint: string, options: RequestInit = {}): Promise<string> {
+    const cleanBase = API_BASE_URL.trim().replace(/\/$/, '');
+    const cleanEndpoint = endpoint.trim().startsWith('/') ? endpoint.trim() : `/${endpoint.trim()}`;
+    const finalUrl = `${cleanBase}${cleanEndpoint}`;
+
+    try {
+        const response = await fetch(finalUrl, {
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'text/html', // Explicitly request HTML
+                ...options.headers 
+            },
+            ...options,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ 
+                detail: `Request to ${finalUrl} failed with HTTP status ${response.status}` 
+            }));
+            throw new Error(errorData.detail);
+        }
+        
+        return await response.text();
+
+    } catch (error: any) {
+        console.error(`HTML request to ${finalUrl} failed:`, error);
+        throw new Error(error.message || 'A network error occurred.');
+    }
+}
+
+export const postGenerateKnowledgeGraphHtml = (connectionString: string) =>
+  requestHtml('/data-estate/semantic-knowledge-graph', { // Uses the new requestHtml helper
+    method: 'POST',
+    body: JSON.stringify({ connection_string: connectionString }),
+  });
+
+
