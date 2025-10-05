@@ -102,44 +102,58 @@ async def _generate_graph_and_insight(text_content: str, document_id: str) -> di
 
 
 # Add this helper function somewhere near the other helpers (minimal, local only)
-def run_query_if_neo4j(cypher: str):
+_neo4j_driver = None
+
+def get_neo4j_driver():
+    global _neo4j_driver
+    if _neo4j_driver is None:
+        uri = os.getenv("NEO4J_URI")
+        user = os.getenv("NEO4J_USER")
+        password = os.getenv("NEO4J_PASSWORD")
+
+        if not (uri and user and password):
+            return None, "Neo4j credentials not set."
+
+        try:
+            from neo4j import GraphDatabase
+            _neo4j_driver = GraphDatabase.driver(uri, auth=(user, password))
+            _neo4j_driver.verify_connectivity()
+            print("Neo4j driver initialized and connected successfully.")
+        except Exception as e:
+            print(f"Failed to connect to Neo4j: {e}")
+            _neo4j_driver = None
+            return None, f"Failed to connect to Neo4j: {e}"
+    return _neo4j_driver, None # Return driver and None for error if successful
+
+# --- Modified run_query_if_neo4j function ---
+def run_query_if_neo4j(cypher: str, parameters: dict = None):
     """
     Minimal runner: if NEO4J_URI/NEO4J_USER/NEO4J_PASSWORD are set and neo4j driver is available,
     execute the query and return list-of-dicts. Otherwise return None (caller will still get cypher).
+    Now accepts an optional `parameters` dictionary to pass to the Cypher query.
     """
-    uri = os.getenv("NEO4J_URI")
-    user = os.getenv("NEO4J_USER")
-    password = os.getenv("NEO4J_PASSWORD")
-    if not (uri and user and password):
-        # No Neo4j creds -> don't attempt to execute (safe)
-        return None
+    driver, error_msg = get_neo4j_driver()
+    if error_msg:
+        # If no driver or connection error, return error dict or None as per original logic
+        # For consistency with the error format, let's return a dict here
+        return {"error": error_msg}
+
 
     try:
-        # import here to avoid hard dependency unless this path is used
-        from neo4j import GraphDatabase
-    except Exception as e:
-        # neo4j package not installed or import error -> do not break main app
-        print(f"neo4j driver not available: {e}")
-        return None
-
-    driver = None
-    try:
-        driver = GraphDatabase.driver(uri, auth=(user, password))
         with driver.session() as session:
-            def _tx_run(tx):
-                res = tx.run(cypher)
+            def _tx_run(tx, cypher_query, params_dict): # Modified to accept parameters
+                res = tx.run(cypher_query, params_dict) # Pass parameters here
                 return [r.data() for r in res]
-            results = session.read_transaction(_tx_run)
+            
+            # Pass the cypher and parameters to the transaction function
+            results = session.read_transaction(_tx_run, cypher, parameters)
         return results
     except Exception as e:
         print(f"Error executing cypher on Neo4j: {e}")
         return {"error": str(e)}
-    finally:
-        if driver:
-            try:
-                driver.close()
-            except Exception:
-                pass
+    # The driver close logic is removed from here because we are managing a global driver.
+    # The driver should be closed gracefully when the application shuts down.
+    # For a FastAPI app, you might use an `@app.on_event("shutdown")` handler.
 
 # --- API Endpoints ---
 
@@ -283,7 +297,137 @@ async def text_to_cypher_endpoint(body: TextRequestBody, useLLM: bool = Query(Fa
         print(f"ERROR in /api/graph/text-to-cypher: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# --- Helper to get node associations (MODIFIED to use node property 'id') ---
+async def get_node_associations_cypher_and_run(node_id: str):
+    """
+    Generates a Cypher query to find all direct associations (nodes and relationships)
+    for a given node ID, and executes it if Neo4j is configured.
+    This version now assumes `node_id` refers to a property named 'id' on the node.
+    """
+    # Cypher query to find a node and all its direct relationships and connected nodes
+    # IMPORTANT CHANGE: WHERE n.id = $node_id (compares against the node property 'id')
+    print(node_id)
+    cypher_query = """
+    MATCH (n)
+    WHERE n.id = $node_id
+    OPTIONAL MATCH (n)-[r]-(m)
+    RETURN n, collect(DISTINCT r) as relationships, collect(DISTINCT m) as associatedNodes
+    """
+    # cypher_query = """
+    # MATCH (n)-[r]-(m)
+    # WHERE n.id = $node_id
+    # RETURN n, r, m
+    # UNION
+    # MATCH (n)
+    # WHERE n.id = $node_id
+    # RETURN n, NULL as r, NULL as m
+    # """
+    # Parameters to pass to the query runner
+    params = {"node_id": node_id} # node_id can now be any string, like "MAT-0009"
 
+    # Execute the query using the existing Neo4j runner, passing parameters
+    # This requires `run_query_if_neo4j` to support a `parameters` argument.
+    raw_results = run_query_if_neo4j(cypher_query, parameters=params)
+
+    if isinstance(raw_results, dict) and "error" in raw_results:
+        raise HTTPException(status_code=500, detail=raw_results["error"])
+
+    # Process the raw results into the frontend-friendly format
+    graph_data = process_neo4j_records(raw_results or [])
+
+    return {
+        "cypher": cypher_query, # Still show the parametrized query
+        "parameters": params,   # Show parameters for debugging
+        "results": raw_results, # Raw results for debugging if needed
+        "graph": graph_data,    # Cleaned nodes/edges for frontend
+    }
+
+
+# --- NEW API Endpoint for Node Associations (MODIFIED - removed isdigit check) ---
+@app.get("/api/graph/node-associations", tags=["Knowledge Graph"])
+async def get_node_associations_endpoint(nodeId: str = Query(..., alias="nodeId")):
+    """
+    Fetches all direct relationships and connected nodes for a given node ID.
+    This version accepts string IDs which are properties of the node (e.g., 'MAT-0009').
+    """
+    if not nodeId:
+        raise HTTPException(status_code=400, detail="Node ID is required.")
+
+    # IMPORTANT CHANGE: Removed the .isdigit() check.
+    # The nodeId is now expected to be a string that matches a node's 'id' property.
+
+    try:
+        associations = await get_node_associations_cypher_and_run(nodeId)
+        return associations
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"ERROR in /api/graph/node-associations: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch node associations: {str(e)}")
+    
+    
+# ... (Your existing `process_neo4j_records` function) ...
+
+# def process_neo4j_records(records):
+#     """
+#     Processes raw Neo4j records to a D3.js friendly format.
+#     It intelligently finds nodes and relationships and formats them correctly.
+#     """
+#     nodes = {}
+#     edges = []
+    
+#     # Keep track of added edge IDs to prevent duplicates for bidirectional relationships
+#     added_edge_ids = set() 
+
+#     for record in records:
+#         n = record.get('n')
+#         r = record.get('r')
+#         m = record.get('m')
+
+#         # Add node n if not already added
+#         if isinstance(n, Node):
+#             node_id_n = str(n.id)
+#             if node_id_n not in nodes:
+#                 # Add common properties: id, labels, and all other properties
+#                 nodes[node_id_n] = {
+#                     "id": node_id_n,
+#                     "name": n.get("name") or n.get("title") or node_id_n, # Attempt to get a display name
+#                     "labels": list(n.labels),
+#                     "properties": dict(n) # Store all original properties
+#                 }
+
+#         # Add node m if not already added
+#         if isinstance(m, Node):
+#             node_id_m = str(m.id)
+#             if node_id_m not in nodes:
+#                 nodes[node_id_m] = {
+#                     "id": node_id_m,
+#                     "name": m.get("name") or m.get("title") or node_id_m,
+#                     "labels": list(m.labels),
+#                     "properties": dict(m)
+#                 }
+
+#         # Add relationship if it exists
+#         if isinstance(r, Relationship):
+#             source_id = str(r.start_node.id)
+#             target_id = str(r.end_node.id)
+#             rel_type = r.type
+
+#             # Create a canonical ID for the edge to avoid duplicates,
+#             # especially for `(n)-[r]-(m)` which returns relationships in both directions
+#             edge_id = f"{min(source_id, target_id)}-{rel_type}-{max(source_id, target_id)}"
+
+#             if edge_id not in added_edge_ids:
+#                 edges.append({
+#                     "id": edge_id, # Frontend uses this for uniqueness
+#                     "source": source_id,
+#                     "target": target_id,
+#                     "type": rel_type,
+#                     "properties": dict(r) # Store all original relationship properties
+#                 })
+#                 added_edge_ids.add(edge_id)
+
+#     return {"nodes": list(nodes.values()), "edges": edges}
 
 def process_neo4j_records(records):
     """

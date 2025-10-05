@@ -117,6 +117,8 @@ Be conservative: do not output CREATE/DELETE/SET. Only MATCH/RETURN/WHERE/LIMIT/
 Request: {request}
 Cypher:
 """
+
+
             prompt = ChatPromptTemplate.from_template(prompt_template)
             model = ChatGroq(model=os.getenv("GROQ_MODEL", "meta-llama/llama-4-maverick-17b-128e-instruct"), temperature=0)
             # run a simple chain: provide the request and get the model output
