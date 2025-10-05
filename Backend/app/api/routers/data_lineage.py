@@ -218,51 +218,232 @@ async def get_data_estate_schema(params: models.DBParams, settings: Settings = D
 # --- HTML Templating (for the final visualization) ---
 def create_interactive_graph_html(nodes_json: str, edges_json: str, groups_json: str) -> str:
     """Generates the final, self-contained HTML page for the interactive knowledge graph."""
-    # This function remains a static template for the vis.js frontend
     return f"""
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
+        <meta charset="utf-8" />
         <title>Semantic Data Estate Knowledge Graph</title>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <style>
-            html, body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }}
-            #mynetwork {{ width: 100vw; height: 100vh; background-color: #0D1117; }}
+            :root {{
+                --bg: #0D1117;
+                --ink: #c9d1d9;
+                --muted: #8b949e;
+                --ring: #30363d;
+                --brand: #1f6feb;
+                --shadow: 0 8px 24px rgba(0,0,0,0.4);
+            }}
+
+            html, body {{
+                margin: 0;
+                padding: 0;
+                background: var(--bg);
+                color: var(--ink);
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+                font-size: clamp(14px, 1.1vw, 16px);
+                height: 100%;
+                overflow: hidden;
+            }}
+
+            #mynetwork {{
+                width: 100vw;
+                height: 100vh;
+                background-color: var(--bg);
+            }}
+
+            .overlay {{
+                position: fixed;
+                top: 12px;
+                left: 12px;
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                z-index: 10;
+                color: var(--ink);
+                background: rgba(13,17,23,0.6);
+                border: 1px solid var(--ring);
+                border-radius: 8px;
+                padding: 8px 10px;
+                box-shadow: var(--shadow);
+                backdrop-filter: blur(4px);
+            }}
+            .overlay .btn {{
+                appearance: none;
+                border: 1px solid var(--ring);
+                background: #161b22;
+                color: var(--ink);
+                padding: 6px 10px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 12px;
+            }}
+            .overlay .btn:hover {{
+                border-color: var(--brand);
+                color: var(--ink);
+            }}
+            .overlay .status {{
+                font-size: 12px;
+                color: var(--muted);
+            }}
+
             .vis-tooltip {{
-                background-color: #21262d !important; color: #c9d1d9 !important;
-                border: 1px solid #30363d !important; border-radius: 6px;
-                padding: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-                max-width: 400px; white-space: pre-wrap;
+                background-color: #21262d !important;
+                color: #c9d1d9 !important;
+                border: 1px solid #30363d !important;
+                border-radius: 6px;
+                padding: 10px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+                max-width: 400px;
+                white-space: pre-wrap;
             }}
         </style>
     </head>
-    <body style="margin:0; padding:0; overflow:hidden;">
-        <div id="mynetwork"></div>
-        <script type="text/javascript">
-            const nodes = new vis.DataSet({nodes_json});
-            const edges = new vis.DataSet({edges_json});
-            const container = document.getElementById('mynetwork');
-            const data = {{ nodes: nodes, edges: edges }};
-            const options = {{
-                nodes: {{
-                    shape: 'box', borderWidth: 2,
-                    font: {{ color: '#c9d1d9', size: 16, face: 'Arial' }},
-                    margin: 15, shapeProperties: {{ borderRadius: 4 }}
-                }},
-                edges: {{
-                    width: 1.5, color: {{ color: 'rgba(100, 100, 100, 0.7)', highlight: '#1f6feb' }},
-                    arrows: {{ to: {{ enabled: true, scaleFactor: 0.8 }} }},
-                    font: {{ color: 'rgba(200, 200, 200, 0.8)', size: 12, align: 'middle' }},
-                    smooth: {{ type: 'cubicBezier', forceDirection: 'horizontal', roundness: 0.4 }}
-                }},
-                physics: {{
-                    barnesHut: {{ gravitationalConstant: -30000, springLength: 250, avoidOverlap: 0.8 }},
-                    solver: 'barnesHut', stabilization: {{ iterations: 250 }}
-                }},
-                interaction: {{ hover: true, tooltipDelay: 250, navigationButtons: true }},
-                groups: {groups_json}
-            }};
-            const network = new vis.Network(container, data, options);
+    <body>
+        <div class="overlay" aria-live="polite" aria-atomic="true">
+            <button class="btn" id="fitBtn" title="Fit graph">Fit</button>
+            <button class="btn" id="togglePhysicsBtn" title="Toggle physics">Physics: On</button>
+            <span class="status" id="statusText">Loading library…</span>
+        </div>
+
+        <div id="mynetwork" role="application" aria-label="Interactive knowledge graph canvas"></div>
+
+        <script>
+        (function() {{
+            const statusText = document.getElementById('statusText');
+
+            // Robust script loader with fallback CDN
+            function loadScript(src) {{
+                return new Promise((resolve, reject) => {{
+                    const s = document.createElement('script');
+                    s.src = src;
+                    s.async = true;
+                    s.crossOrigin = 'anonymous';
+                    s.referrerPolicy = 'no-referrer';
+                    s.onload = () => resolve();
+                    s.onerror = (e) => reject(e);
+                    document.head.appendChild(s);
+                }});
+            }}
+
+            async function ensureVisNetwork() {{
+                if (window.vis && window.vis.Network) return true;
+                try {{
+                    // Primary CDN (cdnjs)
+                    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/vis-network.min.js');
+                }} catch (e) {{
+                    // Fallback CDN (jsDelivr)
+                    await loadScript('https://cdn.jsdelivr.net/npm/vis-network@9.1.2/dist/vis-network.min.js');
+                }}
+                return !!(window.vis && window.vis.Network);
+            }}
+
+            function createNetwork() {{
+                const container = document.getElementById('mynetwork');
+                const nodes = new vis.DataSet({nodes_json});
+                const edges = new vis.DataSet({edges_json});
+                const data = {{ nodes, edges }};
+
+                const options = {{
+                    layout: {{ improvedLayout: true }},
+                    nodes: {{
+                        shape: 'box',
+                        borderWidth: 2,
+                        color: {{
+                            background: '#0f172a',
+                            border: '#475569',
+                            highlight: {{ background: '#0b1220', border: '#1f6feb' }}
+                        }},
+                        font: {{ color: '#c9d1d9', size: 16, face: 'Arial', strokeWidth: 2, strokeColor: '#0D1117' }},
+                        margin: 15,
+                        shapeProperties: {{ borderRadius: 6 }},
+                        shadow: true
+                    }},
+                    edges: {{
+                        width: 1.5,
+                        color: {{ color: '#8b949e', highlight: '#1f6feb', hover: '#c9d1d9' }},
+                        arrows: {{ to: {{ enabled: true, scaleFactor: 0.9 }} }},
+                        font: {{ color: 'rgba(200,200,200,0.9)', size: 13, align: 'middle', strokeWidth: 2, strokeColor: '#0D1117' }},
+                        smooth: {{ type: 'cubicBezier', forceDirection: 'horizontal', roundness: 0.4 }}
+                    }},
+                    physics: {{
+                        enabled: true,
+                        solver: 'barnesHut',
+                        barnesHut: {{
+                            gravitationalConstant: -25000,
+                            springLength: 220,
+                            centralGravity: 0.3,
+                            avoidOverlap: 0.8,
+                            damping: 0.15
+                        }},
+                        stabilization: {{ enabled: true, iterations: 600, updateInterval: 50, fit: true }},
+                        adaptiveTimestep: true,
+                        minVelocity: 0.1
+                    }},
+                    interaction: {{
+                        hover: true,
+                        hoverConnectedEdges: true,
+                        tooltipDelay: 120,
+                        navigationButtons: true,
+                        keyboard: true,
+                        multiselect: true,
+                        selectable: true,
+                        hideEdgesOnDrag: true,
+                        zoomView: true,
+                        dragView: true,
+                        dragNodes: true
+                    }},
+                    groups: {groups_json}
+                }};
+
+                const network = new vis.Network(container, data, options);
+
+                // Controls
+                const fitBtn = document.getElementById('fitBtn');
+                const togglePhysicsBtn = document.getElementById('togglePhysicsBtn');
+                let physicsOn = true;
+
+                fitBtn.addEventListener('click', () => {{
+                    network.fit({{ animation: {{ duration: 500, easingFunction: 'easeInOutQuad' }} }});
+                }});
+
+                togglePhysicsBtn.addEventListener('click', () => {{
+                    physicsOn = !physicsOn;
+                    network.setOptions({{ physics: {{ enabled: physicsOn }} }});
+                    togglePhysicsBtn.textContent = 'Physics: ' + (physicsOn ? 'On' : 'Off');
+                }});
+
+                network.on('doubleClick', (params) => {{
+                    if (!params || (params.nodes && params.nodes.length === 0)) {{
+                        network.fit({{ animation: {{ duration: 400 }} }});
+                    }}
+                }});
+
+                network.on('stabilizationProgress', (p) => {{
+                    const pct = Math.max(0, Math.min(100,
+                        Math.round(((Number(p?.iterations)||0) / Math.max(1, Number(p?.total)||1)) * 100)
+                    ));
+                    statusText.textContent = `Stabilizing… ${{pct}}%`;
+                }});
+
+                network.on('stabilized', () => {{
+                    const nodeCount = nodes.getIds().length;
+                    const edgeCount = edges.getIds().length;
+                    statusText.textContent = `Ready • Nodes: ${{nodeCount}} • Edges: ${{edgeCount}}`;
+                }});
+            }}
+
+            (async () => {{
+                const ok = await ensureVisNetwork();
+                if (!ok) {{
+                    statusText.textContent = 'Failed to load vis-network';
+                    console.error('vis-network failed to load');
+                    return;
+                }}
+                statusText.textContent = 'Stabilizing…';
+                createNetwork();
+            }})();
+        }})();
         </script>
     </body>
     </html>
