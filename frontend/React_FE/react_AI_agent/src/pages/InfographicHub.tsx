@@ -49,7 +49,7 @@ function useCardTilt(ref: React.RefObject<HTMLDivElement>) {
 const INFOGRAPHICS = [
   {
     id: 'ai-governance',
-    title: 'AI Governance Infographic',
+    title: 'AI Governance',
     description:
       'Interactive infographic showcasing automated data governance workflow, AI-driven PII classification, and business impact.',
     icon: ShieldCheck,
@@ -58,7 +58,7 @@ const INFOGRAPHICS = [
   },
   {
     id: 'qa-domain-ai-agent',
-    title: 'Domain AI Agent Infographic',
+    title: 'Domain AI Agent',
     description:
       'Visualizes how a domain-specific AI agent answers user queries accurately and efficiently.',
     icon: Cpu,
@@ -67,7 +67,7 @@ const INFOGRAPHICS = [
   },
   {
     id: 'training-qa',
-    title: 'Training QA Infographic',
+    title: 'Training QA',
     description:
       'Illustrates the training process of the AI, highlighting question-answer pairs, evaluation, and improvements.',
     icon: BookOpen,
@@ -90,10 +90,10 @@ const InfographicHub: React.FC = () => {
     <main className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-900 text-white py-16 px-4">
       <div className="container mx-auto text-center mb-16">
         <h1 className="text-4xl md:text-6xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-cyan-300">
-          Infographic Hub
+          Data Governance Hub
         </h1>
         <p className="text-slate-300 max-w-2xl mx-auto">
-          Explore our interactive AI and Data Governance infographics. Hover and click any card below to dive deeper.
+          Explore our interactive AI and Data Governance. Hover and click any card below to dive deeper.
         </p>
       </div>
 

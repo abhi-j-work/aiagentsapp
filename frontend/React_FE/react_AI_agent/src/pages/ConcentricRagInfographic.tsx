@@ -97,7 +97,7 @@ export default function ConcentricRagInfographic() {
   return (
     <div className="page">
       <div className="scroll-wrapper" ref={wrapperRef}>
-        <section className="stage" aria-label="AI capability evolution infographic">
+        <section className="stage" aria-label="AI capability evolution">
           <GlowBackdrop progress={scrollYProgress} />
           <div className="rings">
             {LABELS.map((label, i) => (
@@ -113,10 +113,7 @@ export default function ConcentricRagInfographic() {
         </section>
       </div>
 
-      <section className="outro">
-        <h2>End of infographic</h2>
-        <p>Scroll upward to replay.</p>
-      </section>
+     
     </div>
   );
 }

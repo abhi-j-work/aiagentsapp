@@ -179,13 +179,13 @@ export interface DatabaseObjectsResponse { tables: TableInfo[]; views: string[] 
 
 // --- API Functions ---
 export const postGetDataLineage = (connectionString: string, objectName: string) =>
-  request<LineageResponse>('/data/lineage', {
+  request<LineageResponse>('/data-estate/lineage', {
     method: 'POST',
     body: JSON.stringify({ connection_string: connectionString, object_name: objectName }),
   });
 
 export const postListDatabaseObjects = (connectionString: string) =>
-  request<DatabaseObjectsResponse>('/data/list-database-objects', {
+  request<DatabaseObjectsResponse>('/data-estate/list-database-objects', {
     method: 'POST',
     body: JSON.stringify({ connection_string: connectionString }),
   });
