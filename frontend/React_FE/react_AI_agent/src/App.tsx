@@ -32,6 +32,7 @@ import InfographicHub from './pages/InfographicHub';
 import ScrollCircleAnimation from './pages/ScrollCircleAnimation';
 import ConcentricRagInfographic from './pages/ConcentricRagInfographic';
 import KnowledgeGraphPage from './pages/KnowledgeGraphPage';
+import SecurityInfographic from './pages/SecurityInfographic';
 
 function App() {
   return (
@@ -76,6 +77,7 @@ function App() {
         <Route path="/ai-governance-infographic" element={<AIGovernanceInfographic />} />
         <Route path="/qa-domain-ai-agent-infographic" element={<DomainAIAgentInfographic />} />
         <Route path="/training-qa-infographic" element={<TrainingQAInfographic />} />
+        <Route path="/security-info" element={<SecurityInfographic />} />
       </Route>
     </Routes>
   );

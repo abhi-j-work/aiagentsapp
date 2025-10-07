@@ -1,7 +1,7 @@
 // InfographicHub.tsx
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Cpu, BookOpen } from 'lucide-react';
+import { ShieldCheck, Cpu, BookOpen, Shield } from 'lucide-react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import clsx from 'clsx';
 
@@ -65,15 +65,15 @@ const INFOGRAPHICS = [
     link: '/qa-domain-ai-agent-infographic',
     color: 'purple',
   },
-  {
-    id: 'training-qa',
-    title: 'Training QA',
-    description:
-      'Illustrates the training process of the AI, highlighting question-answer pairs, evaluation, and improvements.',
-    icon: BookOpen,
-    link: '/training-qa-infographic',
-    color: 'amber',
-  },
+{
+  id: 'security-ai',
+  title: 'AI Security',
+  description:
+    'Modern Zero Trust, RAG enrichment, MCP tool actions, and multi-step reasoning for audit-ready defense.',
+  icon: Shield,
+  link: '/security-info',
+  color: 'indigo',
+},
 ];
 
 const cardColors = {
