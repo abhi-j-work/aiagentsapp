@@ -1,0 +1,55 @@
+[2025-11-12T09:53:05.897+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=real_etl_pipeline_with_failure/run_id=manual__2025-11-12T09:53:03.951773+00:00/task_id=create_source_and_target_tables permission to 509
+[2025-11-12T09:53:05.957+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=real_etl_pipeline_with_failure/run_id=manual__2025-11-12T09:53:03.951773+00:00/task_id=create_source_and_target_tables permission to 509
+[2025-11-12T09:53:06.046+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: real_etl_pipeline_with_failure.create_source_and_target_tables manual__2025-11-12T09:53:03.951773+00:00 [queued]>
+[2025-11-12T09:53:06.088+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: real_etl_pipeline_with_failure.create_source_and_target_tables manual__2025-11-12T09:53:03.951773+00:00 [queued]>
+[2025-11-12T09:53:06.090+0000] {taskinstance.py:2170} INFO - Starting attempt 1 of 1
+[2025-11-12T09:53:06.110+0000] {taskinstance.py:2191} INFO - Executing <Task(PostgresOperator): create_source_and_target_tables> on 2025-11-12 09:53:03.951773+00:00
+[2025-11-12T09:53:06.122+0000] {standard_task_runner.py:60} INFO - Started process 1251 to run task
+[2025-11-12T09:53:06.131+0000] {standard_task_runner.py:87} INFO - Running: ['***', 'tasks', 'run', 'real_etl_pipeline_with_failure', 'create_source_and_target_tables', 'manual__2025-11-12T09:53:03.951773+00:00', '--job-id', '4', '--raw', '--subdir', 'DAGS_FOLDER/real_etl_with_failure.py', '--cfg-path', '/tmp/tmpndp4jh7o']
+[2025-11-12T09:53:06.135+0000] {standard_task_runner.py:88} INFO - Job 4: Subtask create_source_and_target_tables
+[2025-11-12T09:53:06.211+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=real_etl_pipeline_with_failure/run_id=manual__2025-11-12T09:53:03.951773+00:00/task_id=create_source_and_target_tables permission to 509
+[2025-11-12T09:53:06.215+0000] {task_command.py:423} INFO - Running <TaskInstance: real_etl_pipeline_with_failure.create_source_and_target_tables manual__2025-11-12T09:53:03.951773+00:00 [running]> on host 0c867993a02e
+[2025-11-12T09:53:06.309+0000] {taskinstance.py:2480} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='real_etl_pipeline_with_failure' AIRFLOW_CTX_TASK_ID='create_source_and_target_tables' AIRFLOW_CTX_EXECUTION_DATE='2025-11-12T09:53:03.951773+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-11-12T09:53:03.951773+00:00'
+[2025-11-12T09:53:06.348+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-12T09:53:06.359+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-12T09:53:06.369+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-12T09:53:06.374+0000] {base.py:152} WARNING - OpenLineage provider method failed to extract data from provider. 
+[2025-11-12T09:53:06.376+0000] {manager.py:198} WARNING - Extractor returns non-valid metadata: None
+[2025-11-12T09:53:06.600+0000] {sql.py:276} INFO - Executing: 
+        CREATE TABLE IF NOT EXISTS public.raw_orders (
+            order_id VARCHAR(50),
+            product VARCHAR(100),
+            amount VARCHAR(50) -- Stored as string to allow for bad data
+        );
+        CREATE TABLE IF NOT EXISTS public.clean_orders (
+            order_id VARCHAR(50) PRIMARY KEY,
+            product VARCHAR(100),
+            amount INTEGER NOT NULL -- Stored as integer, this will cause the failure
+        );
+        TRUNCATE TABLE public.raw_orders;
+        TRUNCATE TABLE public.clean_orders;
+        
+[2025-11-12T09:53:06.622+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-12T09:53:06.647+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-12T09:53:06.669+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-12T09:53:06.686+0000] {base.py:152} WARNING - OpenLineage provider method failed to extract data from provider. 
+[2025-11-12T09:53:06.692+0000] {manager.py:198} WARNING - Extractor returns non-valid metadata: None
+[2025-11-12T09:53:06.999+0000] {taskinstance.py:2698} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/taskinstance.py", line 433, in _execute_task
+    result = execute_callable(context=context, **execute_callable_kwargs)
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/providers/common/sql/operators/sql.py", line 282, in execute
+    output = hook.run(
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/providers/common/sql/hooks/sql.py", line 391, in run
+    with closing(self.get_conn()) as conn:
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/providers/postgres/hooks/postgres.py", line 158, in get_conn
+    self.conn = psycopg2.connect(**conn_args)
+  File "/home/airflow/.local/lib/python3.8/site-packages/psycopg2/__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+psycopg2.OperationalError: connection to server at "postgres" (10.89.3.2), port 5432 failed: FATAL:  password authentication failed for user "***"
+
+[2025-11-12T09:53:07.022+0000] {taskinstance.py:1138} INFO - Marking task as FAILED. dag_id=real_etl_pipeline_with_failure, task_id=create_source_and_target_tables, execution_date=20251112T095303, start_date=20251112T095306, end_date=20251112T095307
+[2025-11-12T09:53:07.077+0000] {standard_task_runner.py:107} ERROR - Failed to execute job 4 for task create_source_and_target_tables (connection to server at "postgres" (10.89.3.2), port 5432 failed: FATAL:  password authentication failed for user "***"
+; 1251)
+[2025-11-12T09:53:07.127+0000] {local_task_job_runner.py:234} INFO - Task exited with return code 1
+[2025-11-12T09:53:07.180+0000] {taskinstance.py:3280} INFO - 0 downstream tasks scheduled from follow-on schedule check

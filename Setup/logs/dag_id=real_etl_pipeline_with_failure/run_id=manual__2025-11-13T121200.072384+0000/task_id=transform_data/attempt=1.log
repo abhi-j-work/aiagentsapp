@@ -1,0 +1,23 @@
+[2025-11-13T12:12:24.889+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=real_etl_pipeline_with_failure/run_id=manual__2025-11-13T12:12:00.072384+00:00/task_id=transform_data permission to 509
+[2025-11-13T12:12:24.912+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=real_etl_pipeline_with_failure/run_id=manual__2025-11-13T12:12:00.072384+00:00/task_id=transform_data permission to 509
+[2025-11-13T12:12:24.947+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: real_etl_pipeline_with_failure.transform_data manual__2025-11-13T12:12:00.072384+00:00 [queued]>
+[2025-11-13T12:12:24.957+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: real_etl_pipeline_with_failure.transform_data manual__2025-11-13T12:12:00.072384+00:00 [queued]>
+[2025-11-13T12:12:24.958+0000] {taskinstance.py:2170} INFO - Starting attempt 1 of 1
+[2025-11-13T12:12:24.972+0000] {taskinstance.py:2191} INFO - Executing <Task(_PythonDecoratedOperator): transform_data> on 2025-11-13 12:12:00.072384+00:00
+[2025-11-13T12:12:24.979+0000] {standard_task_runner.py:60} INFO - Started process 283 to run task
+[2025-11-13T12:12:24.984+0000] {standard_task_runner.py:87} INFO - Running: ['***', 'tasks', 'run', 'real_etl_pipeline_with_failure', 'transform_data', 'manual__2025-11-13T12:12:00.072384+00:00', '--job-id', '5', '--raw', '--subdir', 'DAGS_FOLDER/real_etl_with_failure.py', '--cfg-path', '/tmp/tmphzvuw7u1']
+[2025-11-13T12:12:24.986+0000] {standard_task_runner.py:88} INFO - Job 5: Subtask transform_data
+[2025-11-13T12:12:25.032+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=real_etl_pipeline_with_failure/run_id=manual__2025-11-13T12:12:00.072384+00:00/task_id=transform_data permission to 509
+[2025-11-13T12:12:25.034+0000] {task_command.py:423} INFO - Running <TaskInstance: real_etl_pipeline_with_failure.transform_data manual__2025-11-13T12:12:00.072384+00:00 [running]> on host dd103ceb31c1
+[2025-11-13T12:12:25.102+0000] {taskinstance.py:2480} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='real_etl_pipeline_with_failure' AIRFLOW_CTX_TASK_ID='transform_data' AIRFLOW_CTX_EXECUTION_DATE='2025-11-13T12:12:00.072384+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-11-13T12:12:00.072384+00:00'
+[2025-11-13T12:12:35.137+0000] {adapter.py:122} WARNING - Failed to emit OpenLineage event of id b63dd87f-3f17-33a8-af4c-0f6733412a89
+[2025-11-13T12:12:35.140+0000] {real_etl_with_failure.py:93} INFO - Transforming 4 records...
+[2025-11-13T12:12:35.142+0000] {python.py:201} INFO - Done. Returned value was: [{'order_id': '101', 'product': 'Widget A', 'amount': '50'}, {'order_id': '102', 'product': 'Widget B', 'amount': '120'}, {'order_id': '103', 'product': 'Gadget', 'amount': 'ninety-nine'}, {'order_id': '104', 'product': 'Widget C', 'amount': '75'}]
+[2025-11-13T12:12:35.167+0000] {logging_mixin.py:188} WARNING - /home/***/.local/lib/python3.8/site-packages/***/models/baseoperator.py:1469 RemovedInAirflow3Warning: Passing 'execution_date' to 'TaskInstance.xcom_push()' is deprecated.
+[2025-11-13T12:12:35.198+0000] {taskinstance.py:1138} INFO - Marking task as SUCCESS. dag_id=real_etl_pipeline_with_failure, task_id=transform_data, execution_date=20251113T121200, start_date=20251113T121224, end_date=20251113T121235
+[2025-11-13T12:12:45.144+0000] {local_task_job_runner.py:302} WARNING - State of this instance has been externally set to success. Terminating instance.
+[2025-11-13T12:12:45.146+0000] {process_utils.py:131} INFO - Sending 15 to group 283. PIDs of all processes in the group: [283]
+[2025-11-13T12:12:45.147+0000] {process_utils.py:86} INFO - Sending the signal 15 to group 283
+[2025-11-13T12:12:45.214+0000] {taskinstance.py:2450} ERROR - Received SIGTERM. Terminating subprocesses.
+[2025-11-13T12:12:45.215+0000] {adapter.py:122} WARNING - Failed to emit OpenLineage event of id b63dd87f-3f17-33a8-af4c-0f6733412a89
+[2025-11-13T12:12:45.241+0000] {process_utils.py:79} INFO - Process psutil.Process(pid=283, status='terminated', exitcode=0, started='12:12:24') (283) terminated with exit code 0

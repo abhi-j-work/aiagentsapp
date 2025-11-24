@@ -1,0 +1,17 @@
+[2025-11-11T05:13:35.711+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=simple_etl_lineage/run_id=manual__2025-11-11T05:11:23.040737+00:00/task_id=run_transform permission to 509
+[2025-11-11T05:13:35.874+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=simple_etl_lineage/run_id=manual__2025-11-11T05:11:23.040737+00:00/task_id=run_transform permission to 509
+[2025-11-11T05:13:36.990+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: simple_etl_lineage.run_transform manual__2025-11-11T05:11:23.040737+00:00 [queued]>
+[2025-11-11T05:13:37.120+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: simple_etl_lineage.run_transform manual__2025-11-11T05:11:23.040737+00:00 [queued]>
+[2025-11-11T05:13:37.128+0000] {taskinstance.py:2170} INFO - Starting attempt 1 of 1
+[2025-11-11T05:13:37.280+0000] {taskinstance.py:2191} INFO - Executing <Task(PythonOperator): run_transform> on 2025-11-11 05:11:23.040737+00:00
+[2025-11-11T05:13:37.329+0000] {standard_task_runner.py:60} INFO - Started process 3704 to run task
+[2025-11-11T05:13:37.356+0000] {standard_task_runner.py:87} INFO - Running: ['***', 'tasks', 'run', 'simple_etl_lineage', 'run_transform', 'manual__2025-11-11T05:11:23.040737+00:00', '--job-id', '4', '--raw', '--subdir', 'DAGS_FOLDER/etl_dag.py', '--cfg-path', '/tmp/tmpeuobjjea']
+[2025-11-11T05:13:37.360+0000] {standard_task_runner.py:88} INFO - Job 4: Subtask run_transform
+[2025-11-11T05:13:38.875+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=simple_etl_lineage/run_id=manual__2025-11-11T05:11:23.040737+00:00/task_id=run_transform permission to 509
+[2025-11-11T05:13:38.931+0000] {task_command.py:423} INFO - Running <TaskInstance: simple_etl_lineage.run_transform manual__2025-11-11T05:11:23.040737+00:00 [running]> on host ca0816b31180
+[2025-11-11T05:13:41.459+0000] {taskinstance.py:2480} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='simple_etl_lineage' AIRFLOW_CTX_TASK_ID='run_transform' AIRFLOW_CTX_EXECUTION_DATE='2025-11-11T05:11:23.040737+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-11-11T05:11:23.040737+00:00'
+[2025-11-11T05:13:43.551+0000] {logging_mixin.py:188} INFO - Running: python /opt/***/scripts/transform.py run_573333e22b66440f952b272a42ce421a /opt/***/persist/run_573333e22b66440f952b272a42ce421a__extract__snapshot.csv
+[2025-11-11T05:13:44.300+0000] {python.py:201} INFO - Done. Returned value was: None
+[2025-11-11T05:13:44.347+0000] {taskinstance.py:1138} INFO - Marking task as SUCCESS. dag_id=simple_etl_lineage, task_id=run_transform, execution_date=20251111T051123, start_date=20251111T051337, end_date=20251111T051344
+[2025-11-11T05:13:45.027+0000] {local_task_job_runner.py:234} INFO - Task exited with return code 0
+[2025-11-11T05:13:45.527+0000] {taskinstance.py:3280} INFO - 1 downstream tasks scheduled from follow-on schedule check

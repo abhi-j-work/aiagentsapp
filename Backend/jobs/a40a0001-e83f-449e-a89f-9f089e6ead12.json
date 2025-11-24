@@ -1,6 +1,0 @@
-{
-    "timestamp": "2025-08-22T14:43:38.291173+00:00",
-    "status": "QUEUED",
-    "task_id": "mock_task_id",
-    "mlflow_run_id": "run-id-placeholder"
-}

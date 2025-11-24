@@ -1,0 +1,4 @@
+apache-airflow==2.8.1
+openlineage-airflow==1.6.0
+Faker==20.1.0
+pandas==2.1.3

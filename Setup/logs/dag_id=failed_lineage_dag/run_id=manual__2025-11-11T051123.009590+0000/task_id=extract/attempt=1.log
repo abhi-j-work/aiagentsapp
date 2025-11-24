@@ -1,0 +1,21 @@
+[2025-11-11T05:12:17.215+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=failed_lineage_dag/run_id=manual__2025-11-11T05:11:23.009590+00:00/task_id=extract permission to 509
+[2025-11-11T05:12:21.211+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=failed_lineage_dag/run_id=manual__2025-11-11T05:11:23.009590+00:00/task_id=extract permission to 509
+[2025-11-11T05:12:25.692+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: failed_lineage_dag.extract manual__2025-11-11T05:11:23.009590+00:00 [queued]>
+[2025-11-11T05:12:26.900+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: failed_lineage_dag.extract manual__2025-11-11T05:11:23.009590+00:00 [queued]>
+[2025-11-11T05:12:26.949+0000] {taskinstance.py:2170} INFO - Starting attempt 1 of 1
+[2025-11-11T05:12:33.930+0000] {taskinstance.py:2191} INFO - Executing <Task(PythonOperator): extract> on 2025-11-11 05:11:23.009590+00:00
+[2025-11-11T05:12:34.358+0000] {standard_task_runner.py:60} INFO - Started process 3684 to run task
+[2025-11-11T05:12:34.503+0000] {standard_task_runner.py:87} INFO - Running: ['***', 'tasks', 'run', 'failed_lineage_dag', 'extract', 'manual__2025-11-11T05:11:23.009590+00:00', '--job-id', '2', '--raw', '--subdir', 'DAGS_FOLDER/failed_lineage_dag.py', '--cfg-path', '/tmp/tmpzhs_mi7j']
+[2025-11-11T05:12:34.526+0000] {standard_task_runner.py:88} INFO - Job 2: Subtask extract
+[2025-11-11T05:12:35.142+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=failed_lineage_dag/run_id=manual__2025-11-11T05:11:23.009590+00:00/task_id=extract permission to 509
+[2025-11-11T05:12:35.259+0000] {task_command.py:423} INFO - Running <TaskInstance: failed_lineage_dag.extract manual__2025-11-11T05:11:23.009590+00:00 [running]> on host ca0816b31180
+[2025-11-11T05:12:38.012+0000] {taskinstance.py:2480} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='failed_lineage_dag' AIRFLOW_CTX_TASK_ID='extract' AIRFLOW_CTX_EXECUTION_DATE='2025-11-11T05:11:23.009590+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-11-11T05:11:23.009590+00:00'
+[2025-11-11T05:12:51.660+0000] {adapter.py:122} WARNING - Failed to emit OpenLineage event of id 9ff196a2-081d-3a17-bc44-44f09cbb5f1f
+[2025-11-11T05:12:51.914+0000] {logging_mixin.py:188} INFO - Extracting data...
+[2025-11-11T05:12:51.920+0000] {python.py:201} INFO - Done. Returned value was: None
+[2025-11-11T05:12:56.476+0000] {taskinstance.py:1138} INFO - Marking task as SUCCESS. dag_id=failed_lineage_dag, task_id=extract, execution_date=20251111T051123, start_date=20251111T051225, end_date=20251111T051256
+[2025-11-11T05:13:01.893+0000] {adapter.py:122} WARNING - Failed to emit OpenLineage event of id 9ff196a2-081d-3a17-bc44-44f09cbb5f1f
+[2025-11-11T05:13:07.968+0000] {local_task_job_runner.py:302} WARNING - State of this instance has been externally set to success. Terminating instance.
+[2025-11-11T05:13:09.783+0000] {process_utils.py:131} INFO - Sending 15 to group 3684. PIDs of all processes in the group: [3684]
+[2025-11-11T05:13:09.896+0000] {process_utils.py:86} INFO - Sending the signal 15 to group 3684
+[2025-11-11T05:13:13.198+0000] {process_utils.py:79} INFO - Process psutil.Process(pid=3684, status='terminated', exitcode=0, started='05:12:33') (3684) terminated with exit code 0

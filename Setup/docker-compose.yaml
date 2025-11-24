@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  # --- POSTGRES ---
+  postgres:
+    image: postgres:13
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    ports:
+    - "5433:5432"
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - lineage-net
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- MARQUEZ API ---
+  marquez-api:
+    image: marquezproject/marquez:0.43.0
+    container_name: marquez_api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    environment:
+      MARQUEZ_HOST: 0.0.0.0
+      MARQUEZ_PORT: 5000
+      DB_TYPE: postgres
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: marquez
+      POSTGRES_USER: marquez
+      POSTGRES_PASSWORD: marquez
+    networks:
+      - lineage-net
+
+  # --- MARQUEZ UI ---
+  marquez-web:
+    image: marquezproject/marquez-web:0.43.0
+    container_name: marquez_ui
+    depends_on:
+      - marquez-api
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_MARQUEZ_API_URL: http://localhost:5000
+    networks:
+      - lineage-net
+
+  # --- AIRFLOW ---
+  airflow:
+    image: apache/airflow:2.8.1
+    container_name: airflow
+    user: root
+    depends_on:
+      postgres:
+        condition: service_healthy
+      marquez-api:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: false
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__OPENLINEAGE__TRANSPORT: '{"type": "http", "url": "http://marquez-api:5000"}'
+      AIRFLOW__OPENLINEAGE__NAMESPACE: ecommerce_demo
+      AIRFLOW__CORE__FILE_TASK_HANDLER_NEW_FILE_PERMISSIONS: "0o777"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./scripts:/opt/airflow/scripts
+      - ./data:/opt/airflow/data
+      - ./logs:/opt/airflow/logs
+    command: >
+      bash -c "
+        pip install pandas Faker apache-airflow-providers-postgres openlineage-airflow;
+        airflow db init;
+        airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@example.com --password admin || true;
+        airflow scheduler & airflow webserver
+      "
+    networks:
+      - lineage-net
+
+# --- VOLUMES ---
+volumes:
+  postgres-db-volume:
+
+# --- NETWORKS ---
+networks:
+  lineage-net:
+    driver: bridge

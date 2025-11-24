@@ -1,0 +1,93 @@
+[2025-11-19T05:01:09.122+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=real_etl_pipeline_with_openlineage_errors/run_id=manual__2025-11-19T05:01:04.124990+00:00/task_id=create_tables permission to 509
+[2025-11-19T05:01:09.181+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=real_etl_pipeline_with_openlineage_errors/run_id=manual__2025-11-19T05:01:04.124990+00:00/task_id=create_tables permission to 509
+[2025-11-19T05:01:09.386+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: real_etl_pipeline_with_openlineage_errors.create_tables manual__2025-11-19T05:01:04.124990+00:00 [queued]>
+[2025-11-19T05:01:09.413+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: real_etl_pipeline_with_openlineage_errors.create_tables manual__2025-11-19T05:01:04.124990+00:00 [queued]>
+[2025-11-19T05:01:09.414+0000] {taskinstance.py:2170} INFO - Starting attempt 1 of 1
+[2025-11-19T05:01:09.447+0000] {taskinstance.py:2191} INFO - Executing <Task(PostgresOperator): create_tables> on 2025-11-19 05:01:04.124990+00:00
+[2025-11-19T05:01:09.466+0000] {standard_task_runner.py:60} INFO - Started process 30130 to run task
+[2025-11-19T05:01:09.472+0000] {standard_task_runner.py:87} INFO - Running: ['***', 'tasks', 'run', 'real_etl_pipeline_with_openlineage_errors', 'create_tables', 'manual__2025-11-19T05:01:04.124990+00:00', '--job-id', '29', '--raw', '--subdir', 'DAGS_FOLDER/etl_pipeline_with_openlineage_errors.py', '--cfg-path', '/tmp/tmpqg_q8i72']
+[2025-11-19T05:01:09.473+0000] {standard_task_runner.py:88} INFO - Job 29: Subtask create_tables
+[2025-11-19T05:01:09.546+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=real_etl_pipeline_with_openlineage_errors/run_id=manual__2025-11-19T05:01:04.124990+00:00/task_id=create_tables permission to 509
+[2025-11-19T05:01:09.550+0000] {task_command.py:423} INFO - Running <TaskInstance: real_etl_pipeline_with_openlineage_errors.create_tables manual__2025-11-19T05:01:04.124990+00:00 [running]> on host bf83f8158c22
+[2025-11-19T05:01:09.831+0000] {taskinstance.py:2480} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='real_etl_pipeline_with_openlineage_errors' AIRFLOW_CTX_TASK_ID='create_tables' AIRFLOW_CTX_EXECUTION_DATE='2025-11-19T05:01:04.124990+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-11-19T05:01:04.124990+00:00'
+[2025-11-19T05:01:09.938+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-19T05:01:09.980+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-19T05:01:09.993+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-19T05:01:10.001+0000] {sql.py:450} INFO - Running statement: SELECT CURRENT_SCHEMA;, parameters: None
+[2025-11-19T05:01:10.002+0000] {sql.py:459} INFO - Rows affected: 1
+[2025-11-19T05:01:10.018+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-19T05:01:10.133+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-19T05:01:11.458+0000] {sql.py:276} INFO - Executing: 
+        CREATE TABLE IF NOT EXISTS public.raw_orders (
+            order_id VARCHAR(50), product VARCHAR(100), amount VARCHAR(50)
+        );
+        CREATE TABLE IF NOT EXISTS public.clean_orders (
+            order_id VARCHAR(50) PRIMARY KEY, product VARCHAR(100), amount INTEGER NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS public.pipeline_audit_log (
+            audit_id BIGSERIAL PRIMARY KEY,
+            dag_id TEXT,
+            task_id TEXT,
+            ***_run_id TEXT,
+            lineage_run_id TEXT,
+            job_name TEXT,
+            namespace TEXT,
+            status TEXT,
+            error TEXT,
+            error_class TEXT,
+            error_message TEXT,
+            stack_trace TEXT,
+            total_records INT,
+            success_count INT,
+            failure_count INT,
+            failed_records JSONB,
+            started_at TIMESTAMP,
+            finished_at TIMESTAMP,
+            hostname TEXT,
+            extra_metadata JSONB
+        );
+        TRUNCATE TABLE public.raw_orders;
+        TRUNCATE TABLE public.clean_orders;
+        
+[2025-11-19T05:01:11.470+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-19T05:01:11.477+0000] {sql.py:450} INFO - Running statement: 
+        CREATE TABLE IF NOT EXISTS public.raw_orders (
+            order_id VARCHAR(50), product VARCHAR(100), amount VARCHAR(50)
+        );
+        CREATE TABLE IF NOT EXISTS public.clean_orders (
+            order_id VARCHAR(50) PRIMARY KEY, product VARCHAR(100), amount INTEGER NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS public.pipeline_audit_log (
+            audit_id BIGSERIAL PRIMARY KEY,
+            dag_id TEXT,
+            task_id TEXT,
+            ***_run_id TEXT,
+            lineage_run_id TEXT,
+            job_name TEXT,
+            namespace TEXT,
+            status TEXT,
+            error TEXT,
+            error_class TEXT,
+            error_message TEXT,
+            stack_trace TEXT,
+            total_records INT,
+            success_count INT,
+            failure_count INT,
+            failed_records JSONB,
+            started_at TIMESTAMP,
+            finished_at TIMESTAMP,
+            hostname TEXT,
+            extra_metadata JSONB
+        );
+        TRUNCATE TABLE public.raw_orders;
+        TRUNCATE TABLE public.clean_orders;
+        , parameters: None
+[2025-11-19T05:01:11.553+0000] {taskinstance.py:1138} INFO - Marking task as SUCCESS. dag_id=real_etl_pipeline_with_openlineage_errors, task_id=create_tables, execution_date=20251119T050104, start_date=20251119T050109, end_date=20251119T050111
+[2025-11-19T05:01:11.578+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-19T05:01:11.587+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-19T05:01:11.592+0000] {sql.py:450} INFO - Running statement: SELECT CURRENT_SCHEMA;, parameters: None
+[2025-11-19T05:01:11.594+0000] {sql.py:459} INFO - Rows affected: 1
+[2025-11-19T05:01:11.603+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-19T05:01:11.657+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-19T05:01:13.247+0000] {local_task_job_runner.py:234} INFO - Task exited with return code 0
+[2025-11-19T05:01:13.354+0000] {taskinstance.py:3280} INFO - 0 downstream tasks scheduled from follow-on schedule check

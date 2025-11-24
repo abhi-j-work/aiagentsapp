@@ -1,0 +1,31 @@
+[2025-11-07T11:52:19.255+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=ecommerce_etl_pipeline/run_id=manual__2025-11-07T11:52:16.380303+00:00/task_id=generate_source_data permission to 509
+[2025-11-07T11:52:19.481+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=ecommerce_etl_pipeline/run_id=manual__2025-11-07T11:52:16.380303+00:00/task_id=generate_source_data permission to 509
+[2025-11-07T11:52:19.668+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: ecommerce_etl_pipeline.generate_source_data manual__2025-11-07T11:52:16.380303+00:00 [queued]>
+[2025-11-07T11:52:19.690+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: ecommerce_etl_pipeline.generate_source_data manual__2025-11-07T11:52:16.380303+00:00 [queued]>
+[2025-11-07T11:52:19.698+0000] {taskinstance.py:2170} INFO - Starting attempt 1 of 1
+[2025-11-07T11:52:19.750+0000] {taskinstance.py:2191} INFO - Executing <Task(BashOperator): generate_source_data> on 2025-11-07 11:52:16.380303+00:00
+[2025-11-07T11:52:19.760+0000] {standard_task_runner.py:60} INFO - Started process 197 to run task
+[2025-11-07T11:52:19.774+0000] {standard_task_runner.py:87} INFO - Running: ['***', 'tasks', 'run', 'ecommerce_etl_pipeline', 'generate_source_data', 'manual__2025-11-07T11:52:16.380303+00:00', '--job-id', '2', '--raw', '--subdir', 'DAGS_FOLDER/ecommerce_etl_dag.py', '--cfg-path', '/tmp/tmphwoqi460']
+[2025-11-07T11:52:19.780+0000] {standard_task_runner.py:88} INFO - Job 2: Subtask generate_source_data
+[2025-11-07T11:52:20.039+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=ecommerce_etl_pipeline/run_id=manual__2025-11-07T11:52:16.380303+00:00/task_id=generate_source_data permission to 509
+[2025-11-07T11:52:20.052+0000] {task_command.py:423} INFO - Running <TaskInstance: ecommerce_etl_pipeline.generate_source_data manual__2025-11-07T11:52:16.380303+00:00 [running]> on host fbe93751a4d4
+[2025-11-07T11:52:20.375+0000] {taskinstance.py:2480} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='ecommerce_etl_pipeline' AIRFLOW_CTX_TASK_ID='generate_source_data' AIRFLOW_CTX_EXECUTION_DATE='2025-11-07T11:52:16.380303+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-11-07T11:52:16.380303+00:00'
+[2025-11-07T11:52:22.472+0000] {subprocess.py:63} INFO - Tmp dir root location: /tmp
+[2025-11-07T11:52:22.522+0000] {subprocess.py:75} INFO - Running command: ['/usr/bin/bash', '-c', 'python /opt/***/scripts/generate_data.py']
+[2025-11-07T11:52:22.560+0000] {subprocess.py:86} INFO - Output:
+[2025-11-07T11:52:24.656+0000] {subprocess.py:93} INFO - Traceback (most recent call last):
+[2025-11-07T11:52:24.659+0000] {subprocess.py:93} INFO -   File "/opt/***/scripts/generate_data.py", line 2, in <module>
+[2025-11-07T11:52:24.660+0000] {subprocess.py:93} INFO -     from faker import Faker
+[2025-11-07T11:52:24.661+0000] {subprocess.py:93} INFO - ModuleNotFoundError: No module named 'faker'
+[2025-11-07T11:52:25.004+0000] {subprocess.py:97} INFO - Command exited with return code 1
+[2025-11-07T11:52:25.719+0000] {taskinstance.py:2698} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/taskinstance.py", line 433, in _execute_task
+    result = execute_callable(context=context, **execute_callable_kwargs)
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/operators/bash.py", line 212, in execute
+    raise AirflowException(
+airflow.exceptions.AirflowException: Bash command failed. The command returned a non-zero exit code 1.
+[2025-11-07T11:52:25.761+0000] {taskinstance.py:1138} INFO - Marking task as FAILED. dag_id=ecommerce_etl_pipeline, task_id=generate_source_data, execution_date=20251107T115216, start_date=20251107T115219, end_date=20251107T115225
+[2025-11-07T11:52:25.836+0000] {standard_task_runner.py:107} ERROR - Failed to execute job 2 for task generate_source_data (Bash command failed. The command returned a non-zero exit code 1.; 197)
+[2025-11-07T11:52:25.898+0000] {local_task_job_runner.py:234} INFO - Task exited with return code 1
+[2025-11-07T11:52:25.970+0000] {taskinstance.py:3280} INFO - 0 downstream tasks scheduled from follow-on schedule check

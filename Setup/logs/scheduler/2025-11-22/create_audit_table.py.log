@@ -1,0 +1,49 @@
+[2025-11-22T16:41:23.737+0000] {processor.py:161} INFO - Started process (PID=4445) to work on /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:41:23.752+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/create_audit_table.py for tasks to queue
+[2025-11-22T16:41:23.756+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:23.755+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:41:23.894+0000] {processor.py:840} INFO - DAG(s) 'create_audit_table' retrieved from /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:41:24.007+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:24.007+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:41:24.103+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:24.103+0000] {dag.py:3823} INFO - Setting next_dagrun for create_audit_table to None, run_after=None
+[2025-11-22T16:41:24.209+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/create_audit_table.py took 0.478 seconds
+[2025-11-22T16:41:56.165+0000] {processor.py:161} INFO - Started process (PID=4475) to work on /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:41:56.180+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/create_audit_table.py for tasks to queue
+[2025-11-22T16:41:56.182+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:56.182+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:41:56.221+0000] {processor.py:840} INFO - DAG(s) 'create_audit_table' retrieved from /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:41:56.380+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:56.379+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:41:56.444+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:56.443+0000] {dag.py:3823} INFO - Setting next_dagrun for create_audit_table to None, run_after=None
+[2025-11-22T16:41:56.516+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/create_audit_table.py took 0.366 seconds
+[2025-11-22T16:42:28.544+0000] {processor.py:161} INFO - Started process (PID=4507) to work on /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:42:28.548+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/create_audit_table.py for tasks to queue
+[2025-11-22T16:42:28.549+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:42:28.549+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:42:28.609+0000] {processor.py:840} INFO - DAG(s) 'create_audit_table' retrieved from /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:42:28.732+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:42:28.731+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:42:28.797+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:42:28.796+0000] {dag.py:3823} INFO - Setting next_dagrun for create_audit_table to None, run_after=None
+[2025-11-22T16:42:28.903+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/create_audit_table.py took 0.377 seconds
+[2025-11-22T16:43:00.478+0000] {processor.py:161} INFO - Started process (PID=4535) to work on /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:43:00.483+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/create_audit_table.py for tasks to queue
+[2025-11-22T16:43:00.485+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:00.485+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:43:00.573+0000] {processor.py:840} INFO - DAG(s) 'create_audit_table' retrieved from /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:43:00.710+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:00.709+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:43:00.762+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:00.762+0000] {dag.py:3823} INFO - Setting next_dagrun for create_audit_table to None, run_after=None
+[2025-11-22T16:43:00.873+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/create_audit_table.py took 0.411 seconds
+[2025-11-22T16:43:31.395+0000] {processor.py:161} INFO - Started process (PID=4565) to work on /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:43:31.398+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/create_audit_table.py for tasks to queue
+[2025-11-22T16:43:31.400+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:31.399+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:43:31.432+0000] {processor.py:840} INFO - DAG(s) 'create_audit_table' retrieved from /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:43:31.484+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:31.484+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:43:31.512+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:31.511+0000] {dag.py:3823} INFO - Setting next_dagrun for create_audit_table to None, run_after=None
+[2025-11-22T16:43:31.551+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/create_audit_table.py took 0.166 seconds
+[2025-11-22T16:44:06.694+0000] {processor.py:161} INFO - Started process (PID=4597) to work on /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:44:06.696+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/create_audit_table.py for tasks to queue
+[2025-11-22T16:44:06.707+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:44:06.707+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:44:06.774+0000] {processor.py:840} INFO - DAG(s) 'create_audit_table' retrieved from /opt/airflow/dags/create_audit_table.py
+[2025-11-22T16:44:06.886+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:44:06.886+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:44:06.972+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:44:06.963+0000] {dag.py:3823} INFO - Setting next_dagrun for create_audit_table to None, run_after=None
+[2025-11-22T16:44:07.043+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/create_audit_table.py took 0.355 seconds
+[2025-11-22T17:01:57.409+0000] {processor.py:161} INFO - Started process (PID=4628) to work on /opt/airflow/dags/create_audit_table.py
+[2025-11-22T17:01:57.412+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/create_audit_table.py for tasks to queue
+[2025-11-22T17:01:57.422+0000] {logging_mixin.py:188} INFO - [2025-11-22T17:01:57.421+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/create_audit_table.py
+[2025-11-22T17:01:57.504+0000] {processor.py:840} INFO - DAG(s) 'create_audit_table' retrieved from /opt/airflow/dags/create_audit_table.py
+[2025-11-22T17:01:57.652+0000] {logging_mixin.py:188} INFO - [2025-11-22T17:01:57.652+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T17:01:57.736+0000] {logging_mixin.py:188} INFO - [2025-11-22T17:01:57.736+0000] {dag.py:3823} INFO - Setting next_dagrun for create_audit_table to None, run_after=None
+[2025-11-22T17:01:57.839+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/create_audit_table.py took 0.442 seconds

@@ -1,0 +1,19 @@
+[2025-11-11T10:24:28.528+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=failed_lineage_dag/run_id=manual__2025-11-11T10:24:14.082504+00:00/task_id=extract permission to 509
+[2025-11-11T10:24:28.800+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=failed_lineage_dag/run_id=manual__2025-11-11T10:24:14.082504+00:00/task_id=extract permission to 509
+[2025-11-11T10:24:29.578+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: failed_lineage_dag.extract manual__2025-11-11T10:24:14.082504+00:00 [queued]>
+[2025-11-11T10:24:29.649+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: failed_lineage_dag.extract manual__2025-11-11T10:24:14.082504+00:00 [queued]>
+[2025-11-11T10:24:29.658+0000] {taskinstance.py:2170} INFO - Starting attempt 1 of 1
+[2025-11-11T10:24:29.851+0000] {taskinstance.py:2191} INFO - Executing <Task(PythonOperator): extract> on 2025-11-11 10:24:14.082504+00:00
+[2025-11-11T10:24:29.997+0000] {standard_task_runner.py:60} INFO - Started process 3653 to run task
+[2025-11-11T10:24:30.051+0000] {standard_task_runner.py:87} INFO - Running: ['***', 'tasks', 'run', 'failed_lineage_dag', 'extract', 'manual__2025-11-11T10:24:14.082504+00:00', '--job-id', '24', '--raw', '--subdir', 'DAGS_FOLDER/failed_lineage_dag.py', '--cfg-path', '/tmp/tmpx7mivkak']
+[2025-11-11T10:24:30.097+0000] {standard_task_runner.py:88} INFO - Job 24: Subtask extract
+[2025-11-11T10:24:30.402+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=failed_lineage_dag/run_id=manual__2025-11-11T10:24:14.082504+00:00/task_id=extract permission to 509
+[2025-11-11T10:24:30.447+0000] {task_command.py:423} INFO - Running <TaskInstance: failed_lineage_dag.extract manual__2025-11-11T10:24:14.082504+00:00 [running]> on host daaf74c00587
+[2025-11-11T10:24:31.010+0000] {taskinstance.py:2480} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='failed_lineage_dag' AIRFLOW_CTX_TASK_ID='extract' AIRFLOW_CTX_EXECUTION_DATE='2025-11-11T10:24:14.082504+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-11-11T10:24:14.082504+00:00'
+[2025-11-11T10:24:48.058+0000] {adapter.py:122} WARNING - Failed to emit OpenLineage event of id ca36d2bf-9803-38db-b6ba-64f8c01a03ad
+[2025-11-11T10:24:48.243+0000] {logging_mixin.py:188} INFO - Extracting data...
+[2025-11-11T10:24:48.310+0000] {python.py:201} INFO - Done. Returned value was: None
+[2025-11-11T10:24:48.501+0000] {taskinstance.py:1138} INFO - Marking task as SUCCESS. dag_id=failed_lineage_dag, task_id=extract, execution_date=20251111T102414, start_date=20251111T102429, end_date=20251111T102448
+[2025-11-11T10:24:57.024+0000] {adapter.py:122} WARNING - Failed to emit OpenLineage event of id ca36d2bf-9803-38db-b6ba-64f8c01a03ad
+[2025-11-11T10:25:00.969+0000] {local_task_job_runner.py:234} INFO - Task exited with return code 0
+[2025-11-11T10:25:02.173+0000] {taskinstance.py:3280} INFO - 0 downstream tasks scheduled from follow-on schedule check

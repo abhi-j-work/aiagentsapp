@@ -1,0 +1,47 @@
+[2025-11-17T05:10:38.496+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=real_etl_pipeline_with_db_logging_full/run_id=manual__2025-11-17T05:10:30.701728+00:00/task_id=load_data permission to 509
+[2025-11-17T05:10:38.524+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=real_etl_pipeline_with_db_logging_full/run_id=manual__2025-11-17T05:10:30.701728+00:00/task_id=load_data permission to 509
+[2025-11-17T05:10:38.559+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: real_etl_pipeline_with_db_logging_full.load_data manual__2025-11-17T05:10:30.701728+00:00 [queued]>
+[2025-11-17T05:10:38.570+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: real_etl_pipeline_with_db_logging_full.load_data manual__2025-11-17T05:10:30.701728+00:00 [queued]>
+[2025-11-17T05:10:38.571+0000] {taskinstance.py:2170} INFO - Starting attempt 1 of 1
+[2025-11-17T05:10:38.583+0000] {taskinstance.py:2191} INFO - Executing <Task(_PythonDecoratedOperator): load_data> on 2025-11-17 05:10:30.701728+00:00
+[2025-11-17T05:10:38.587+0000] {standard_task_runner.py:60} INFO - Started process 1007 to run task
+[2025-11-17T05:10:38.591+0000] {standard_task_runner.py:87} INFO - Running: ['***', 'tasks', 'run', 'real_etl_pipeline_with_db_logging_full', 'load_data', 'manual__2025-11-17T05:10:30.701728+00:00', '--job-id', '6', '--raw', '--subdir', 'DAGS_FOLDER/real_etl_with_failure.py', '--cfg-path', '/tmp/tmpwudkac3p']
+[2025-11-17T05:10:38.592+0000] {standard_task_runner.py:88} INFO - Job 6: Subtask load_data
+[2025-11-17T05:10:38.633+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=real_etl_pipeline_with_db_logging_full/run_id=manual__2025-11-17T05:10:30.701728+00:00/task_id=load_data permission to 509
+[2025-11-17T05:10:38.635+0000] {task_command.py:423} INFO - Running <TaskInstance: real_etl_pipeline_with_db_logging_full.load_data manual__2025-11-17T05:10:30.701728+00:00 [running]> on host 054794ed4c88
+[2025-11-17T05:10:38.712+0000] {taskinstance.py:2480} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='real_etl_pipeline_with_db_logging_full' AIRFLOW_CTX_TASK_ID='load_data' AIRFLOW_CTX_EXECUTION_DATE='2025-11-17T05:10:30.701728+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-11-17T05:10:30.701728+00:00'
+[2025-11-17T05:10:38.836+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-17T05:10:38.839+0000] {real_etl_with_failure.py:177} INFO - Loading 4 records into clean_orders...
+[2025-11-17T05:10:38.845+0000] {real_etl_with_failure.py:192} ERROR - Failed record {'order_id': '103', 'product': 'Gadget', 'amount': 'ninety-nine'}: invalid input syntax for type integer: "ninety-nine"
+LINE 2: ...                         VALUES ('103', 'Gadget', 'ninety-ni...
+                                                             ^
+
+[2025-11-17T05:10:38.856+0000] {base.py:83} INFO - Using connection ID 'postgres_default' for task execution.
+[2025-11-17T05:10:38.859+0000] {sql.py:450} INFO - Running statement: 
+        INSERT INTO public.pipeline_audit_log (
+            dag_id, task_id, ***_run_id, lineage_run_id,
+            job_name, namespace, status, error,
+            error_class, error_message, stack_trace,
+            total_records, success_count, failure_count, failed_records,
+            started_at, finished_at, hostname, extra_metadata
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        , parameters: ('real_etl_pipeline_with_db_logging_full', 'load_data', 'manual__2025-11-17T05:10:30.701728+00:00', 'manual__2025-11-17T05:10:30.701728+00:00', 'real_etl_pipeline_with_db_logging_full', 'ecommerce_demo', 'FAILED', 'task_failure', 'RecordInsertError', '1 record(s) could not be inserted.', None, 4, 3, 1, '[{"order_id": "103", "product": "Gadget", "amount": "ninety-nine"}]', datetime.datetime(2025, 11, 17, 5, 10, 38, 822703), datetime.datetime(2025, 11, 17, 5, 10, 38, 848246), '054794ed4c88', '{"component": "load_task", "version": "full_v1"}')
+[2025-11-17T05:10:38.861+0000] {sql.py:459} INFO - Rows affected: 1
+[2025-11-17T05:10:38.971+0000] {taskinstance.py:2698} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/taskinstance.py", line 433, in _execute_task
+    result = execute_callable(context=context, **execute_callable_kwargs)
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/decorators/base.py", line 241, in execute
+    return_value = super().execute(context)
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/operators/python.py", line 199, in execute
+    return_value = self.execute_callable()
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/operators/python.py", line 216, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+  File "/opt/airflow/dags/real_etl_with_failure.py", line 230, in load_data
+    raise Exception(f"{len(failed)} records failed. See pipeline_audit_log_full.")
+Exception: 1 records failed. See pipeline_audit_log_full.
+[2025-11-17T05:10:38.990+0000] {taskinstance.py:1138} INFO - Marking task as FAILED. dag_id=real_etl_pipeline_with_db_logging_full, task_id=load_data, execution_date=20251117T051030, start_date=20251117T051038, end_date=20251117T051038
+[2025-11-17T05:10:39.008+0000] {standard_task_runner.py:107} ERROR - Failed to execute job 6 for task load_data (1 records failed. See pipeline_audit_log_full.; 1007)
+[2025-11-17T05:10:39.045+0000] {local_task_job_runner.py:234} INFO - Task exited with return code 1
+[2025-11-17T05:10:39.063+0000] {taskinstance.py:3280} INFO - 0 downstream tasks scheduled from follow-on schedule check

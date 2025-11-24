@@ -1,0 +1,49 @@
+[2025-11-22T16:41:24.203+0000] {processor.py:161} INFO - Started process (PID=4450) to work on /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:41:24.215+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/failed_lineage_dag.py for tasks to queue
+[2025-11-22T16:41:24.228+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:24.227+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:41:24.422+0000] {processor.py:840} INFO - DAG(s) 'failed_lineage_dag' retrieved from /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:41:24.539+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:24.538+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:41:24.596+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:24.596+0000] {dag.py:3823} INFO - Setting next_dagrun for failed_lineage_dag to None, run_after=None
+[2025-11-22T16:41:24.670+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/failed_lineage_dag.py took 0.479 seconds
+[2025-11-22T16:41:56.384+0000] {processor.py:161} INFO - Started process (PID=4480) to work on /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:41:56.398+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/failed_lineage_dag.py for tasks to queue
+[2025-11-22T16:41:56.402+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:56.401+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:41:56.476+0000] {processor.py:840} INFO - DAG(s) 'failed_lineage_dag' retrieved from /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:41:56.610+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:56.609+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:41:56.670+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:56.670+0000] {dag.py:3823} INFO - Setting next_dagrun for failed_lineage_dag to None, run_after=None
+[2025-11-22T16:41:56.755+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/failed_lineage_dag.py took 0.387 seconds
+[2025-11-22T16:42:29.143+0000] {processor.py:161} INFO - Started process (PID=4512) to work on /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:42:29.174+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/failed_lineage_dag.py for tasks to queue
+[2025-11-22T16:42:29.188+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:42:29.187+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:42:29.785+0000] {processor.py:840} INFO - DAG(s) 'failed_lineage_dag' retrieved from /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:42:29.971+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:42:29.970+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:42:30.019+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:42:30.019+0000] {dag.py:3823} INFO - Setting next_dagrun for failed_lineage_dag to None, run_after=None
+[2025-11-22T16:42:30.223+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/failed_lineage_dag.py took 1.087 seconds
+[2025-11-22T16:43:00.943+0000] {processor.py:161} INFO - Started process (PID=4540) to work on /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:43:00.962+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/failed_lineage_dag.py for tasks to queue
+[2025-11-22T16:43:00.966+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:00.965+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:43:01.118+0000] {processor.py:840} INFO - DAG(s) 'failed_lineage_dag' retrieved from /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:43:01.208+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:01.207+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:43:01.284+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:01.283+0000] {dag.py:3823} INFO - Setting next_dagrun for failed_lineage_dag to None, run_after=None
+[2025-11-22T16:43:01.429+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/failed_lineage_dag.py took 0.492 seconds
+[2025-11-22T16:43:31.624+0000] {processor.py:161} INFO - Started process (PID=4572) to work on /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:43:31.626+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/failed_lineage_dag.py for tasks to queue
+[2025-11-22T16:43:31.629+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:31.629+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:43:31.662+0000] {processor.py:840} INFO - DAG(s) 'failed_lineage_dag' retrieved from /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:43:31.718+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:31.718+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:43:31.774+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:31.774+0000] {dag.py:3823} INFO - Setting next_dagrun for failed_lineage_dag to None, run_after=None
+[2025-11-22T16:43:31.819+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/failed_lineage_dag.py took 0.201 seconds
+[2025-11-22T16:44:06.703+0000] {processor.py:161} INFO - Started process (PID=4600) to work on /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:44:06.705+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/failed_lineage_dag.py for tasks to queue
+[2025-11-22T16:44:06.717+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:44:06.716+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:44:06.784+0000] {processor.py:840} INFO - DAG(s) 'failed_lineage_dag' retrieved from /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T16:44:06.917+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:44:06.906+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:44:06.986+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:44:06.986+0000] {dag.py:3823} INFO - Setting next_dagrun for failed_lineage_dag to None, run_after=None
+[2025-11-22T16:44:07.101+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/failed_lineage_dag.py took 0.404 seconds
+[2025-11-22T17:01:57.421+0000] {processor.py:161} INFO - Started process (PID=4631) to work on /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T17:01:57.424+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/failed_lineage_dag.py for tasks to queue
+[2025-11-22T17:01:57.426+0000] {logging_mixin.py:188} INFO - [2025-11-22T17:01:57.425+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T17:01:57.473+0000] {processor.py:840} INFO - DAG(s) 'failed_lineage_dag' retrieved from /opt/airflow/dags/failed_lineage_dag.py
+[2025-11-22T17:01:57.584+0000] {logging_mixin.py:188} INFO - [2025-11-22T17:01:57.584+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T17:01:57.643+0000] {logging_mixin.py:188} INFO - [2025-11-22T17:01:57.642+0000] {dag.py:3823} INFO - Setting next_dagrun for failed_lineage_dag to None, run_after=None
+[2025-11-22T17:01:57.759+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/failed_lineage_dag.py took 0.350 seconds

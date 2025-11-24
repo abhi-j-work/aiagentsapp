@@ -1,0 +1,17 @@
+[2025-11-08T20:23:25.593+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=failed_lineage_dag/run_id=manual__2025-11-08T20:23:18.770136+00:00/task_id=transform permission to 509
+[2025-11-08T20:23:25.630+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=failed_lineage_dag/run_id=manual__2025-11-08T20:23:18.770136+00:00/task_id=transform permission to 509
+[2025-11-08T20:23:25.700+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: failed_lineage_dag.transform manual__2025-11-08T20:23:18.770136+00:00 [queued]>
+[2025-11-08T20:23:25.710+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: failed_lineage_dag.transform manual__2025-11-08T20:23:18.770136+00:00 [queued]>
+[2025-11-08T20:23:25.711+0000] {taskinstance.py:2170} INFO - Starting attempt 1 of 1
+[2025-11-08T20:23:25.727+0000] {taskinstance.py:2191} INFO - Executing <Task(PythonOperator): transform> on 2025-11-08 20:23:18.770136+00:00
+[2025-11-08T20:23:25.734+0000] {standard_task_runner.py:60} INFO - Started process 269 to run task
+[2025-11-08T20:23:25.738+0000] {standard_task_runner.py:87} INFO - Running: ['***', 'tasks', 'run', 'failed_lineage_dag', 'transform', 'manual__2025-11-08T20:23:18.770136+00:00', '--job-id', '3', '--raw', '--subdir', 'DAGS_FOLDER/failed_lineage_dag.py', '--cfg-path', '/tmp/tmpwt9z1o8z']
+[2025-11-08T20:23:25.740+0000] {standard_task_runner.py:88} INFO - Job 3: Subtask transform
+[2025-11-08T20:23:25.782+0000] {logging_mixin.py:188} INFO - Changing /opt/***/logs/dag_id=failed_lineage_dag/run_id=manual__2025-11-08T20:23:18.770136+00:00/task_id=transform permission to 509
+[2025-11-08T20:23:25.784+0000] {task_command.py:423} INFO - Running <TaskInstance: failed_lineage_dag.transform manual__2025-11-08T20:23:18.770136+00:00 [running]> on host 7a79f262ef22
+[2025-11-08T20:23:25.855+0000] {taskinstance.py:2480} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='failed_lineage_dag' AIRFLOW_CTX_TASK_ID='transform' AIRFLOW_CTX_EXECUTION_DATE='2025-11-08T20:23:18.770136+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-11-08T20:23:18.770136+00:00'
+[2025-11-08T20:23:26.043+0000] {logging_mixin.py:188} INFO - Transforming data...
+[2025-11-08T20:23:26.049+0000] {python.py:201} INFO - Done. Returned value was: None
+[2025-11-08T20:23:26.076+0000] {taskinstance.py:1138} INFO - Marking task as SUCCESS. dag_id=failed_lineage_dag, task_id=transform, execution_date=20251108T202318, start_date=20251108T202325, end_date=20251108T202326
+[2025-11-08T20:23:26.756+0000] {local_task_job_runner.py:234} INFO - Task exited with return code 0
+[2025-11-08T20:23:26.836+0000] {taskinstance.py:3280} INFO - 0 downstream tasks scheduled from follow-on schedule check

@@ -1,0 +1,35 @@
+[2025-11-22T16:41:23.439+0000] {processor.py:161} INFO - Started process (PID=4442) to work on /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:41:23.444+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/utils/audit_logger.py for tasks to queue
+[2025-11-22T16:41:23.448+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:23.448+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:41:23.662+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:41:23.700+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/utils/audit_logger.py took 0.267 seconds
+[2025-11-22T16:41:56.141+0000] {processor.py:161} INFO - Started process (PID=4472) to work on /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:41:56.145+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/utils/audit_logger.py for tasks to queue
+[2025-11-22T16:41:56.154+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:56.154+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:41:56.207+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:41:56.244+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/utils/audit_logger.py took 0.107 seconds
+[2025-11-22T16:42:28.334+0000] {processor.py:161} INFO - Started process (PID=4502) to work on /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:42:28.347+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/utils/audit_logger.py for tasks to queue
+[2025-11-22T16:42:28.352+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:42:28.352+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:42:28.405+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:42:28.451+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/utils/audit_logger.py took 0.125 seconds
+[2025-11-22T16:43:00.419+0000] {processor.py:161} INFO - Started process (PID=4532) to work on /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:43:00.431+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/utils/audit_logger.py for tasks to queue
+[2025-11-22T16:43:00.447+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:00.442+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:43:00.510+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:43:00.548+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/utils/audit_logger.py took 0.134 seconds
+[2025-11-22T16:43:31.321+0000] {processor.py:161} INFO - Started process (PID=4562) to work on /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:43:31.324+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/utils/audit_logger.py for tasks to queue
+[2025-11-22T16:43:31.335+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:31.334+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:43:31.392+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:43:31.418+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/utils/audit_logger.py took 0.102 seconds
+[2025-11-22T16:44:06.462+0000] {processor.py:161} INFO - Started process (PID=4592) to work on /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:44:06.467+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/utils/audit_logger.py for tasks to queue
+[2025-11-22T16:44:06.469+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:44:06.469+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:44:06.525+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T16:44:06.553+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/utils/audit_logger.py took 0.102 seconds
+[2025-11-22T17:01:57.045+0000] {processor.py:161} INFO - Started process (PID=4623) to work on /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T17:01:57.059+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/utils/audit_logger.py for tasks to queue
+[2025-11-22T17:01:57.061+0000] {logging_mixin.py:188} INFO - [2025-11-22T17:01:57.061+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T17:01:57.248+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/utils/audit_logger.py
+[2025-11-22T17:01:57.283+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/utils/audit_logger.py took 0.243 seconds

@@ -1,0 +1,28 @@
+[2025-11-24T04:44:20.392+0000] {processor.py:161} INFO - Started process (PID=4658) to work on /opt/airflow/dags/real_etl_with_failure.py
+[2025-11-24T04:44:20.410+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/real_etl_with_failure.py for tasks to queue
+[2025-11-24T04:44:20.428+0000] {logging_mixin.py:188} INFO - [2025-11-24T04:44:20.425+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/real_etl_with_failure.py
+[2025-11-24T04:44:20.609+0000] {processor.py:840} INFO - DAG(s) 'real_etl_pipeline_with_db_logging_full' retrieved from /opt/airflow/dags/real_etl_with_failure.py
+[2025-11-24T04:44:20.893+0000] {logging_mixin.py:188} INFO - [2025-11-24T04:44:20.893+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-24T04:44:21.056+0000] {logging_mixin.py:188} INFO - [2025-11-24T04:44:21.056+0000] {dag.py:3823} INFO - Setting next_dagrun for real_etl_pipeline_with_db_logging_full to None, run_after=None
+[2025-11-24T04:44:21.928+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/real_etl_with_failure.py took 1.573 seconds
+[2025-11-24T04:44:57.429+0000] {processor.py:161} INFO - Started process (PID=4687) to work on /opt/airflow/dags/real_etl_with_failure.py
+[2025-11-24T04:44:57.460+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/real_etl_with_failure.py for tasks to queue
+[2025-11-24T04:44:57.477+0000] {logging_mixin.py:188} INFO - [2025-11-24T04:44:57.466+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/real_etl_with_failure.py
+[2025-11-24T04:44:57.731+0000] {processor.py:840} INFO - DAG(s) 'real_etl_pipeline_with_db_logging_full' retrieved from /opt/airflow/dags/real_etl_with_failure.py
+[2025-11-24T04:44:58.895+0000] {logging_mixin.py:188} INFO - [2025-11-24T04:44:58.895+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-24T04:44:58.977+0000] {logging_mixin.py:188} INFO - [2025-11-24T04:44:58.976+0000] {dag.py:3823} INFO - Setting next_dagrun for real_etl_pipeline_with_db_logging_full to None, run_after=None
+[2025-11-24T04:44:59.721+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/real_etl_with_failure.py took 2.462 seconds
+[2025-11-24T04:45:31.961+0000] {processor.py:161} INFO - Started process (PID=4718) to work on /opt/airflow/dags/real_etl_with_failure.py
+[2025-11-24T04:45:31.965+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/real_etl_with_failure.py for tasks to queue
+[2025-11-24T04:45:31.973+0000] {logging_mixin.py:188} INFO - [2025-11-24T04:45:31.971+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/real_etl_with_failure.py
+[2025-11-24T04:45:32.219+0000] {processor.py:840} INFO - DAG(s) 'real_etl_pipeline_with_db_logging_full' retrieved from /opt/airflow/dags/real_etl_with_failure.py
+[2025-11-24T04:45:33.778+0000] {logging_mixin.py:188} INFO - [2025-11-24T04:45:33.770+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-24T04:45:34.352+0000] {logging_mixin.py:188} INFO - [2025-11-24T04:45:34.351+0000] {dag.py:3823} INFO - Setting next_dagrun for real_etl_pipeline_with_db_logging_full to None, run_after=None
+[2025-11-24T04:45:34.466+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/real_etl_with_failure.py took 2.531 seconds
+[2025-11-24T04:46:33.853+0000] {processor.py:161} INFO - Started process (PID=4747) to work on /opt/airflow/dags/real_etl_with_failure.py
+[2025-11-24T04:46:34.117+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/real_etl_with_failure.py for tasks to queue
+[2025-11-24T04:46:34.441+0000] {logging_mixin.py:188} INFO - [2025-11-24T04:46:34.334+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/real_etl_with_failure.py
+[2025-11-24T04:46:39.170+0000] {processor.py:840} INFO - DAG(s) 'real_etl_pipeline_with_db_logging_full' retrieved from /opt/airflow/dags/real_etl_with_failure.py
+[2025-11-24T04:46:40.492+0000] {logging_mixin.py:188} INFO - [2025-11-24T04:46:40.491+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-24T04:46:40.682+0000] {logging_mixin.py:188} INFO - [2025-11-24T04:46:40.682+0000] {dag.py:3823} INFO - Setting next_dagrun for real_etl_pipeline_with_db_logging_full to None, run_after=None
+[2025-11-24T04:46:40.887+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/real_etl_with_failure.py took 15.888 seconds

@@ -1,0 +1,49 @@
+[2025-11-22T16:41:21.352+0000] {processor.py:161} INFO - Started process (PID=4432) to work on /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:41:21.390+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py for tasks to queue
+[2025-11-22T16:41:21.429+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:21.413+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:41:22.286+0000] {processor.py:840} INFO - DAG(s) 'real_etl_pipeline_with_openlineage_errors' retrieved from /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:41:22.854+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:22.854+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:41:23.030+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:23.029+0000] {dag.py:3823} INFO - Setting next_dagrun for real_etl_pipeline_with_openlineage_errors to None, run_after=None
+[2025-11-22T16:41:23.188+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py took 2.695 seconds
+[2025-11-22T16:41:54.682+0000] {processor.py:161} INFO - Started process (PID=4462) to work on /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:41:54.688+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py for tasks to queue
+[2025-11-22T16:41:54.694+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:54.693+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:41:55.118+0000] {processor.py:840} INFO - DAG(s) 'real_etl_pipeline_with_openlineage_errors' retrieved from /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:41:55.503+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:55.503+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:41:55.588+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:41:55.588+0000] {dag.py:3823} INFO - Setting next_dagrun for real_etl_pipeline_with_openlineage_errors to None, run_after=None
+[2025-11-22T16:41:55.738+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py took 1.124 seconds
+[2025-11-22T16:42:26.237+0000] {processor.py:161} INFO - Started process (PID=4492) to work on /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:42:26.251+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py for tasks to queue
+[2025-11-22T16:42:26.260+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:42:26.259+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:42:26.444+0000] {processor.py:840} INFO - DAG(s) 'real_etl_pipeline_with_openlineage_errors' retrieved from /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:42:26.771+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:42:26.771+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:42:27.094+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:42:27.093+0000] {dag.py:3823} INFO - Setting next_dagrun for real_etl_pipeline_with_openlineage_errors to None, run_after=None
+[2025-11-22T16:42:27.800+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py took 1.584 seconds
+[2025-11-22T16:42:59.325+0000] {processor.py:161} INFO - Started process (PID=4522) to work on /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:42:59.347+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py for tasks to queue
+[2025-11-22T16:42:59.360+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:42:59.359+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:42:59.608+0000] {processor.py:840} INFO - DAG(s) 'real_etl_pipeline_with_openlineage_errors' retrieved from /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:42:59.832+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:42:59.832+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:42:59.899+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:42:59.899+0000] {dag.py:3823} INFO - Setting next_dagrun for real_etl_pipeline_with_openlineage_errors to None, run_after=None
+[2025-11-22T16:43:00.163+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py took 0.844 seconds
+[2025-11-22T16:43:30.892+0000] {processor.py:161} INFO - Started process (PID=4552) to work on /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:43:30.895+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py for tasks to queue
+[2025-11-22T16:43:30.902+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:30.901+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:43:30.962+0000] {processor.py:840} INFO - DAG(s) 'real_etl_pipeline_with_openlineage_errors' retrieved from /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:43:31.034+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:31.034+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:43:31.063+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:43:31.063+0000] {dag.py:3823} INFO - Setting next_dagrun for real_etl_pipeline_with_openlineage_errors to None, run_after=None
+[2025-11-22T16:43:31.146+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py took 0.261 seconds
+[2025-11-22T16:44:05.306+0000] {processor.py:161} INFO - Started process (PID=4582) to work on /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:44:05.310+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py for tasks to queue
+[2025-11-22T16:44:05.314+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:44:05.314+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:44:05.598+0000] {processor.py:840} INFO - DAG(s) 'real_etl_pipeline_with_openlineage_errors' retrieved from /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T16:44:05.720+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:44:05.720+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T16:44:05.781+0000] {logging_mixin.py:188} INFO - [2025-11-22T16:44:05.780+0000] {dag.py:3823} INFO - Setting next_dagrun for real_etl_pipeline_with_openlineage_errors to None, run_after=None
+[2025-11-22T16:44:05.866+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py took 0.567 seconds
+[2025-11-22T17:01:54.948+0000] {processor.py:161} INFO - Started process (PID=4613) to work on /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T17:01:54.971+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py for tasks to queue
+[2025-11-22T17:01:55.004+0000] {logging_mixin.py:188} INFO - [2025-11-22T17:01:54.986+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T17:01:55.541+0000] {processor.py:840} INFO - DAG(s) 'real_etl_pipeline_with_openlineage_errors' retrieved from /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py
+[2025-11-22T17:01:56.505+0000] {logging_mixin.py:188} INFO - [2025-11-22T17:01:56.503+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2025-11-22T17:01:56.740+0000] {logging_mixin.py:188} INFO - [2025-11-22T17:01:56.739+0000] {dag.py:3823} INFO - Setting next_dagrun for real_etl_pipeline_with_openlineage_errors to None, run_after=None
+[2025-11-22T17:01:56.931+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/etl_pipeline_with_openlineage_errors.py took 2.272 seconds
